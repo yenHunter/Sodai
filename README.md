@@ -98,6 +98,6 @@ php artisan test
 ## 👤 Author
 *   **Name:** Firoz Ebna Jobaier
 *   **Email:** firoz.jobaier@gmail.com
-```
+
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/firoz-ebna-jobaier)
 [![Fork me on GitHub](https://img.shields.io/badge/Fork_on_GitHub-000?style=for-the-badge&logo=github)](https://github.com/yenHunter)
