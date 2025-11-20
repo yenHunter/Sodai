@@ -1,0 +1,14 @@
+{
+  "workspace": {
+    "id": "fee6a65d-2a2c-411b-8104-d05b7aa0b83a"
+  },
+  "entities": {
+    "collections": [
+      "..\\postman\\collections\\BTF_SLD_Assignment.postman_collection.json"
+    ],
+    "environments": [],
+    "specs": [],
+    "flows": [],
+    "globals": []
+  }
+}
