@@ -26,7 +26,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (! $token = Auth::attempt($credentials)) {
+        if (! $token = Auth::guard('api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -39,20 +39,24 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
+            'mobile'=> 'nullable|string',
+            'password' => 'required|string|min:8',
             'role' => 'sometimes|string|in:admin,vendor,customer'
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'email' => $validated['email'],
+            'mobile' => $validated['mobile'],
             'password' => $validated['password'], // Cast handles hashing automatically in Laravel 10/11
             'role' => $validated['role'] ?? UserRole::CUSTOMER,
         ]);
 
-        $token = Auth::login($user);
+        $token = Auth::guard('api')->login($user);
 
         return $this->respondWithToken($token);
     }
@@ -62,7 +66,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(Auth::user());
+        return response()->json(Auth::guard('api')->user());
     }
 
     /**
@@ -70,7 +74,7 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        Auth::logout();
+        Auth::guard('api')->logout();
         return response()->json(['message' => 'Successfully logged out']);
     }
 
@@ -79,7 +83,7 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(Auth::refresh());
+        return $this->respondWithToken(Auth::guard('api')->refresh());
     }
 
     /**
@@ -90,7 +94,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => Auth::factory()->getTTL() * 60,
+            'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
             'user' => Auth::user()
         ]);
     }
