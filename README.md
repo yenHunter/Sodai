@@ -51,7 +51,7 @@ php artisan jwt:secret
 Configure your .env file with database credentials, then run:
 
 ```bash
-php artisan migrate
+php artisan migrate:fresh --seed
 ```
 
 ### 4. Run the Application
@@ -93,11 +93,21 @@ This project uses PHPUnit for feature testing.
 php artisan test
 ```
 
-**Key Test Case (`OrderFlowTest`):**
-1.  Creates a User and Product.
-2.  Places an order via API.
-3.  Asserts Order is created in DB.
-4.  Asserts Stock is deducted in DB.
+### Test Credentials
+
+Now you can login with these credentials in Postman:
+
+**Role: Customer (For Buying)**
+*   **Email:** `customer@gmail.com`
+*   **Password:** `password`
+
+**Role: Vendor (For creating more products)**
+*   **Email:** `vendor@nike.com`
+*   **Password:** `password`
+
+**Role: Admin**
+*   **Email:** `admin@ecommerce.com`
+*   **Password:** `password`
 
 ## 👤 Author
 *   **Name:** Firoz Ebna Jobaier
