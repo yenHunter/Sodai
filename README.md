@@ -36,6 +36,10 @@ cd project-name
 # Install Dependencies
 composer install
 
+#Build assets
+npm install
+npm run build
+
 # Environment Setup
 cp .env.example .env
 php artisan key:generate
