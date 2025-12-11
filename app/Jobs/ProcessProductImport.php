@@ -16,14 +16,13 @@ class ProcessProductImport implements ShouldQueue
 
     public function __construct(
         protected int $vendorId,
-        protected array $csvData // Passing array to avoid file permission issues in queue
+        protected array $csvData 
     ) {}
 
     public function handle(ProductService $service): void
     {
         foreach ($this->csvData as $row) {
             try {
-                // Expecting CSV columns: name, sku, price, quantity
                 $payload = [
                     'vendor_id' => $this->vendorId,
                     'name' => $row['name'],

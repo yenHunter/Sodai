@@ -12,8 +12,7 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        // Require auth for everything except login and register
-        // Using middleware inside controller or routes (preferred in routes for API)
+        
     }
 
     /**
@@ -52,7 +51,7 @@ class AuthController extends Controller
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'mobile' => $validated['mobile'],
-            'password' => $validated['password'], // Cast handles hashing automatically in Laravel 10/11
+            'password' => $validated['password'], 
             'role' => $validated['role'] ?? UserRole::CUSTOMER,
         ]);
 

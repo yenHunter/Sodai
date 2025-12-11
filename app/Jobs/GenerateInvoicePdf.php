@@ -28,8 +28,5 @@ class GenerateInvoicePdf implements ShouldQueue
         // Save to Storage
         $fileName = 'invoices/' . $this->order->invoice_number . '.pdf';
         Storage::put('public/' . $fileName, $pdf->output());
-
-        // In a real app, you would trigger an email here with the attachment
-        // Mail::to($this->order->user)->send(new OrderInvoiceMail($fileName));
     }
 }

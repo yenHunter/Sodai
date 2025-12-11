@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\OrderStatus; // Ensure you created this Enum in Step 1
+use App\Enums\OrderStatus; 
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
@@ -10,7 +10,7 @@ class Order extends Model
     protected $fillable = ['user_id', 'status', 'total_amount', 'invoice_number'];
 
     protected $casts = [
-        'status' => OrderStatus::class, // Auto-cast string to Enum
+        'status' => OrderStatus::class,
     ];
 
     public function user()
