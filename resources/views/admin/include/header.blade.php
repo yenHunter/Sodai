@@ -22,12 +22,12 @@
                 <!-- User Account -->
                 <li class="dropdown user-menu">
                     <button class="dropdown-toggle nav-link ec-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="assets/img/user/user.png" class="user-image" alt="User Image" />
+                        <img src="admin/img/user/user.png" class="user-image" alt="User Image" />
                     </button>
                     <ul class="dropdown-menu dropdown-menu-right ec-dropdown-menu">
                         <!-- User image -->
                         <li class="dropdown-header">
-                            <img src="assets/img/user/user.png" class="img-circle" alt="User Image" />
+                            <img src="admin/img/user/user.png" class="img-circle" alt="User Image" />
                             <div class="d-inline-block">
                                 John Deo <small class="pt-1">john.example@gmail.com</small>
                             </div>
@@ -91,7 +91,7 @@
                                         <li>
                                             <a href="javscript:void(0)" class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u2.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u2.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>
@@ -115,7 +115,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification media-active">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u1.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u1.jpg"
                                                         alt="Image">
                                                     <span class="status active"></span>
                                                 </div>
@@ -139,7 +139,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u5.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u5.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>
@@ -297,7 +297,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u6.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u6.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>
@@ -321,7 +321,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u7.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u7.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>
@@ -345,7 +345,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification media-active">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u1.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u1.jpg"
                                                         alt="Image">
                                                     <span class="status active"></span>
                                                 </div>
@@ -369,7 +369,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u2.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u2.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>
@@ -393,7 +393,7 @@
                                             <a href="javscript:void(0)"
                                                 class="media media-message media-notification">
                                                 <div class="position-relative mr-3">
-                                                    <img class="rounded-circle" src="assets/img/user/u5.jpg"
+                                                    <img class="rounded-circle" src="admin/img/user/u5.jpg"
                                                         alt="Image">
                                                     <span class="status away"></span>
                                                 </div>

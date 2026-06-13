@@ -15,11 +15,11 @@
 <link href="https://cdn.materialdesignicons.com/4.4.95/css/materialdesignicons.min.css" rel="stylesheet" />
 
 <!-- PLUGINS CSS STYLE -->
-<link href="assets/plugins/daterangepicker/daterangepicker.css" rel="stylesheet">
-<link href="assets/plugins/simplebar/simplebar.css" rel="stylesheet" />
+<link href="admin/plugins/daterangepicker/daterangepicker.css" rel="stylesheet">
+<link href="admin/plugins/simplebar/simplebar.css" rel="stylesheet" />
 
 <!-- Ekka CSS -->
-<link id="ekka-css" href="assets/css/ekka.css" rel="stylesheet" />
+<link id="ekka-css" href="admin/css/ekka.css" rel="stylesheet" />
 
 <!-- FAVICON -->
-<link href="assets/img/favicon.png" rel="shortcut icon" />
+<link href="admin/img/favicon.png" rel="shortcut icon" />
