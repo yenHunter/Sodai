@@ -1,30 +1,6 @@
 <!-- -----Footer Section Start----- -->
 
 <footer class="ec-footer">
-    <div class="footer-newletter section-space-footer-p">
-        <div class="container">
-            <div class="row">
-                <div class="text-center footer-news-inner">
-                    <div class="footer-news-block">
-                        <div class="footer-news-stitle">Our Newsletter</div>
-                        <div class="footer-news-title">Join Our Newsletter</div>
-                        <div class="footer-news-desc">Subscribe to the Puik Store mailing list to receive updates on
-                            new arrivals, special offers and other discount information.</div>
-                        <div class="ec-subscribe-form">
-                            <form id="ec-newsletter-form" name="ec-newsletter-form" method="post" action="#">
-                                <div id="ec_news_signup" class="ec-form">
-                                    <input class="ec-email" type="email" required=""
-                                        placeholder="Enter your email address" name="ec-email" value="" />
-                                    <button id="ec-news-btn" class="button btn-primary" type="submit" name="subscribe"
-                                        value="">Subscribe</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="footer-container">
         <div class="footer-top section-space-footer-p">
             <div class="container">

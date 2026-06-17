@@ -1,90 +1,6 @@
 <!-- ----- Header Section Start -----  -->
 
 <header class="ec-header">
-    <!--Ec Header Top Start -->
-    <div class="header-top">
-        <div class="container">
-            <div class="row align-items-center">
-                <!-- Header Top social Start -->
-                <div class="col text-left header-top-left d-none d-lg-block">
-                    <div class="header-top-social">
-                        <ul class="mb-0">
-                            <li class="list-inline-item"><a href="#"><i class="ecicon eci-facebook"></i></a></li>
-                            <li class="list-inline-item"><a href="#"><i class="ecicon eci-twitter"></i></a></li>
-                            <li class="list-inline-item"><a href="#"><i class="ecicon eci-youtube-play"></i></a>
-                            </li>
-                            <li class="list-inline-item"><a href="#"><i class="ecicon eci-vimeo"></i></a></li>
-                            <li class="list-inline-item"><a href="#"><i class="ecicon eci-instagram"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-                <!-- Header Top social End -->
-                <!-- Header Top Message Start -->
-                <div class="col text-center header-top-center">
-                    <div class="header-top-message">
-                        World's Fastest Online Shopping Destination
-                    </div>
-                </div>
-                <!-- Header Top Message End -->
-                <!-- Header Top Language Currency -->
-                <div class="col header-top-right d-none d-lg-block">
-                    <div class="header-top-right-inner d-flex justify-content-end">
-                        <!-- Language Start -->
-                        <div class="header-top-lan-curr header-top-lan dropdown">
-                            <button class="dropdown-toggle" data-bs-toggle="dropdown">English <i
-                                    class="ecicon eci-angle-down" aria-hidden="true"></i></button>
-                            <ul class="dropdown-menu">
-                                <li class="active"><a class="dropdown-item" href="#">English</a></li>
-                                <li><a class="dropdown-item" href="#">Italiano</a></li>
-                            </ul>
-                        </div>
-                        <!-- Language End -->
-                        <!-- Currency Start -->
-                        <div class="header-top-lan-curr header-top-curr dropdown">
-                            <button class="dropdown-toggle" data-bs-toggle="dropdown">Dollar <i
-                                    class="ecicon eci-angle-down" aria-hidden="true"></i></button>
-                            <ul class="dropdown-menu">
-                                <li class="active"><a class="dropdown-item" href="#">USD $</a></li>
-                                <li><a class="dropdown-item" href="#">EUR €</a></li>
-                            </ul>
-                        </div>
-                        <!-- Currency End -->
-
-                    </div>
-                </div>
-                <!-- Header Top Language Currency -->
-                <!-- Header Top responsive Action -->
-                <div class="col header-top-res d-lg-none">
-                    <div class="ec-header-bottons">
-                        <!-- Header User Start -->
-                        <a href="login.html" class="ec-header-btn ec-header-user">
-                            <div class="header-icon"><i class="fi-rr-user"></i></div>
-                        </a>
-                        <!-- Header User End -->
-                        <!-- Header Cart Start -->
-                        <a href="#" class="ec-header-btn ec-header-wishlist">
-                            <div class="header-icon"><i class="fi-rr-heart"></i></div>
-                            <span class="ec-header-count ec-wishlist-count">0</span>
-                        </a>
-                        <!-- Header Cart End -->
-                        <!-- Header Cart Start -->
-                        <a href="#ec-side-cart" class="ec-header-btn ec-side-toggle">
-                            <div class="header-icon"><i class="fi-rr-shopping-basket"></i></div>
-                            <span class="ec-header-count ec-cart-count">3</span>
-                        </a>
-                        <!-- Header Cart End -->
-                        <!-- Header menu Start -->
-                        <a href="#ec-mobile-menu" class="ec-header-btn ec-side-toggle d-lg-none">
-                            <i class="ecicon eci-bars"></i>
-                        </a>
-                        <!-- Header menu End -->
-                    </div>
-                </div>
-                <!-- Header Top responsive Action -->
-            </div>
-        </div>
-    </div>
-    <!-- Ec Header Top  End -->
     <!-- Ec Header Bottom  Start -->
     <div class="ec-header-bottom d-none d-lg-block">
         <div class="container position-relative">
@@ -93,9 +9,11 @@
                     <!-- Ec Header Logo Start -->
                     <div class="align-self-center ec-header-logo">
                         <div class="header-logo">
-                            <a href="index.html"><img src="visitor/images/logo/logo-4.png" alt="Site Logo" /><img
-                                    class="dark-logo" src="visitor/images/logo/dark-logo-4.png" alt="Site Logo"
-                                    style="display: none;" /></a>
+                            <a href="index.html">
+                                <img src="visitor/images/logo/logo-4.png" alt="Site Logo" />
+                                <img class="dark-logo" src="visitor/images/logo/dark-logo-4.png" alt="Site Logo"
+                                    style="display: none;" />
+                            </a>
                         </div>
                     </div>
                     <!-- Ec Header Logo End -->
