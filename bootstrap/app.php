@@ -6,16 +6,16 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // Global Middleware
+        // Global middleware - applies to all requests
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
-        // Named Middleware (Aliases)
+        // Named middleware aliases
         $middleware->alias([
             'auth.admin'           => \App\Http\Middleware\AdminAuthenticated::class,
             'auth.customer'        => \App\Http\Middleware\CustomerAuthenticated::class,

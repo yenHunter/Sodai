@@ -1,4 +1,5 @@
 <?php
+// app/Models/Admin.php
 
 namespace App\Models;
 
@@ -36,18 +37,29 @@ class Admin extends Authenticatable
         ];
     }
 
-    // Relationships
+    // ─────────────────────────────────────────────
+    // RELATIONSHIPS
+    // ─────────────────────────────────────────────
+
     public function activityLogs()
     {
         return $this->morphMany(ActivityLog::class, 'loggable');
     }
 
-    // Helpers
+    // ─────────────────────────────────────────────
+    // HELPER METHODS
+    // ─────────────────────────────────────────────
+
     public function updateLastLogin(string $ip): void
     {
         $this->update([
             'last_login_at' => now(),
             'last_login_ip' => $ip,
         ]);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->is_active === true;
     }
 }

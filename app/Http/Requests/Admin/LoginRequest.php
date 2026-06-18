@@ -17,38 +17,64 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:8'],
+            'email'    => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+            ],
         ];
     }
 
-    public function authenticate(): void
+    public function messages(): array
     {
-        $this->ensureIsNotRateLimited();
+        return [
+            'email.required'    => 'Email address is required.',
+            'email.email'       => 'Please enter a valid email address.',
+            'password.required' => 'Password is required.',
+            'password.min'      => 'Password must be at least 6 characters.',
+        ];
     }
+
+    // ─────────────────────────────────────────────
+    // RATE LIMITING
+    // ─────────────────────────────────────────────
 
     public function ensureIsNotRateLimited(): void
     {
-        $key = 'admin-login:' . Str::lower($this->input('email'))
-               . '|' . $this->ip();
+        $key = $this->throttleKey();
 
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            $seconds = RateLimiter::availableIn($key);
-
-            throw ValidationException::withMessages([
-                'email' => "Too many login attempts. Try again in {$seconds} seconds.",
-            ]);
+        if (!RateLimiter::tooManyAttempts($key, 5)) {
+            return;
         }
 
-        RateLimiter::hit($key, 300); // 5 minutes decay
+        $seconds = RateLimiter::availableIn($key);
+
+        throw ValidationException::withMessages([
+            'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+        ]);
     }
 
-    protected function failedValidation($validator)
+    public function incrementRateLimiter(): void
     {
-        $key = 'admin-login:' . Str::lower($this->input('email'))
-               . '|' . $this->ip();
-        RateLimiter::hit($key, 300);
+        RateLimiter::hit($this->throttleKey(), 300); // 5 min decay
+    }
 
-        parent::failedValidation($validator);
+    public function clearRateLimiter(): void
+    {
+        RateLimiter::clear($this->throttleKey());
+    }
+
+    public function throttleKey(): string
+    {
+        return 'admin-login:'
+            . Str::lower($this->input('email'))
+            . '|'
+            . $this->ip();
     }
 }

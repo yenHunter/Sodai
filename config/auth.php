@@ -1,24 +1,25 @@
 <?php
+// config/auth.php
 
 return [
     'defaults' => [
-        'guard' => 'customer',      // default guard
+        'guard'     => 'customer',
         'passwords' => 'customers',
     ],
 
     'guards' => [
         'web' => [
-            'driver' => 'session',
+            'driver'   => 'session',
             'provider' => 'users',
         ],
 
-        // Customer Guard
+        // Customer guard
         'customer' => [
             'driver'   => 'session',
             'provider' => 'customers',
         ],
 
-        // Admin Guard
+        // Admin guard
         'admin' => [
             'driver'   => 'session',
             'provider' => 'admins',
@@ -33,12 +34,12 @@ return [
 
         'customers' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\User::class,  // Same users table
+            'model'  => App\Models\User::class,
         ],
 
         'admins' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\Admin::class, // Separate admins table
+            'model'  => App\Models\Admin::class,
         ],
     ],
 
@@ -53,7 +54,7 @@ return [
         'admins' => [
             'provider' => 'admins',
             'table'    => 'admin_password_reset_tokens',
-            'expire'   => 30,    // Shorter for admin
+            'expire'   => 30,
             'throttle' => 60,
         ],
     ],

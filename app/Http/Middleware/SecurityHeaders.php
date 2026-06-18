@@ -4,31 +4,36 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeaders
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
         $response->headers->set(
-            'X-Content-Type-Options', 'nosniff'
+            'X-Content-Type-Options',
+            'nosniff'
         );
         $response->headers->set(
-            'X-Frame-Options', 'SAMEORIGIN'
+            'X-Frame-Options',
+            'SAMEORIGIN'
         );
         $response->headers->set(
-            'X-XSS-Protection', '1; mode=block'
+            'X-XSS-Protection',
+            '1; mode=block'
         );
         $response->headers->set(
-            'Referrer-Policy', 'strict-origin-when-cross-origin'
+            'Referrer-Policy',
+            'strict-origin-when-cross-origin'
         );
         $response->headers->set(
-            'Permissions-Policy', 
+            'Permissions-Policy',
             'camera=(), microphone=(), geolocation=()'
         );
 
-        // Only in production
+        // Enable in production only
         if (app()->isProduction()) {
             $response->headers->set(
                 'Strict-Transport-Security',
