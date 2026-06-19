@@ -1,5 +1,4 @@
 <?php
-// app/Models/Admin.php
 
 namespace App\Models;
 
@@ -7,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles; 
 
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles; 
 
     protected $guard = 'admin';
 
@@ -61,5 +61,13 @@ class Admin extends Authenticatable
     public function isActive(): bool
     {
         return $this->is_active === true;
+    }
+
+    /**
+     * Check if this admin is the super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super-admin');
     }
 }

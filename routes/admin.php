@@ -2,21 +2,44 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\DashboardController;
+// ... other imports
 
-Route::middleware('guest')->group(function () {
-    Route::prefix('admin')->name('admin')->group(function () {
-        Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
-        Route::get('register', [AuthController::class, 'register_view'])->name('register.view');
-        Route::post('register', [AuthController::class, 'register'])->name('register.attempt');
-        Route::get('forgot-password', [AuthController::class, 'forgot_password_view'])->name('forgot.password.view');
-        Route::post('forgot-password', [AuthController::class, 'forgot_password'])->name('forgot.password.attempt');
-        Route::get('reset-password/{token}', [AuthController::class, 'reset_password_view'])->name('password.reset');
-        Route::post('reset-password', [AuthController::class, 'reset_password'])->name('reset.password.attempt');
-    });
+// Guest
+Route::middleware('guest:admin')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('admin', function () {
-        return view('admin.pages.index');
+// Authenticated
+Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── Categories: only roles with category permissions ──
+    Route::middleware('permission:category.view')->group(function () {
+        // Route::resource('categories', CategoryController::class);
     });
+
+    // ── Products: only roles with product permissions ──
+    Route::middleware('permission:product.view')->group(function () {
+        // Route::resource('products', ProductController::class);
+    });
+
+    // ── Orders ──
+    Route::middleware('permission:order.view')->group(function () {
+        // Route::resource('orders', OrderController::class);
+    });
+
+    // ── Admin Management: super-admin only ──
+    Route::middleware('permission:admin.view')->group(function () {
+        // Route::resource('admins', AdminController::class);
+    });
+
+    // ── Settings: super-admin only ──
+    Route::middleware('permission:setting.view')->group(function () {
+        // Route::get('/settings', ...)->name('settings.index');
+    });
+
 });

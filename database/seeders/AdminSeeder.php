@@ -1,5 +1,4 @@
 <?php
-// database/seeders/AdminSeeder.php
 
 namespace Database\Seeders;
 
@@ -11,12 +10,24 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        Admin::create([
+        // Super Admin
+        $admin = Admin::create([
             'name'      => 'Super Admin',
             'email'     => 'admin@admin.com',
             'password'  => Hash::make('Admin#123'),
             'phone'     => '01700000000',
             'is_active' => true,
         ]);
+        $admin->assignRole('super-admin');
+
+        // Sample Manager (optional - remove if not needed)
+        $manager = Admin::create([
+            'name'      => 'Manager',
+            'email'     => 'manager@admin.com',
+            'password'  => Hash::make('Manager#123'),
+            'phone'     => '01700000001',
+            'is_active' => true,
+        ]);
+        $manager->assignRole('manager');
     }
 }
