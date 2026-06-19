@@ -7,10 +7,10 @@ return [
     ],
 
     'table_names' => [
-        'roles'              => 'roles',
-        'permissions'        => 'permissions',
-        'model_has_roles'    => 'model_has_roles',
+        'roles'                 => 'roles',
+        'permissions'           => 'permissions',
         'model_has_permissions' => 'model_has_permissions',
+        'model_has_roles'       => 'model_has_roles',
         'role_has_permissions'  => 'role_has_permissions',
     ],
 
@@ -18,18 +18,18 @@ return [
         'role_pivot_key'       => null,
         'permission_pivot_key' => null,
         'model_morph_key'      => 'model_id',
-        'team_foreign_key'     => null,
+        'team_foreign_key'     => 'team_id', 
     ],
 
+    'use_teams' => false,
     'display_permission_in_exception' => false,
     'display_role_in_exception'       => false,
+    'enable_wildcard_permission' => false,
 
     'cache' => [
-        'expiration_seconds' => 86400, // 24 hours
+        'expiration_seconds' => 86400,
         'key'                => 'spatie.permission.cache',
         'model_key'          => 'name',
         'store'              => 'default',
     ],
-
-    'register_octane_reset_listener' => true,
 ];
