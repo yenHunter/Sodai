@@ -1,4 +1,5 @@
 <?php
+// database/seeders/RolePermissionSeeder.php
 
 namespace Database\Seeders;
 
@@ -15,7 +16,7 @@ class RolePermissionSeeder extends Seeder
             ->forgetCachedPermissions();
 
         // ═══════════════════════════════════════════
-        // DEFINE PERMISSIONS
+        // DEFINE ALL PERMISSIONS
         // ═══════════════════════════════════════════
 
         $permissions = [
@@ -78,7 +79,7 @@ class RolePermissionSeeder extends Seeder
             'admin.delete',
         ];
 
-        // Create all permissions
+        // Create all permissions for admin guard
         foreach ($permissions as $permission) {
             Permission::create([
                 'name'       => $permission,
@@ -90,72 +91,110 @@ class RolePermissionSeeder extends Seeder
         // CREATE ROLES & ASSIGN PERMISSIONS
         // ═══════════════════════════════════════════
 
-        // Super Admin - All permissions
+        // ── Super Admin: All permissions ────────────
         $superAdmin = Role::create([
             'name'       => 'super-admin',
             'guard_name' => 'admin',
         ]);
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin->givePermissionTo(Permission::where('guard_name', 'admin')->get());
 
-        // Manager - Everything except admin management & settings
+
+        // ── Manager: Everything except admin management ──
         $manager = Role::create([
             'name'       => 'manager',
             'guard_name' => 'admin',
         ]);
         $manager->givePermissionTo([
             'dashboard.view',
-            'category.*',
-            'product.*',
-            'order.*',
+
+            'category.view',
+            'category.create',
+            'category.edit',
+            'category.delete',
+
+            'product.view',
+            'product.create',
+            'product.edit',
+            'product.delete',
+
+            'order.view',
+            'order.update-status',
+            'order.cancel',
+            'order.delete',
+
             'customer.view',
             'customer.ban',
-            'coupon.*',
-            'banner.*',
-            'review.*',
+
+            'coupon.view',
+            'coupon.create',
+            'coupon.edit',
+            'coupon.delete',
+
+            'banner.view',
+            'banner.create',
+            'banner.edit',
+            'banner.delete',
+
+            'review.view',
+            'review.approve',
+            'review.reject',
+            'review.delete',
+
             'report.view',
             'setting.view',
         ]);
 
-        // Order Manager - Orders & Customers only
+
+        // ── Order Manager: Orders & customers only ──
         $orderManager = Role::create([
             'name'       => 'order-manager',
             'guard_name' => 'admin',
         ]);
         $orderManager->givePermissionTo([
             'dashboard.view',
+
             'order.view',
             'order.update-status',
             'order.cancel',
+
             'customer.view',
         ]);
 
-        // Content Editor - Products, Categories, Banners
+
+        // ── Content Editor: Products, Categories, Banners ──
         $contentEditor = Role::create([
             'name'       => 'content-editor',
             'guard_name' => 'admin',
         ]);
         $contentEditor->givePermissionTo([
             'dashboard.view',
+
             'category.view',
             'category.create',
             'category.edit',
+
             'product.view',
             'product.create',
             'product.edit',
+
             'banner.view',
             'banner.create',
             'banner.edit',
         ]);
 
-        // Support Staff - View orders, handle reviews & customers
+
+        // ── Support: View orders, handle reviews & customers ──
         $support = Role::create([
             'name'       => 'support',
             'guard_name' => 'admin',
         ]);
         $support->givePermissionTo([
             'dashboard.view',
+
             'order.view',
+
             'customer.view',
+
             'review.view',
             'review.approve',
             'review.reject',

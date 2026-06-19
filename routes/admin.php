@@ -7,8 +7,8 @@ use App\Http\Controllers\Admin\DashboardController;
 
 // Guest
 Route::middleware('guest:admin')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->name('login.post');
 });
 
 // Authenticated
