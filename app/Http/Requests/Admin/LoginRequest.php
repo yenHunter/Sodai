@@ -1,7 +1,9 @@
 <?php
+// app/Http/Requests/Admin/LoginRequest.php
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\ReCaptcha;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -17,16 +19,21 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => [
+            'email'                => [
                 'required',
                 'string',
                 'email',
                 'max:255',
             ],
-            'password' => [
+            'password'             => [
                 'required',
                 'string',
                 'min:6',
+            ],
+            // ── Add ReCaptcha rule ──
+            'g-recaptcha-response' => [
+                'required',
+                new ReCaptcha(),
             ],
         ];
     }
@@ -34,10 +41,12 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required'    => 'Email address is required.',
-            'email.email'       => 'Please enter a valid email address.',
-            'password.required' => 'Password is required.',
-            'password.min'      => 'Password must be at least 6 characters.',
+            'email.required'                => 'Email address is required.',
+            'email.email'                   => 'Please enter a valid email address.',
+            'password.required'             => 'Password is required.',
+            'password.min'                  => 'Password must be at least 6 characters.',
+            // ── ReCaptcha messages ──
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ];
     }
 
@@ -62,7 +71,7 @@ class LoginRequest extends FormRequest
 
     public function incrementRateLimiter(): void
     {
-        RateLimiter::hit($this->throttleKey(), 300); // 5 min decay
+        RateLimiter::hit($this->throttleKey(), 300);
     }
 
     public function clearRateLimiter(): void

@@ -7,15 +7,19 @@ use App\Http\Controllers\Admin\DashboardController;
 
 // Guest
 Route::middleware('guest:admin')->group(function () {
-    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AuthController::class, 'login'])->name('login.post');
+    Route::get('login', [AuthController::class, 'loginView'])->name('login.view');
+    Route::post('login', [AuthController::class, 'loginAttempt'])->name('login.attempt');
+    Route::get('forgot-password', [AuthController::class, 'forgotPasswordView'])->name('forgot-password.view');
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password.attempt');
+    Route::get('reset-password/{token}', [AuthController::class, 'resetPasswordView'])->name('reset-password.view');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password.attempt');
 });
 
 // Authenticated
 Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ── Categories: only roles with category permissions ──
     Route::middleware('permission:category.view')->group(function () {
@@ -39,7 +43,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
     // ── Settings: super-admin only ──
     Route::middleware('permission:setting.view')->group(function () {
-        // Route::get('/settings', ...)->name('settings.index');
+        // Route::get('settings', ...)->name('settings.index');
     });
 
 });

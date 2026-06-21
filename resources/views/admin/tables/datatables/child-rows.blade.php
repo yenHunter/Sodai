@@ -1,0 +1,53 @@
+@extends("shared.base", ["title" => "Child Row Datatables"])
+
+@section("styles")
+@endsection
+
+@section("content")
+    <div class="wrapper">
+        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+
+        <div class="content-page">
+            <div class="container-fluid">
+                @include("shared.partials.page-title", ["subtitle" => "DataTables", "title" => "Child Row"])
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header justify-content-between">
+                                <h4 class="card-title">Example</h4>
+                                <a class="icon-link icon-link-hover link-primary fw-semibold" href="https://datatables.net/examples/api/row_details.html" target="_blank">
+                                    View Docs
+                                    <i class="bi align-middle fs-lg" data-lucide="arrow-right"></i>
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped dt-responsive align-middle mb-0" id="child-rows-data">
+                                    <thead class="thead-sm text-uppercase fs-xxs">
+                                        <tr>
+                                            <th></th>
+                                            <th>Company</th>
+                                            <th>Symbol</th>
+                                            <th>Price</th>
+                                            <th>Change</th>
+                                            <th>Volume</th>
+                                            <th>Market Cap</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @include("shared.partials.footer")
+        </div>
+    </div>
+
+    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+@endsection
+
+@section("scripts")
+    @vite(["resources/js/pages/datatables-child-rows.js"])
+@endsection
