@@ -23,31 +23,57 @@
                         <div class="mt-auto">
                             <p class="text-muted text-center auth-sub-text mx-auto">Let’s get you signed in. Enter your
                                 email and password to continue.</p>
-                            {{-- Success Message --}}
+                            {{-- Session success message --}}
                             @if (session('success'))
-                                <div class="alert alert-success alert-dismissible fade show">
-                                    <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <div class="alert alert-success alert-dismissible d-flex align-items-center gap-2"
+                                    role="alert">
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                                        type="button"></button>
+                                    <i class="fs-xl" data-lucide="circle-alert"></i>
+                                    {{ session('success') }}
                                 </div>
                             @endif
 
-                            {{-- Error Message --}}
+                            {{-- Session error message --}}
                             @if (session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
+                                    role="alert">
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                                        type="button"></button>
+                                    <i class="fs-xl" data-lucide="circle-alert"></i>
+                                    {{ session('error') }}
                                 </div>
                             @endif
-                            <form id="login-form" class="mt-4" action="{{ route('admin.login.attempt') }}" method="POST">
+
+                            {{-- Validation errors bag --}}
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
+                                    role="alert">
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                                        type="button"></button>
+                                    <i class="fs-xl" data-lucide="octagon-alert"></i>
+                                    @foreach ($errors->all() as $error)
+                                        {{ $error }}
+                                    @endforeach
+                                </div>
+                            @endif
+                            <form id="adminLoginForm" class="mt-4" action="{{ route('admin.login.attempt') }}"
+                                method="POST" autocomplete="off" novalidate>
                                 @csrf
+                                <input type="hidden" id="recaptchaSiteKey"
+                                    value="{{ config('services.recaptcha.site_key') }}">
+
+                                {{-- reCAPTCHA v3 token field --}}
+                                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                                 <div class="mb-3">
                                     <label class="form-label" for="email">
                                         Email address
                                         <span class="text-danger">*</span>
                                     </label>
                                     <div class="app-search">
-                                        <input class="form-control" id="email" name="email"
-                                            placeholder="account@mail.com" required="" type="email" />
+                                        <input class="form-control" id="email" name="email" type="email"
+                                            value="{{ old('email') }}" placeholder="account@mail.com" required
+                                            autofocus />
                                         <i class="app-search-icon text-muted" data-lucide="mail"></i>
                                     </div>
                                 </div>
@@ -72,17 +98,13 @@
                                         href="{{ route('admin.forgot-password.view') }}">Forgot Password?</a>
                                 </div>
                                 <div class="d-grid">
-                                    <button class="btn btn-primary fw-bold py-2" type="submit" id="submit_button"
-                                        data-sitekey="{{ config('services.recaptcha.site_key') }}" data-callback="onSubmit"
-                                        data-action="submit">Sign In</button>
+                                    <button class="btn btn-primary fw-bold py-2 btn-login" type="submit"
+                                        id="loginBtn">Sign In</button>
                                 </div>
                             </form>
                         </div>
                         <p class="text-center text-muted mt-auto mb-0">
-                            ©
-                            <span data-current-year=""></span>
-                            UBold — by
-                            <span class="fw-bold">Coderthemes</span>
+                            © {{ date('Y') }} <span class="fw-bold">Cyberjatra</span>
                         </p>
                     </div>
                 </div>
@@ -101,11 +123,6 @@
 
 @section('scripts')
     <!-- ================== Google reCaptcha ================== -->
-    <script src="https://www.google.com/recaptcha/enterprise.js?render={{ config('services.recaptcha.site_key') }}">
-    </script>
-    <script>
-        function onSubmit(token) {
-            document.getElementById("login-form").submit();
-        }
-    </script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+    @vite(['resources/js/pages/admin-auth-login.js'])
 @endsection

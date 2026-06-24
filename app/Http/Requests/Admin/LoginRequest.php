@@ -1,5 +1,4 @@
 <?php
-// app/Http/Requests/Admin/LoginRequest.php
 
 namespace App\Http\Requests\Admin;
 
@@ -19,21 +18,24 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'                => [
+            'email'    => [
                 'required',
                 'string',
                 'email',
                 'max:255',
             ],
-            'password'             => [
+            'password' => [
                 'required',
                 'string',
                 'min:6',
             ],
-            // ── Add ReCaptcha rule ──
+            // ── v3: pass action name and threshold ──
             'g-recaptcha-response' => [
                 'required',
-                new ReCaptcha(),
+                new ReCaptcha(
+                    threshold: config('services.recaptcha.threshold', 0.5),
+                    action   : 'admin_login',
+                ),
             ],
         ];
     }
@@ -45,8 +47,7 @@ class LoginRequest extends FormRequest
             'email.email'                   => 'Please enter a valid email address.',
             'password.required'             => 'Password is required.',
             'password.min'                  => 'Password must be at least 6 characters.',
-            // ── ReCaptcha messages ──
-            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
 

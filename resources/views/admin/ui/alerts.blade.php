@@ -1,15 +1,15 @@
-@extends("shared.base", ["title" => "Alerts"])
+@extends("admin.shared.base", ["title" => "Alerts"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.shared.partials.topbar") @include("admin.shared.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "UI", "title" => "Alerts"])
+                @include("admin.shared.partials.page-title", ["subtitle" => "UI", "title" => "Alerts"])
 
                 <div class="row">
                     <div class="col-xl-6">
@@ -254,11 +254,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.shared.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.shared.partials.customizer") @include("admin.shared.partials.footer-scripts")
 @endsection
 
 @section("scripts")
