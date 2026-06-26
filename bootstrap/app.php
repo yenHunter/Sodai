@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Named middleware aliases
         $middleware->alias([
+            'guest'                => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'auth.admin'           => \App\Http\Middleware\AdminAuthenticated::class,
             'auth.customer'        => \App\Http\Middleware\CustomerAuthenticated::class,
             'prevent.back.history' => \App\Http\Middleware\PreventBackHistory::class,
