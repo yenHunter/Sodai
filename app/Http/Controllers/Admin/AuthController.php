@@ -78,7 +78,7 @@ class AuthController extends Controller
     // FORGOT PASSWORD
     // ═══════════════════════════════════════════════
 
-    public function showForgotPassword()
+    public function forgotPasswordView()
     {
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
@@ -87,7 +87,7 @@ class AuthController extends Controller
         return view('admin.auth.forgot-password');
     }
 
-    public function sendResetLink(ForgotPasswordRequest $request)
+    public function forgotPasswordAttempt(ForgotPasswordRequest $request)
     {
         // Rate limit check
         $request->ensureIsNotRateLimited();
@@ -123,7 +123,7 @@ class AuthController extends Controller
         ]);
 
         // Build reset URL with plain token (not hashed)
-        $resetUrl = route('admin.password.reset.form', [
+        $resetUrl = route('admin.reset-password.view', [
             'token' => $token,
             'email' => $admin->email,
         ]);
@@ -148,7 +148,7 @@ class AuthController extends Controller
     // RESET PASSWORD
     // ═══════════════════════════════════════════════
 
-    public function showResetPassword(Request $request, string $token)
+    public function resetPasswordView(Request $request, string $token)
     {
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
@@ -167,7 +167,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function resetPassword(ResetPasswordRequest $request)
+    public function resetPasswordAttempt(ResetPasswordRequest $request)
     {
         // Find token record
         $tokenRecord = DB::table('admin_password_reset_tokens')

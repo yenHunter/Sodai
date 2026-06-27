@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\ReCaptcha;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -23,16 +24,29 @@ class ForgotPasswordRequest extends FormRequest
                 'email',
                 'max:255',
             ],
+            // ── Add ReCaptcha ──
+            'g-recaptcha-response' => [
+                'required',
+                new ReCaptcha(
+                    threshold: config('services.recaptcha.threshold', 0.5),
+                    action   : 'admin_forgot_password',
+                ),
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'email.required' => 'Email address is required.',
-            'email.email'    => 'Please enter a valid email address.',
+            'email.required'                => 'Email address is required.',
+            'email.email'                   => 'Please enter a valid email address.',
+            'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
+
+    // ─────────────────────────────────────────────
+    // RATE LIMITING
+    // ─────────────────────────────────────────────
 
     public function ensureIsNotRateLimited(): void
     {
@@ -51,7 +65,6 @@ class ForgotPasswordRequest extends FormRequest
 
     public function incrementRateLimiter(): void
     {
-        // Decay of 10 minutes
         RateLimiter::hit(
             'admin-forgot-password:' . $this->ip(),
             600

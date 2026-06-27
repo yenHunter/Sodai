@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\ReCaptcha;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -26,16 +27,25 @@ class ResetPasswordRequest extends FormRequest
                     ->numbers()
                     ->symbols(),
             ],
+            // ── Add ReCaptcha ──
+            'g-recaptcha-response' => [
+                'required',
+                new ReCaptcha(
+                    threshold: config('services.recaptcha.threshold', 0.5),
+                    action   : 'admin_reset_password',
+                ),
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'token.required'             => 'Invalid reset link.',
-            'email.required'             => 'Email address is required.',
-            'password.required'          => 'New password is required.',
-            'password.confirmed'         => 'Passwords do not match.',
+            'token.required'                => 'Invalid reset link.',
+            'email.required'                => 'Email address is required.',
+            'password.required'             => 'New password is required.',
+            'password.confirmed'            => 'Passwords do not match.',
+            'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
 }

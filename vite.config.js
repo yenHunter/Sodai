@@ -6,7 +6,11 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+                // ───────────── Auth Pages Start ─────────────
                 'resources/js/pages/admin-auth-login.js',
+                'resources/js/pages/admin-auth-forgot-password.js',
+                'resources/js/pages/admin-auth-reset-password.js',
+                // ───────────── Auth Pages End ─────────────
 
                 'resources/js/app.js',
                 'resources/js/maps/leaflet-data.js',

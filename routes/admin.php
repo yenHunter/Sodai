@@ -10,9 +10,9 @@ Route::middleware('guest:admin')->group(function () {
     Route::get('login', [AuthController::class, 'loginView'])->name('login.view');
     Route::post('login', [AuthController::class, 'loginAttempt'])->name('login.attempt');
     Route::get('forgot-password', [AuthController::class, 'forgotPasswordView'])->name('forgot-password.view');
-    Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password.attempt');
+    Route::post('forgot-password', [AuthController::class, 'forgotPasswordAttempt'])->name('forgot-password.attempt');
     Route::get('reset-password/{token}', [AuthController::class, 'resetPasswordView'])->name('reset-password.view');
-    Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password.attempt');
+    Route::post('reset-password', [AuthController::class, 'resetPasswordAttempt'])->name('reset-password.attempt');
 });
 
 // Authenticated

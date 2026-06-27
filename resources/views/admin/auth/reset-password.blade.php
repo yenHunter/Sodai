@@ -1,9 +1,9 @@
-@extends("shared.base", ["title" => "New Password"])
+@extends('admin.shared.base', ['title' => 'New Password'])
 
-@section("styles")
+@section('styles')
 @endsection
 
-@section("content")
+@section('content')
     <div class="auth-box p-0 w-100">
         <div class="row w-100 g-0">
             <div class="col-md-auto">
@@ -13,28 +13,26 @@
                     </div>
                     <div class="card-body min-vh-100 position-relative d-flex flex-column justify-content-center">
                         <div class="auth-brand mb-0 text-center">
-                            <a class="logo-dark" href="{{ url("/") }}">
+                            <a class="logo-dark" href="{{ url('/') }}">
                                 <img alt="dark logo" src="/images/logo-black.png" />
                             </a>
-                            <a class="logo-light" href="{{ url("/") }}">
+                            <a class="logo-light" href="{{ url('/') }}">
                                 <img alt="logo" src="/images/logo.png" />
                             </a>
                         </div>
                         <div class="mt-auto">
-                            <p class="text-muted text-center auth-sub-text mx-auto">We've emailed you a 6-digit verification code. Please enter it below to confirm your Email Address.</p>
+                            <p class="text-muted text-center auth-sub-text mx-auto">We've emailed you a 6-digit verification
+                                code. Please enter it below to confirm your Email Address.</p>
                             <form class="mt-4">
                                 <div class="mb-3">
-                                    <label class="form-label d-flex">
-                                        Enter your 6-digit code
+                                    <label class="form-label" for="email">
+                                        Email address
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <div class="d-flex gap-2 two-factor">
-                                        <input class="form-control text-center" required="" type="text" />
-                                        <input class="form-control text-center" required="" type="text" />
-                                        <input class="form-control text-center" required="" type="text" />
-                                        <input class="form-control text-center" required="" type="text" />
-                                        <input class="form-control text-center" required="" type="text" />
-                                        <input class="form-control text-center" required="" type="text" />
+                                    <div class="app-search">
+                                        <input class="form-control" id="email" name="email" type="email"
+                                            value="{{ $email }}" placeholder="account@email.com" required />
+                                        <i class="app-search-icon text-muted" data-lucide="mail"></i>
                                     </div>
                                 </div>
                                 <div class="mb-3" data-password="bar">
@@ -43,16 +41,20 @@
                                         <span class="text-danger">*</span>
                                     </label>
                                     <div class="app-search">
-                                        <input class="form-control" id="userPassword" placeholder="••••••••" required="" type="password" />
+                                        <input class="form-control" id="userPassword" placeholder="••••••••" required=""
+                                            type="password" autofocus />
                                         <i class="app-search-icon text-muted" data-lucide="lock-keyhole"></i>
                                     </div>
                                     <div class="password-bar my-2"></div>
-                                    <p class="text-muted fs-xs mb-0">Use 8+ characters with letters, numbers &amp; symbols.</p>
+                                    <p class="text-muted fs-xs mb-0">Use 8+ characters with letters, numbers &amp; symbols.
+                                    </p>
                                 </div>
                                 <div class="mb-3 d-flex">
                                     <div class="form-check">
-                                        <input checked="" class="form-check-input form-check-input-light fs-14" id="termAndPolicy" type="checkbox" />
-                                        <label class="form-check-label" for="termAndPolicy">Agree the Terms &amp; Policy</label>
+                                        <input checked="" class="form-check-input form-check-input-light fs-14"
+                                            id="termAndPolicy" type="checkbox" />
+                                        <label class="form-check-label" for="termAndPolicy">Agree the Terms &amp;
+                                            Policy</label>
                                     </div>
                                 </div>
                                 <div class="d-grid">
@@ -68,7 +70,8 @@
                         </p>
                         <p class="text-muted text-center mt-4 mb-0">
                             Return to
-                            <a class="text-decoration-underline link-offset-3 fw-semibold" href="{{ url("/auth-split/sign-in") }}">Sign in</a>
+                            <a class="text-decoration-underline link-offset-3 fw-semibold"
+                                href="{{ url('/auth-split/sign-in') }}">Sign in</a>
                         </p>
                         <p class="text-center text-muted mt-auto mb-0">
                             ©
@@ -80,17 +83,18 @@
                 </div>
             </div>
             <div class="col">
-                <div class="h-100 position-relative card-side-img rounded-0 overflow-hidden" style="background-image: url(/images/auth.jpg)">
+                <div class="h-100 position-relative card-side-img rounded-0 overflow-hidden"
+                    style="background-image: url(/images/auth.jpg)">
                     <div class="p-4 card-img-overlay auth-overlay d-flex align-items-end justify-content-center"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    @include("shared.partials.footer-scripts")
+    @include('admin.shared.partials.footer-scripts')
 @endsection
 
-@section("scripts")
-    @vite(["resources/js/pages/auth-two-factor.js"])
-    @vite(["resources/js/pages/auth-password.js"])
+@section('scripts')
+    @vite(['resources/js/pages/auth-two-factor.js'])
+    @vite(['resources/js/pages/auth-password.js'])
 @endsection
