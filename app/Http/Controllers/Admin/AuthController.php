@@ -227,7 +227,7 @@ class AuthController extends Controller
         Auth::guard('admin')->logoutOtherDevices($request->password);
 
         return redirect()
-            ->route('admin.login')
+            ->route('admin.login.view')
             ->with('success', 'Password reset successfully. Please login with your new password.');
     }
 }

@@ -23,61 +23,95 @@
                         <div class="mt-auto">
                             <p class="text-muted text-center auth-sub-text mx-auto">We've emailed you a 6-digit verification
                                 code. Please enter it below to confirm your Email Address.</p>
-                            <form class="mt-4">
+
+                            @if (session('error'))
+                                <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
+                                    role="alert">
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                                        type="button"></button>
+                                    <i class="fs-xl" data-lucide="circle-alert"></i>
+                                    {{ session('error') }}
+                                </div>
+                            @endif
+
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
+                                    role="alert">
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                                        type="button"></button>
+                                    <i class="fs-xl" data-lucide="octagon-alert"></i>
+                                    @foreach ($errors->all() as $error)
+                                        {{ $error }}
+                                    @endforeach
+                                </div>
+                            @endif
+                            <div id="jsErrorContainer" class="alert alert-danger d-none mb-3"></div>
+                            <form class="mt-4" id="resetPasswordForm" action="{{ route('admin.reset-password.attempt') }}"
+                                method="POST">
+                                @csrf
+                                <input type="hidden" name="token" value="{{ $token }}">
+                                <input type="hidden" name="email" value="{{ $email }}">
+                                <input type="hidden" id="recaptchaSiteKey"
+                                    value="{{ config('services.recaptcha.site_key') }}">
+                                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                                 <div class="mb-3">
                                     <label class="form-label" for="email">
                                         Email address
-                                        <span class="text-danger">*</span>
                                     </label>
                                     <div class="app-search">
-                                        <input class="form-control" id="email" name="email" type="email"
-                                            value="{{ $email }}" placeholder="account@email.com" required />
+                                        <input class="form-control" type="email" value="{{ $email }}"
+                                            placeholder="account@email.com" required readonly />
                                         <i class="app-search-icon text-muted" data-lucide="mail"></i>
                                     </div>
                                 </div>
                                 <div class="mb-3" data-password="bar">
-                                    <label class="form-label" for="userPassword">
+                                    <label class="form-label" for="password">
                                         New Password
                                         <span class="text-danger">*</span>
                                     </label>
                                     <div class="app-search">
-                                        <input class="form-control" id="userPassword" placeholder="••••••••" required=""
-                                            type="password" autofocus />
+                                        <input class="form-control @error('password') is-invalid @enderror" id="password"
+                                            name="password" placeholder="••••••••" type="password" required autofocus />
                                         <i class="app-search-icon text-muted" data-lucide="lock-keyhole"></i>
                                     </div>
                                     <div class="password-bar my-2"></div>
                                     <p class="text-muted fs-xs mb-0">Use 8+ characters with letters, numbers &amp; symbols.
                                     </p>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="password_confirmation">
+                                        Confirm New Password
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="app-search">
+                                        <input class="form-control @error('password_confirmation') is-invalid @enderror"
+                                            id="password_confirmation" name="password_confirmation" placeholder="••••••••"
+                                            type="password" required autofocus />
+                                        <i class="app-search-icon text-muted" data-lucide="lock-keyhole"></i>
+                                    </div>
+                                </div>
                                 <div class="mb-3 d-flex">
                                     <div class="form-check">
-                                        <input checked="" class="form-check-input form-check-input-light fs-14"
-                                            id="termAndPolicy" type="checkbox" />
+                                        <input class="form-check-input form-check-input-light fs-14" id="termAndPolicy"
+                                            type="checkbox" />
                                         <label class="form-check-label" for="termAndPolicy">Agree the Terms &amp;
                                             Policy</label>
                                     </div>
                                 </div>
                                 <div class="d-grid">
-                                    <button class="btn btn-primary fw-semibold py-2" type="submit">Update Password</button>
+                                    <button class="btn btn-primary fw-semibold py-2 btn-login" type="submit"
+                                        id="resetBtn">Update Password</button>
                                 </div>
                             </form>
                         </div>
                         <p class="text-muted text-center mt-4 mb-0">
-                            Don’t have a code?
-                            <a class="text-decoration-underline link-offset-2 fw-semibold" href="#">Resend</a>
-                            or
-                            <a class="text-decoration-underline link-offset-2 fw-semibold" href="#">Call Us</a>
-                        </p>
-                        <p class="text-muted text-center mt-4 mb-0">
                             Return to
                             <a class="text-decoration-underline link-offset-3 fw-semibold"
-                                href="{{ url('/auth-split/sign-in') }}">Sign in</a>
+                                href="{{ route('admin.login.view') }}">Sign in</a>
                         </p>
                         <p class="text-center text-muted mt-auto mb-0">
-                            ©
-                            <span data-current-year=""></span>
-                            UBold — by
-                            <span class="fw-bold">Coderthemes</span>
+                            © {{ date('Y') }} <a class="fw-bold" href="https://www.cyberjatra.com"
+                                target="_blank">Cyberjatra</a>
                         </p>
                     </div>
                 </div>
@@ -95,6 +129,8 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/auth-two-factor.js'])
+    <!-- ================== Google reCaptcha ================== -->
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
     @vite(['resources/js/pages/auth-password.js'])
+    @vite(['resources/js/pages/admin-auth-reset-password.js'])
 @endsection

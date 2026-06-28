@@ -23,7 +23,7 @@
                         <div class="mt-auto">
                             <p class="text-muted text-center auth-sub-text mx-auto">Enter your email address and we'll send
                                 you a link to reset your password.</p>
-                            {{-- Session success message --}}
+
                             @if (session('success'))
                                 <div class="alert alert-success alert-dismissible d-flex align-items-center gap-2"
                                     role="alert">
@@ -34,18 +34,6 @@
                                 </div>
                             @endif
 
-                            {{-- Session error message --}}
-                            @if (session('error'))
-                                <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
-                                    role="alert">
-                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
-                                        type="button"></button>
-                                    <i class="fs-xl" data-lucide="circle-alert"></i>
-                                    {{ session('error') }}
-                                </div>
-                            @endif
-
-                            {{-- Validation errors bag --}}
                             @if ($errors->any())
                                 <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2"
                                     role="alert">
@@ -58,7 +46,8 @@
                                 </div>
                             @endif
                             <div id="jsErrorContainer" class="alert alert-danger d-none mb-3"></div>
-                            <form class="mt-4" id="forgotPasswordForm" action="{{ route('admin.forgot-password.attempt') }}" method="POST">
+                            <form class="mt-4" id="forgotPasswordForm"
+                                action="{{ route('admin.forgot-password.attempt') }}" method="POST">
                                 @csrf
                                 <input type="hidden" id="recaptchaSiteKey"
                                     value="{{ config('services.recaptcha.site_key') }}">
