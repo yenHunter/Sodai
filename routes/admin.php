@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -22,7 +23,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
     // ── Categories: only roles with category permissions ──
     Route::middleware('permission:category.view')->group(function () {
-        // Route::resource('categories', CategoryController::class);
+        Route::resource('categories', CategoryController::class);
     });
 
     // ── Products: only roles with product permissions ──
