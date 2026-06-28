@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
-// ... other imports
 
 // Guest
 Route::middleware('guest:admin')->group(function () {

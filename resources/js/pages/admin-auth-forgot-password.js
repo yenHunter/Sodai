@@ -1,5 +1,3 @@
-// resources/js/pages/admin-auth-forgot-password.js
-
 /**
  * Admin Forgot Password Page
  * Handles: reCAPTCHA v3, form submission loading state
