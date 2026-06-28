@@ -1,4 +1,4 @@
-@extends('admin.shared.base', ['title' => 'Dashboard'])
+@extends('admin.shared.vertical', ['title' => 'Dashboard'])
 
 @section('styles')
 @endsection
@@ -1067,7 +1067,7 @@
         </div>
     </div>
 
-    @include('shared.partials.footer-scripts')
+    @include('admin.shared.partials.footer-scripts')
 @endsection
 
 @section('scripts')

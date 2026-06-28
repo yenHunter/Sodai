@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('visitor.pages.index');
-})->name('home');
+})->name('visitor.index');
 
 // ── Auth Guest Routes (coming soon) ───────────────────────
 // Route::middleware('guest:customer')->group(function () {
