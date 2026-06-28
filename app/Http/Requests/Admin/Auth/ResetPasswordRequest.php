@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests\Admin\Auth;
 
 use App\Rules\ReCaptcha;
 use Illuminate\Foundation\Http\FormRequest;
