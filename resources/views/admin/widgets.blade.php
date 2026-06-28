@@ -4,12 +4,7 @@
 @endsection
 
 @section('content')
-    {{-- <div class="wrapper">
-        @include("admin.shared.partials.topbar") @include("admin.shared.partials.sidenav")
-
-        <div class="content-page">
-            <div class="container-fluid">
-                @include("admin.shared.partials.page-title", ["subtitle" => "Pages", "title" => "Widgets"]) --}}
+    @include('admin.shared.partials.page-title', ['subtitle' => 'Pages', 'title' => 'Widgets'])
 
     <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
         <div class="col">
@@ -866,13 +861,8 @@
             </div>
         </div>
     </div>
-    {{-- </div>
 
-            @include("admin.shared.partials.footer")
-        </div>
-    </div> --}}
-
-    @include('admin.shared.partials.customizer') @include('admin.shared.partials.footer-scripts')
+    @include('admin.shared.partials.footer-scripts')
 @endsection
 
 @section('scripts')
