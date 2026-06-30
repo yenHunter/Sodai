@@ -24,7 +24,7 @@ class CategoryController extends Controller
         $categories = $this->categoryService
                            ->getCategoriesWithChildren();
 
-        return view('admin.categories.index', compact('categories'));
+        return view('admin.ecommerce.category.index', compact('categories'));
     }
 
     // ─────────────────────────────────────────────
@@ -36,7 +36,7 @@ class CategoryController extends Controller
         $parentCategories = $this->categoryService
                                  ->getParentCategories();
 
-        return view('admin.categories.create',
+        return view('admin.ecommerce.category.create',
             compact('parentCategories')
         );
     }
@@ -51,7 +51,7 @@ class CategoryController extends Controller
             $this->categoryService->store($request->validated());
 
             return redirect()
-                ->route('admin.categories.index')
+                ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category created successfully.');
 
         } catch (\Exception $e) {
@@ -67,7 +67,7 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return redirect()->route('admin.categories.edit', $category);
+        return redirect()->route('admin.ecommerce.category.edit', $category);
     }
 
     // ─────────────────────────────────────────────
@@ -82,7 +82,7 @@ class CategoryController extends Controller
         $parentCategories = $this->categoryService
                                  ->getParentCategories();
 
-        return view('admin.categories.edit',
+        return view('admin.ecommerce.category.edit',
             compact('category', 'parentCategories')
         );
     }
@@ -102,7 +102,7 @@ class CategoryController extends Controller
             );
 
             return redirect()
-                ->route('admin.categories.index')
+                ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category updated successfully.');
 
         } catch (\Exception $e) {
@@ -122,7 +122,7 @@ class CategoryController extends Controller
             $this->categoryService->delete($category);
 
             return redirect()
-                ->route('admin.categories.index')
+                ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category deleted successfully.');
 
         } catch (\Exception $e) {

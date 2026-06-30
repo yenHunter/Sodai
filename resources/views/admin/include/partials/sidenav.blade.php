@@ -89,7 +89,7 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/categories') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.category.index') }}">
                         <span class="menu-icon"><i data-lucide="chart-bar-stacked"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-categories">Categories</span>
                     </a>

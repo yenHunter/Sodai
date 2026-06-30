@@ -21,19 +21,21 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // ── Categories: only roles with category permissions ──
-    Route::middleware('permission:category.view')->group(function () {
-        Route::resource('categories', CategoryController::class);
-    });
+    Route::name('ecommerce.')->group(function () {
+        // ── Categories: only roles with category permissions ──
+        Route::middleware('permission:category.view')->group(function () {
+            Route::resource('category', CategoryController::class);
+        });
 
-    // ── Products: only roles with product permissions ──
-    Route::middleware('permission:product.view')->group(function () {
-        // Route::resource('products', ProductController::class);
-    });
+        // ── Products: only roles with product permissions ──
+        Route::middleware('permission:product.view')->group(function () {
+            // Route::resource('products', ProductController::class);
+        });
 
-    // ── Orders ──
-    Route::middleware('permission:order.view')->group(function () {
-        // Route::resource('orders', OrderController::class);
+        // ── Orders ──
+        Route::middleware('permission:order.view')->group(function () {
+            // Route::resource('orders', OrderController::class);
+        });
     });
 
     // ── Admin Management: super-admin only ──
@@ -45,5 +47,4 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     Route::middleware('permission:setting.view')->group(function () {
         // Route::get('settings', ...)->name('settings.index');
     });
-
 });

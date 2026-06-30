@@ -580,25 +580,25 @@ class LayoutCustomizer {
     }
 
     // only for demo (not required)
-    isFirstVisit() {
-        const visited = localStorage.getItem("__user_has_visited__")
-        if (!visited) {
-            localStorage.setItem("__user_has_visited__", "true")
-            return true
-        }
-        return false
-    }
+    // isFirstVisit() {
+    //     const visited = localStorage.getItem("__user_has_visited__")
+    //     if (!visited) {
+    //         localStorage.setItem("__user_has_visited__", "true")
+    //         return true
+    //     }
+    //     return false
+    // }
 
-    // only for demo (not required)
-    openCustomizer() {
-        const layoutCustomizer = document.getElementById("theme-settings-offcanvas")
-        if (layoutCustomizer && this.isFirstVisit()) {
-            const offcanvas = new bootstrap.Offcanvas(layoutCustomizer)
-            setTimeout(() => {
-                offcanvas.show()
-            }, 1000)
-        }
-    }
+    // // only for demo (not required)
+    // openCustomizer() {
+    //     const layoutCustomizer = document.getElementById("theme-settings-offcanvas")
+    //     if (layoutCustomizer && this.isFirstVisit()) {
+    //         const offcanvas = new bootstrap.Offcanvas(layoutCustomizer)
+    //         setTimeout(() => {
+    //             offcanvas.show()
+    //         }, 1000)
+    //     }
+    // }
 
     initConfig() {
         this.defaultConfig = JSON.parse(JSON.stringify(window.defaultConfig))

@@ -3,19 +3,19 @@
 <html @yield("html_attribute")>
 
 <head>
-    @include("admin.shared.partials.title-meta")
+    @include("admin.include.partials.title-meta")
 
     @yield("styles")
 
-    @include("admin.shared.partials.head-css")
+    @include("admin.include.partials.head-css")
 </head>
 
 <body>
     <div class="wrapper">
 
-        @include("admin.shared.partials.topbar")
+        @include("admin.include.partials.topbar")
 
-        @include("admin.shared.partials.sidenav")
+        @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
@@ -24,11 +24,11 @@
 
             </div>
 
-            @include("admin.shared.partials.footer")
+            @include("admin.include.partials.footer")
 
         </div>
 
-        @include("admin.shared.partials.customizer")
+        @include("admin.include.partials.customizer")
 
     </div>
 
