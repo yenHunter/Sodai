@@ -1,4 +1,4 @@
-@extends('admin.shared.base', ['title' => 'Login'])
+@extends('admin.include.base', ['title' => 'Login'])
 
 @section('styles')
 @endsection
@@ -119,7 +119,7 @@
         </div>
     </div>
 
-    @include('admin.shared.partials.footer-scripts')
+    @include('admin.include.partials.footer-scripts')
 @endsection
 
 @section('scripts')

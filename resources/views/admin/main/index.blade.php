@@ -1,10 +1,10 @@
-@extends('admin.shared.vertical', ['title' => 'Dashboard'])
+@extends('admin.include.vertical', ['title' => 'Dashboard'])
 
 @section('styles')
 @endsection
 
 @section('content')
-    @include('admin.shared.partials.page-title', ['subtitle' => 'Dashboards', 'title' => 'eCommerce'])
+    @include('admin.include.partials.page-title', ['subtitle' => 'Dashboards', 'title' => 'eCommerce'])
 
     <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
         <div class="col">
@@ -1067,7 +1067,7 @@
         </div>
     </div>
 
-    @include('admin.shared.partials.footer-scripts')
+    @include('admin.include.partials.footer-scripts')
 @endsection
 
 @section('scripts')

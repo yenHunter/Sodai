@@ -1,15 +1,15 @@
-@extends("shared.base", ["title" => "Custom Tables"])
+@extends("admin.include.base", ["title" => "Custom Tables"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "Pages", "title" => "Custom Tables"])
+                @include("admin.include.partials.page-title", ["subtitle" => "Pages", "title" => "Custom Tables"])
 
                 <div class="row">
                     <div class="col-12">
@@ -5631,11 +5631,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")

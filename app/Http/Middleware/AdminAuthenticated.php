@@ -14,7 +14,7 @@ class AdminAuthenticated
         // Check if admin is logged in
         if (!Auth::guard('admin')->check()) {
             return redirect()
-                ->route('admin.login')
+                ->route('admin.login.view')
                 ->with('error', 'Please login to access admin panel.');
         }
 
@@ -28,7 +28,7 @@ class AdminAuthenticated
             $request->session()->regenerateToken();
 
             return redirect()
-                ->route('admin.login')
+                ->route('admin.login.view')
                 ->with('error', 'Your account has been deactivated. Contact super admin.');
         }
 

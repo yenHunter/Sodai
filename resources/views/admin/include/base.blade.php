@@ -7,11 +7,11 @@
     <title>{{ $title }}</title>
     <meta content="width=device-width, initial-scale=1" name="viewport" />
 
-    @include("admin.shared.partials.title-meta")
+    @include("admin.include.partials.title-meta")
 
     @yield("styles")
 
-    @include("admin.shared.partials.head-css")
+    @include("admin.include.partials.head-css")
 
 </head>
 

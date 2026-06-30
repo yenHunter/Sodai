@@ -1,4 +1,4 @@
-@extends("shared.base", ["title" => "Lock Screen"])
+@extends("include.base", ["title" => "Lock Screen"])
 
 @section("styles")
 @endsection
@@ -70,7 +70,7 @@
         </div>
     </div>
 
-    @include("shared.partials.footer-scripts")
+    @include("include.partials.footer-scripts")
 @endsection
 
 @section("scripts")

@@ -1,4 +1,4 @@
-@extends('admin.shared.base', ['title' => 'Reset Password'])
+@extends('admin.include.base', ['title' => 'Reset Password'])
 
 @section('styles')
 @endsection
@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    @include('admin.shared.partials.footer-scripts')
+    @include('admin.include.partials.footer-scripts')
 @endsection
 
 @section('scripts')
