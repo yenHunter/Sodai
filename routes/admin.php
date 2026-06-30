@@ -23,8 +23,30 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
     Route::name('ecommerce.')->group(function () {
         // ── Categories: only roles with category permissions ──
-        Route::middleware('permission:category.view')->group(function () {
-            Route::resource('category', CategoryController::class);
+        Route::middleware('permission:category.view')->prefix('categories')->name('category.')->group(function () {
+
+            Route::get('/', [CategoryController::class, 'index'])
+                ->name('index');
+
+            Route::post('/store', [CategoryController::class, 'store'])
+                ->name('store')
+                ->middleware('permission:category.create');
+
+            Route::post('/{category}/update', [CategoryController::class, 'update'])
+                ->name('update')
+                ->middleware('permission:category.edit');
+
+            Route::delete('/{category}', [CategoryController::class, 'destroy'])
+                ->name('destroy')
+                ->middleware('permission:category.delete');
+
+            Route::delete('/', [CategoryController::class, 'bulkDestroy'])
+                ->name('bulk-destroy')
+                ->middleware('permission:category.delete');
+
+            Route::patch('/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])
+                ->name('toggle-status')
+                ->middleware('permission:category.edit');
         });
 
         // ── Products: only roles with product permissions ──

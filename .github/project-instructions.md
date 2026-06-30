@@ -592,10 +592,21 @@ $this->middleware('permission:product.create')->only(['create', 'store']);
 
 ### How to Use in Blade
 ```blade
-@can('product.create', 'admin') ... @endcan
-@role('super-admin', 'admin') ... @endrole
-@canany(['product.edit', 'product.delete'], 'admin') ... @endcanany
+@admincan('category.create')
+    ...
+@endadmincan
+
+@admincanany(['category.edit', 'category.delete'])
+    ...
+@endadmincanany
+
+@adminrole('super-admin')
+    ...
+@endadminrole
 ```
+
+These are registered in AppServiceProvider::boot()
+Always use @admincan instead of @can in admin views
 
 ---
 
