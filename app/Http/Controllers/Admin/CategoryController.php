@@ -16,33 +16,22 @@ class CategoryController extends Controller
     ) {}
 
     // ─────────────────────────────────────────────
-    // INDEX - List all categories
+    // INDEX
     // ─────────────────────────────────────────────
 
-    public function index(Request $request)
+    public function index()
     {
-        $categories = $this->categoryService
-                           ->getCategoriesWithChildren();
+        $categories       = $this->categoryService->getCategoriesWithChildren();
+        $parentCategories = $this->categoryService->getParentCategories();
 
-        return view('admin.ecommerce.category.index', compact('categories'));
-    }
-
-    // ─────────────────────────────────────────────
-    // CREATE - Show create form
-    // ─────────────────────────────────────────────
-
-    public function create()
-    {
-        $parentCategories = $this->categoryService
-                                 ->getParentCategories();
-
-        return view('admin.ecommerce.category.create',
-            compact('parentCategories')
+        return view(
+            'admin.ecommerce.category.index',
+            compact('categories', 'parentCategories')
         );
     }
 
     // ─────────────────────────────────────────────
-    // STORE - Save new category
+    // STORE
     // ─────────────────────────────────────────────
 
     public function store(StoreCategoryRequest $request)
@@ -53,67 +42,53 @@ class CategoryController extends Controller
             return redirect()
                 ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category created successfully.');
-
         } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to create category. ' . $e->getMessage());
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('error', 'Failed to create category: ' . $e->getMessage());
         }
     }
 
     // ─────────────────────────────────────────────
-    // SHOW - Not needed, redirect to edit
-    // ─────────────────────────────────────────────
-
-    public function show(Category $category)
-    {
-        return redirect()->route('admin.ecommerce.category.edit', $category);
-    }
-
-    // ─────────────────────────────────────────────
-    // EDIT - Show edit form
+    // EDIT - Returns data for modal via redirect back
     // ─────────────────────────────────────────────
 
     public function edit(Category $category)
     {
-        // Load parent for display
-        $category->load('parent');
+        // Load relationships
+        $category->load('parent', 'children');
 
-        $parentCategories = $this->categoryService
-                                 ->getParentCategories();
+        $categories       = $this->categoryService->getCategoriesWithChildren();
+        $parentCategories = $this->categoryService->getParentCategories();
 
-        return view('admin.ecommerce.category.edit',
-            compact('category', 'parentCategories')
-        );
+        return view('admin.ecommerce.category.index', compact(
+            'categories',
+            'parentCategories',
+            'category',        // ← editing category passed to view
+        ));
     }
 
     // ─────────────────────────────────────────────
-    // UPDATE - Save updated category
+    // UPDATE
     // ─────────────────────────────────────────────
 
-    public function update(
-        UpdateCategoryRequest $request,
-        Category $category
-    ) {
+    public function update(UpdateCategoryRequest $request, Category $category)
+    {
         try {
-            $this->categoryService->update(
-                $category,
-                $request->validated()
-            );
+            $this->categoryService->update($category, $request->validated());
 
             return redirect()
                 ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category updated successfully.');
-
         } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to update category. ' . $e->getMessage());
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('error', 'Failed to update category: ' . $e->getMessage());
         }
     }
 
     // ─────────────────────────────────────────────
-    // DESTROY - Delete category
+    // DESTROY
     // ─────────────────────────────────────────────
 
     public function destroy(Category $category)
@@ -124,11 +99,59 @@ class CategoryController extends Controller
             return redirect()
                 ->route('admin.ecommerce.category.index')
                 ->with('success', 'Category deleted successfully.');
-
         } catch (\Exception $e) {
-            return back()
+            return redirect()
+                ->route('admin.ecommerce.category.index')
                 ->with('error', $e->getMessage());
         }
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => ['required', 'string'],
+        ]);
+
+        $ids = array_filter(
+            explode(',', $request->input('ids')),
+            fn($id) => is_numeric($id)
+        );
+
+        if (empty($ids)) {
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('error', 'No categories selected.');
+        }
+
+        $successCount = 0;
+        $failedNames  = [];
+
+        foreach ($ids as $id) {
+            $category = Category::find($id);
+            if (!$category) continue;
+
+            try {
+                $this->categoryService->delete($category);
+                $successCount++;
+            } catch (\Exception $e) {
+                $failedNames[] = $category->name;
+            }
+        }
+
+        $message = "{$successCount} categor" .
+            ($successCount === 1 ? 'y' : 'ies') .
+            " deleted successfully.";
+
+        if (!empty($failedNames)) {
+            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('error', $message);
+        }
+
+        return redirect()
+            ->route('admin.ecommerce.category.index')
+            ->with('success', $message);
     }
 
     // ─────────────────────────────────────────────
@@ -139,20 +162,20 @@ class CategoryController extends Controller
     {
         try {
             $updated = $this->categoryService->toggleStatus($category);
-
             $status  = $updated->is_active ? 'activated' : 'deactivated';
             $message = "Category {$status} successfully.";
 
-            // If deactivated and had children, mention it
-            if (!$updated->is_active && $category->hasChildren()) {
-                $message .= ' All sub-categories have been deactivated too.';
+            if (!$updated->is_active && $category->children()->count() > 0) {
+                $message .= ' All sub-categories deactivated too.';
             }
 
-            return back()->with('success', $message);
-
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('success', $message);
         } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to update status. ' . $e->getMessage());
+            return redirect()
+                ->route('admin.ecommerce.category.index')
+                ->with('error', 'Failed to update status.');
         }
     }
 }

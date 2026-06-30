@@ -9,6 +9,12 @@
 // ------------------------------ Required main scripts ------------------------------
 //
 
+import jQuery from 'jquery';
+window.$ = window.jQuery = jQuery;
+
+import 'datatables.net-bs5';
+import 'datatables.net-select-bs5';
+
 import bootstrap from "bootstrap/dist/js/bootstrap.min"
 window.bootstrap = bootstrap
 
@@ -576,7 +582,7 @@ class LayoutCustomizer {
         this.setSwitchFromConfig()
         this.activeThemeDropdownItem()
 
-        this.openCustomizer() // only for demo (not required)
+        // this.openCustomizer() // only for demo (not required)
     }
 
     // only for demo (not required)
