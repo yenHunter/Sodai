@@ -3,11 +3,10 @@
 namespace App\Services;
 
 use App\Models\Category;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CategoryService
 {
@@ -20,22 +19,20 @@ class CategoryService
         return DB::transaction(function () use ($data) {
 
             $imagePath = null;
-
             if (!empty($data['image'])) {
                 $imagePath = $this->uploadImage($data['image']);
             }
 
-            $category = Category::create([
+            return Category::create([
                 'name'        => $data['name'],
                 'slug'        => $this->generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
                 'parent_id'   => $data['parent_id'] ?? null,
                 'image'       => $imagePath,
-                'is_active'   => $data['is_active'] ?? true,
+                // ✅ Convert any format to boolean
+                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
             ]);
-
-            return $category;
         });
     }
 
@@ -47,22 +44,16 @@ class CategoryService
     {
         return DB::transaction(function () use ($category, $data) {
 
-            $imagePath = $category->image; // Keep existing image
+            $imagePath = $category->image;
 
             if (!empty($data['image'])) {
-                // Delete old image
                 $this->deleteImage($category->image);
-                // Upload new image
                 $imagePath = $this->uploadImage($data['image']);
             }
 
-            // Regenerate slug only if name changed
             $slug = $category->slug;
             if ($category->name !== $data['name']) {
-                $slug = $this->generateUniqueSlug(
-                    $data['name'],
-                    $category->id
-                );
+                $slug = $this->generateUniqueSlug($data['name'], $category->id);
             }
 
             $category->update([
@@ -71,7 +62,8 @@ class CategoryService
                 'description' => $data['description'] ?? null,
                 'parent_id'   => $data['parent_id'] ?? null,
                 'image'       => $imagePath,
-                'is_active'   => $data['is_active'] ?? true,
+                // ✅ Convert any format to boolean
+                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
             ]);
 
@@ -87,24 +79,25 @@ class CategoryService
     {
         return DB::transaction(function () use ($category) {
 
-            // Check if category has products
             if ($category->products()->exists()) {
                 throw new \Exception(
-                    'Cannot delete category that has products assigned to it.'
+                    'Cannot delete a category that has products assigned to it.'
                 );
             }
 
-            // If deleting a parent, also delete children
             if ($category->hasChildren()) {
                 foreach ($category->children as $child) {
+                    if ($child->products()->exists()) {
+                        throw new \Exception(
+                            "Cannot delete: sub-category \"{$child->name}\" has products."
+                        );
+                    }
                     $this->deleteImage($child->image);
                     $child->delete();
                 }
             }
 
-            // Delete category image
             $this->deleteImage($category->image);
-
             return $category->delete();
         });
     }
@@ -115,12 +108,10 @@ class CategoryService
 
     public function toggleStatus(Category $category): Category
     {
-        $category->update([
-            'is_active' => !$category->is_active,
-        ]);
+        $newStatus = !$category->is_active;
+        $category->update(['is_active' => $newStatus]);
 
-        // If deactivating parent, deactivate all children too
-        if (!$category->is_active && $category->hasChildren()) {
+        if (!$newStatus && $category->hasChildren()) {
             $category->children()->update(['is_active' => false]);
         }
 
@@ -133,9 +124,8 @@ class CategoryService
 
     private function uploadImage(UploadedFile $image): string
     {
-        $filename  = Str::uuid() . '.' . $image->getClientOriginalExtension();
-        $path      = $image->storeAs('categories', $filename, 'public');
-        return $path;
+        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+        return $image->storeAs('categories', $filename, 'public');
     }
 
     private function deleteImage(?string $imagePath): void
@@ -146,7 +136,29 @@ class CategoryService
     }
 
     // ─────────────────────────────────────────────
-    // SLUG GENERATION
+    // RESOLVE IS_ACTIVE
+    // Handles: 'active', 'inactive', true, false, 1, 0
+    // ─────────────────────────────────────────────
+
+    private function resolveIsActive(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (is_string($value)) {
+            return strtolower($value) === 'active';
+        }
+
+        return false;
+    }
+
+    // ─────────────────────────────────────────────
+    // SLUG
     // ─────────────────────────────────────────────
 
     private function generateUniqueSlug(
@@ -159,15 +171,10 @@ class CategoryService
 
         while (true) {
             $query = Category::where('slug', $slug);
-
             if ($ignoreId) {
                 $query->where('id', '!=', $ignoreId);
             }
-
-            if (!$query->exists()) {
-                break;
-            }
-
+            if (!$query->exists()) break;
             $slug = $original . '-' . $count++;
         }
 
@@ -178,7 +185,6 @@ class CategoryService
     // QUERY HELPERS
     // ─────────────────────────────────────────────
 
-    // Get all parent categories for dropdown
     public function getParentCategories()
     {
         return Category::parentOnly()
@@ -187,31 +193,14 @@ class CategoryService
                        ->get();
     }
 
-    // Get all categories with children (for listing)
     public function getCategoriesWithChildren()
     {
         return Category::with(['children' => function ($query) {
-                            $query->withCount('products')
-                                  ->ordered();
+                            $query->withCount('products')->ordered();
                         }])
                        ->parentOnly()
                        ->withCount('products')
                        ->ordered()
                        ->get();
-    }
-
-    // Get all categories flat (for dropdowns)
-    public function getAllCategoriesFlat()
-    {
-        return Category::with('parent')
-                       ->active()
-                       ->ordered()
-                       ->get()
-                       ->map(function ($category) {
-                           return [
-                               'id'   => $category->id,
-                               'name' => $category->full_name,
-                           ];
-                       });
     }
 }

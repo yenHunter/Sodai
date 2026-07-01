@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Category extends Model
 {
@@ -33,20 +33,17 @@ class Category extends Model
     // RELATIONSHIPS
     // ─────────────────────────────────────────────
 
-    // Parent category
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Direct children (sub-categories)
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id')
                     ->orderBy('sort_order');
     }
 
-    // Active children only
     public function activeChildren()
     {
         return $this->hasMany(Category::class, 'parent_id')
@@ -54,7 +51,6 @@ class Category extends Model
                     ->orderBy('sort_order');
     }
 
-    // Products in this category
     public function products()
     {
         return $this->hasMany(Product::class);
@@ -64,7 +60,6 @@ class Category extends Model
     // ACCESSORS
     // ─────────────────────────────────────────────
 
-    // Get full category path e.g. "Electronics > Smartphones"
     public function getFullNameAttribute(): string
     {
         if ($this->parent) {
@@ -74,7 +69,7 @@ class Category extends Model
     }
 
     // ─────────────────────────────────────────────
-    // HELPER METHODS
+    // HELPERS
     // ─────────────────────────────────────────────
 
     public function isParent(): bool
