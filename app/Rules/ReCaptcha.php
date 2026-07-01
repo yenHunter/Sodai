@@ -3,9 +3,9 @@
 namespace App\Rules;
 
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class ReCaptcha implements ValidationRule
 {
@@ -18,7 +18,10 @@ class ReCaptcha implements ValidationRule
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
-    {        // DEVELOPMENT: Skip reCAPTCHA validation in local environment
+    {
+        if (!app()->isProduction()) {
+            Log::debug('ReCaptcha response', $response ?? []);
+        }
         // Remove this block once you have valid production keys
         if (config('app.env') === 'local' && config('app.debug')) {
             Log::info('reCAPTCHA: Skipped in development mode');
@@ -49,7 +52,6 @@ class ReCaptcha implements ValidationRule
                 'action' => $response['action'] ?? null,
                 'error_codes' => $response['error-codes'] ?? [],
             ]);
-
         } catch (\Exception $e) {
             // If Google API is unreachable - fail open or closed
             // Fail open (allow login) to avoid locking out real admins

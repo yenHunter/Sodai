@@ -1,4 +1,5 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
@@ -18,6 +19,9 @@ class User extends Authenticatable
         'password',
         'avatar',
         'status',
+        'ban_reason',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     protected $hidden = [
@@ -28,40 +32,18 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password'             => 'hashed',
-            'email_verified_at'    => 'datetime',
-            'last_login_at'        => 'datetime',
-            'locked_until'         => 'datetime',
+            'password'              => 'hashed',
+            'email_verified_at'     => 'datetime',
+            'last_login_at'         => 'datetime',
+            'locked_until'          => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
     }
 
-    // Relationships
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
+    // ─────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────
 
-    public function cart()
-    {
-        return $this->hasOne(Cart::class);
-    }
-
-    public function wishlist()
-    {
-        return $this->hasMany(Wishlist::class);
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    public function addresses()
-    {
-        return $this->hasMany(Address::class);
-    }
-
-    // Helper Methods
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -74,7 +56,8 @@ class User extends Authenticatable
 
     public function isLocked(): bool
     {
-        return $this->locked_until && $this->locked_until->isFuture();
+        return $this->locked_until
+            && $this->locked_until->isFuture();
     }
 
     public function updateLastLogin(string $ip): void
@@ -91,10 +74,9 @@ class User extends Authenticatable
     {
         $this->increment('failed_login_attempts');
 
-        // Lock after 5 failed attempts
         if ($this->failed_login_attempts >= 5) {
             $this->update([
-                'locked_until' => now()->addMinutes(30)
+                'locked_until' => now()->addMinutes(30),
             ]);
         }
     }

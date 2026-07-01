@@ -21,7 +21,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::name('ecommerce.')->group(function () {
+    Route::prefix('ecommerce')->name('ecommerce.')->group(function () {
         // ── Categories: only roles with category permissions ──
         Route::middleware('permission:category.view')->prefix('categories')->name('category.')->group(function () {
 
