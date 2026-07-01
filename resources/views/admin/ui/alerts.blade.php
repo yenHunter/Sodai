@@ -1,15 +1,15 @@
-@extends("admin.shared.base", ["title" => "Alerts"])
+@extends("admin.include.base", ["title" => "Alerts"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("admin.shared.partials.topbar") @include("admin.shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("admin.shared.partials.page-title", ["subtitle" => "UI", "title" => "Alerts"])
+                @include("admin.include.partials.page-title", ["subtitle" => "UI", "title" => "Alerts"])
 
                 <div class="row">
                     <div class="col-xl-6">
@@ -175,6 +175,7 @@
                                         <p>You’ve just read through a primary alert message. The extra length helps show how well the layout handles content spacing.</p>
                                         <button class="btn btn-danger btn-sm" type="button">Got it</button>
                                     </div>
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="alert" type="button"></button>
                                 </div>
                             </div>
                         </div>
@@ -254,11 +255,11 @@
                 </div>
             </div>
 
-            @include("admin.shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("admin.shared.partials.customizer") @include("admin.shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")

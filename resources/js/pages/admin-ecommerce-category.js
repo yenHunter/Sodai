@@ -44,6 +44,15 @@ waitForJQuery(function ($) {
 
     let dataTable = null;
 
+    const renderLucideIcons = () => {
+        if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+            const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
+            if (iconSet) {
+                lucide.createIcons({ icons: iconSet })
+            }
+        }
+    }
+
     function initDataTable() {
         if (!document.getElementById('categoryTable')) return;
 
@@ -60,7 +69,7 @@ waitForJQuery(function ($) {
                 searchPlaceholder: 'Search categories...',
                 lengthMenu       : 'Show _MENU_ entries',
                 info             : 'Showing _START_ to _END_ of _TOTAL_ categories',
-                infoEmpty        : 'No categories found',
+                // infoEmpty        : 'No categories found',
                 emptyTable       : 'No categories available',
                 paginate: {
                     first   : '«',
@@ -80,9 +89,7 @@ waitForJQuery(function ($) {
                     '<"col-md-7"p>' +
                 '>',
             drawCallback: function () {
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
+                renderLucideIcons();
                 updateBulkDeleteVisibility();
             },
         });
@@ -148,8 +155,8 @@ waitForJQuery(function ($) {
         form.reset();
         if (storeUrl) form.action = storeUrl;
 
-        const methodField = document.getElementById('formMethod');
-        if (methodField) methodField.value = 'POST';
+        // const methodField = document.getElementById('formMethod');
+        // if (methodField) methodField.value = 'POST';
 
         if (title) title.textContent = 'Add New Category';
 
@@ -168,7 +175,7 @@ waitForJQuery(function ($) {
         const parentSelect = document.getElementById('categoryParent');
         if (parentSelect) parentSelect.disabled = false;
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        renderLucideIcons();
     }
 
     function populateModalForEdit(trigger) {
@@ -193,8 +200,8 @@ waitForJQuery(function ($) {
 
         form.action = updateUrl;
 
-        const methodField = document.getElementById('formMethod');
-        if (methodField) methodField.value = 'PUT';
+        // const methodField = document.getElementById('formMethod');
+        // if (methodField) methodField.value = 'PUT';
 
         setVal('categoryName',        name);
         setVal('categorySlug',        slug);
@@ -226,7 +233,7 @@ waitForJQuery(function ($) {
                 '<i data-lucide="save" class="fs-sm me-1"></i> Update Category';
         }
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        renderLucideIcons();
     }
 
     // ─────────────────────────────────────────────
@@ -277,7 +284,7 @@ waitForJQuery(function ($) {
                 if (detailNoImage) { detailNoImage.classList.remove('d-none'); }
             }
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            renderLucideIcons();
         });
     }
 
@@ -336,7 +343,7 @@ waitForJQuery(function ($) {
                 }, { once: true });
             }
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            renderLucideIcons();
         });
     }
 
@@ -443,7 +450,7 @@ waitForJQuery(function ($) {
                 bulkBtn.innerHTML =
                     `<i data-lucide="trash-2" class="fs-sm me-1"></i>` +
                     `Delete Selected (${selected.length})`;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
+                renderLucideIcons();
             } else {
                 bulkBtn.classList.add('d-none');
             }
