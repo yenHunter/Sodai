@@ -2,28 +2,45 @@
 
 namespace App\Http\Requests\Admin\Product;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreProductRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return Auth::guard('admin')->check();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:255'],
+            'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
+            'short_description' => ['nullable', 'string', 'max:500'],
+            'description' => ['nullable', 'string'],
+            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'is_active' => ['required'],
+            'is_featured' => ['nullable'],
+            'tags' => ['nullable', 'string'],
+            'meta' => ['nullable', 'array'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'stock_quantity' => $this->input('stock_quantity') ?? 0,
+            'low_stock_threshold' => $this->input('low_stock_threshold') ?? 5,
+            'category_id' => $this->input('category_id') ?: null,
+            'is_active' => $this->input('is_active') ?? true,
+            'is_featured' => $this->input('is_featured') ?? false,
+        ]);
     }
 }

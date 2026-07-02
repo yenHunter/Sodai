@@ -1,686 +1,114 @@
-@extends("admin.include.base", ["title" => "Products"])
+@extends('admin.include.vertical', ['title' => 'Products'])
 
-@section("styles")
+@section('styles')
 @endsection
 
-@section("content")
-    <div class="wrapper">
-        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
+@section('content')
+    @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Products'])
 
-        <div class="content-page">
-            <div class="container-fluid">
-                @include("admin.include.partials.page-title", ["subtitle" => "Ecommerce", "title" => "Products"])
+    <div class="row">
+        <div class="col-12">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-3">
+                    <i class="me-2" data-lucide="circle-check"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card" data-table="" data-table-rows-per-page="8">
-                            <div class="card-header border-light justify-content-between">
-                                <div class="d-flex gap-2">
-                                    <div class="app-search">
-                                        <input class="form-control" data-table-search="" placeholder="Search product name..." type="search" />
-                                        <i class="app-search-icon text-muted" data-lucide="search"></i>
-                                    </div>
-                                    <button class="btn btn-danger d-none" data-table-delete-selected="">Delete</button>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="me-2 fw-semibold">Filter By:</span>
-                                    <div class="app-search">
-                                        <select class="form-select form-control my-1 my-md-0" data-table-filter="category">
-                                            <option value="All">Category</option>
-                                            <option value="Electronics">Electronics</option>
-                                            <option value="Fashion">Fashion</option>
-                                            <option value="Home">Home</option>
-                                            <option value="Sports">Sports</option>
-                                            <option value="Beauty">Beauty</option>
-                                        </select>
-                                        <i class="app-search-icon text-muted" data-lucide="tag"></i>
-                                    </div>
-                                    <div class="app-search">
-                                        <select class="form-select form-control my-1 my-md-0" data-table-filter="status">
-                                            <option value="">Status</option>
-                                            <option value="Published">Published</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Out of Stock">Out of Stock</option>
-                                        </select>
-                                        <i class="app-search-icon text-muted" data-lucide="activity"></i>
-                                    </div>
-                                    <div class="app-search">
-                                        <select class="form-select form-control my-1 my-md-0" data-table-range-filter="price">
-                                            <option value="">Price Range</option>
-                                            <option value="0-50">$0 - $50</option>
-                                            <option value="51-150">$51 - $150</option>
-                                            <option value="151-500">$151 - $500</option>
-                                            <option value="500+">$500+</option>
-                                        </select>
-                                        <i class="app-search-icon text-muted" data-lucide="dollar-sign"></i>
-                                    </div>
-                                    <div>
-                                        <select class="form-select form-control my-1 my-md-0" data-table-set-rows-per-page="">
-                                            <option value="5">5</option>
-                                            <option value="10">10</option>
-                                            <option value="15">15</option>
-                                            <option value="20">20</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <a class="btn btn-soft-primary btn-icon" href="{{ url("/apps/ecommerce/products-grid") }}">
-                                        <i class="fs-lg" data-lucide="layout-grid"></i>
-                                    </a>
-                                    <a class="btn btn-soft-primary btn-icon active" href="{{ url("/apps/ecommerce/products") }}">
-                                        <i class="fs-lg" data-lucide="list-check"></i>
-                                    </a>
-                                    <a class="btn btn-danger ms-1" href="{{ url("/apps/ecommerce/product-add") }}">
-                                        <i class="fs-sm me-2" data-lucide="plus"></i>
-                                        Add Product
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-custom table-centered table-select table-hover w-100 mb-0">
-                                    <thead class="bg-light align-middle bg-opacity-25 thead-sm">
-                                        <tr class="text-uppercase fs-xxs">
-                                            <th class="ps-3" style="width: 1%">
-                                                <input class="form-check-input form-check-input-light fs-14 mt-0" data-table-select-all="" id="select-all-products" type="checkbox" value="option" />
-                                            </th>
-                                            <th data-table-sort="product">Product</th>
-                                            <th>SKU</th>
-                                            <th data-column="category" data-table-sort="">Category</th>
-                                            <th data-table-sort="">Stock</th>
-                                            <th data-column="price" data-table-sort="">Price</th>
-                                            <th data-table-sort="">Orders</th>
-                                            <th data-table-sort="rating">Rating</th>
-                                            <th data-column="status" data-table-sort="">Status</th>
-                                            <th data-table-sort="">Published</th>
-                                            <th class="text-center" style="width: 1%">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/1.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Wireless Earbuds</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: My Furniture</p>
-                                                    </div>
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mb-3">
+                    <i class="me-2" data-lucide="triangle-alert"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div></div>
+                @admincan('product.create')
+                    <a href="{{ route('admin.ecommerce.product.create') }}" class="btn btn-primary">
+                        <i class="fs-sm me-1" data-lucide="plus"></i>Add Product
+                    </a>
+                @endadmincan
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Product List</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Featured</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($products as $product)
+                                    <tr>
+                                        <td>
+                                            @if ($product->thumbnail)
+                                                <img src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}" class="rounded" width="44" height="44" style="object-fit:cover">
+                                            @else
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:44px;height:44px">
+                                                    <i data-lucide="image" class="text-muted"></i>
                                                 </div>
-                                            </td>
-                                            <td>WB-10245</td>
-                                            <td>Electronics</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">56</h5>
-                                            </td>
-                                            <td>$59.99</td>
-                                            <td>124</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(87)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                18 Apr, 2025
-                                                <small class="text-muted">12:24 PM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">{{ $product->name }}</div>
+                                            <small class="text-muted">{{ Str::limit($product->short_description, 50) }}</small>
+                                        </td>
+                                        <td>{{ $product->sku }}</td>
+                                        <td>{{ $product->category?->name ?? '—' }}</td>
+                                        <td>${{ number_format($product->price, 2) }}</td>
+                                        <td>{{ $product->stock_quantity }}</td>
+                                        <td>
+                                            <span class="badge {{ $product->is_active ? 'bg-success' : 'bg-danger' }}">{{ $product->is_active ? 'Active' : 'Inactive' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $product->is_featured ? 'bg-primary' : 'bg-secondary' }}">{{ $product->is_featured ? 'Featured' : 'Standard' }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ route('admin.ecommerce.product.show', $product) }}" class="btn btn-default btn-icon btn-sm rounded-circle" title="View">
+                                                    <i class="fs-lg" data-lucide="eye"></i>
+                                                </a>
+                                                @admincan('product.edit')
+                                                    <a href="{{ route('admin.ecommerce.product.edit', $product) }}" class="btn btn-default btn-icon btn-sm rounded-circle" title="Edit">
                                                         <i class="fs-lg" data-lucide="square-pen"></i>
                                                     </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/2.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Smart LED Desk Lamp</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: BrightLite</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>SL-89012</td>
-                                            <td>Home &amp; Office</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">32</h5>
-                                            </td>
-                                            <td>$39.49</td>
-                                            <td>78</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(54)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-warning fs-xxs">Pending</span>
-                                            </td>
-                                            <td>
-                                                22 Apr, 2025
-                                                <small class="text-muted">09:45 AM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/3.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Men's Running Shoes</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: ActiveWear Co.</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>RS-20450</td>
-                                            <td>Fashion</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">120</h5>
-                                            </td>
-                                            <td>$89.00</td>
-                                            <td>231</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(142)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                24 Apr, 2025
-                                                <small class="text-muted">03:10 PM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/4.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Fitness Tracker Watch</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: FitPulse</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>FT-67123</td>
-                                            <td>Fitness</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">78</h5>
-                                            </td>
-                                            <td>$49.95</td>
-                                            <td>198</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(89)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                23 Apr, 2025
-                                                <small class="text-muted">10:12 AM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/5.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Gaming Mouse RGB</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: HyperClick</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>GM-72109</td>
-                                            <td>Gaming</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">120</h5>
-                                            </td>
-                                            <td>$29.99</td>
-                                            <td>243</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(102)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                19 Apr, 2025
-                                                <small class="text-muted">05:56 PM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/6.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Modern Lounge Chair</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: UrbanLiving</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>FC-31220</td>
-                                            <td>Furniture</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">24</h5>
-                                            </td>
-                                            <td>$199.00</td>
-                                            <td>38</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(27)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-danger fs-xxs">Out of Stock</span>
-                                            </td>
-                                            <td>
-                                                18 Apr, 2025
-                                                <small class="text-muted">11:30 AM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/7.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Plush Toy Bear</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: Softies</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>TY-00788</td>
-                                            <td>Toys</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">150</h5>
-                                            </td>
-                                            <td>$15.99</td>
-                                            <td>305</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(120)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                17 Apr, 2025
-                                                <small class="text-muted">04:21 PM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/8.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">55" Ultra HD Smart TV</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: ViewMaster</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>TV-5588</td>
-                                            <td>Electronics</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">64</h5>
-                                            </td>
-                                            <td>$499.00</td>
-                                            <td>142</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(88)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                25 Apr, 2025
-                                                <small class="text-muted">10:10 AM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/9.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Apple iMac 24" M3</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: Apple</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>IMAC-M3-24</td>
-                                            <td>Computers</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">18</h5>
-                                            </td>
-                                            <td>$1,399.00</td>
-                                            <td>29</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(16)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-warning fs-xxs">Pending</span>
-                                            </td>
-                                            <td>
-                                                24 Apr, 2025
-                                                <small class="text-muted">02:14 PM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-3">
-                                                <input class="form-check-input form-check-input-light fs-14 product-item-check mt-0" type="checkbox" value="option" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex">
-                                                    <div class="avatar-md me-3">
-                                                        <img alt="Product" class="img-fluid rounded" src="/images/products/10.png" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="mb-1">
-                                                            <a class="link-reset" data-sort="product" href="{{ url("/apps/ecommerce/product-details") }}">Smart Watch Pro X2</a>
-                                                        </h5>
-                                                        <p class="text-muted mb-0 fs-xxs">by: FitTech</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>SWPX2-GL</td>
-                                            <td>Wearables</td>
-                                            <td>
-                                                <h5 class="fs-base mb-0 fw-medium">85</h5>
-                                            </td>
-                                            <td>$149.50</td>
-                                            <td>197</td>
-                                            <td>
-                                                <span class="text-warning">
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                    <i data-lucide="star"></i>
-                                                </span>
-                                                <span class="ms-1">
-                                                    <a class="link-reset fw-semibold" data-sort="rating" href="{{ url("/apps/ecommerce/reviews") }}">(65)</a>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-soft-success fs-xxs">Published</span>
-                                            </td>
-                                            <td>
-                                                23 Apr, 2025
-                                                <small class="text-muted">08:00 AM</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="{{ url("/apps/ecommerce/product-details") }}">
-                                                        <i class="fs-lg" data-lucide="eye"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                        <i class="fs-lg" data-lucide="square-pen"></i>
-                                                    </a>
-                                                    <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row="" href="#">
-                                                        <i class="fs-lg" data-lucide="trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="card-footer border-0">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div data-table-pagination-info="products"></div>
-                                    <div data-table-pagination=""></div>
-                                </div>
-                            </div>
-                        </div>
+                                                @endadmincan
+                                                @admincan('product.delete')
+                                                    <form action="{{ route('admin.ecommerce.product.destroy', $product) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-default btn-icon btn-sm rounded-circle" title="Delete" onclick="return confirm('Delete this product?')">
+                                                            <i class="fs-lg" data-lucide="trash-2"></i>
+                                                        </button>
+                                                    </form>
+                                                @endadmincan
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">No products found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-
-            @include("admin.include.partials.footer")
         </div>
     </div>
 

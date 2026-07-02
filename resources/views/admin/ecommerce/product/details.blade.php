@@ -1,263 +1,88 @@
-@extends("admin.include.base", ["title" => "Product Details"])
+@extends('admin.include.vertical', ['title' => 'Product Details'])
 
-@section("styles")
+@section('styles')
 @endsection
 
-@section("content")
-    <div class="wrapper">
-        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
+@section('content')
+    @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Product Details'])
 
-        <div class="content-page">
-            <div class="container-fluid">
-                @include("admin.include.partials.page-title", ["subtitle" => "Ecommerce", "title" => "Product Details"])
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            @if ($product->thumbnail)
+                                <img src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}" class="img-fluid rounded border" style="max-height:320px;object-fit:cover">
+                            @else
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:320px">
+                                    <i data-lucide="image" class="text-muted" style="width:64px;height:64px"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h3 class="mb-1">{{ $product->name }}</h3>
+                                    <p class="text-muted mb-0">{{ $product->short_description }}</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('admin.ecommerce.product.edit', $product) }}" class="btn btn-light">Edit</a>
+                                    <form action="{{ route('admin.ecommerce.product.destroy', $product) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this product?')">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">SKU</div>
+                                    <div class="fw-semibold">{{ $product->sku }}</div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">Category</div>
+                                    <div class="fw-semibold">{{ $product->category?->name ?? '—' }}</div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">Stock</div>
+                                    <div class="fw-semibold">{{ $product->stock_quantity }}</div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">Price</div>
+                                    <div class="fw-semibold">${{ number_format($product->price, 2) }}</div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">Sale Price</div>
+                                    <div class="fw-semibold">{{ $product->sale_price ? '$' . number_format($product->sale_price, 2) : '—' }}</div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="text-muted small">Status</div>
+                                    <div class="fw-semibold"><span class="badge {{ $product->is_active ? 'bg-success' : 'bg-danger' }}">{{ $product->is_active ? 'Active' : 'Inactive' }}</span></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h6 class="fw-semibold">Description</h6>
+                                <p class="text-muted mb-0">{{ $product->description ?: 'No description provided.' }}</p>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold">Tags</h6>
+                                @forelse ($product->tags as $tag)
+                                    <span class="badge bg-secondary me-1">{{ $tag->name }}</span>
+                                @empty
+                                    <span class="text-muted">No tags</span>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-xl-4">
-                                        <div class="card card-top-sticky border-0">
-                                            <div class="card-body p-0">
-                                                <div class="carousel slide carousel-fade" data-bs-ride="carousel" id="carouselExampleFade">
-                                                    <div class="carousel-inner" role="listbox">
-                                                        <div class="carousel-item text-center active">
-                                                            <img alt="" class="img-fluid" src="/images/products/single-1.png" />
-                                                        </div>
-                                                        <div class="carousel-item text-center">
-                                                            <img alt="" class="img-fluid" src="/images/products/single-2.png" />
-                                                        </div>
-                                                        <div class="carousel-item text-center">
-                                                            <img alt="" class="img-fluid" src="/images/products/single-3.png" />
-                                                        </div>
-                                                        <div class="carousel-item text-center">
-                                                            <img alt="" class="img-fluid" src="/images/products/single-4.png" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="carousel-indicators m-0 mt-3 d-lg-flex d-none position-static h-100 rounded gap-2">
-                                                        <button aria-current="true" aria-label="Slide 1" class="h-auto rounded bg-light-subtle border active" data-bs-slide-to="0" data-bs-target="#carouselExampleFade" style="width: auto !important" type="button">
-                                                            <img alt="indicator-img" class="d-block avatar-xl" src="/images/products/single-1.png" />
-                                                        </button>
-                                                        <button aria-label="Slide 2" class="h-auto rounded bg-light-subtle border" data-bs-slide-to="1" data-bs-target="#carouselExampleFade" style="width: auto !important" type="button">
-                                                            <img alt="indicator-img" class="d-block avatar-xl" src="/images/products/single-2.png" />
-                                                        </button>
-                                                        <button aria-label="Slide 3" class="h-auto rounded bg-light-subtle border" data-bs-slide-to="2" data-bs-target="#carouselExampleFade" style="width: auto !important" type="button">
-                                                            <img alt="indicator-img" class="d-block avatar-xl" src="/images/products/single-3.png" />
-                                                        </button>
-                                                        <button aria-label="Slide 4" class="h-auto rounded bg-light-subtle border" data-bs-slide-to="3" data-bs-target="#carouselExampleFade" style="width: auto !important" type="button">
-                                                            <img alt="indicator-img" class="d-block avatar-xl" src="/images/products/single-4.png" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="text-center my-3">
-                                                    <a class="btn btn-light me-1" href="{{ url("/apps/ecommerce/product-add") }}">
-                                                        <i class="fs-lg me-1" data-lucide="pencil"></i>
-                                                        Edit
-                                                    </a>
-                                                    <a class="btn btn-danger" href="{{ url("/apps/ecommerce/product-add") }}">
-                                                        <i class="fs-lg me-1" data-lucide="circle-plus"></i>
-                                                        Delisting
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-8">
-                                        <div class="p-4">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <span class="badge bg-success-subtle text-success px-2 py-1 fs-base rounded-pill">In Stock</span>
-                                                </div>
-                                                <div class="flex-grow-1 d-inline-flex align-items-center justify-content-end fs-lg">
-                                                    <i class="text-warning" data-lucide="star"></i>
-                                                    <i class="text-warning" data-lucide="star"></i>
-                                                    <i class="text-warning" data-lucide="star"></i>
-                                                    <i class="text-warning" data-lucide="star"></i>
-                                                    <i class="text-warning" data-lucide="star"></i>
-                                                    <span class="ms-1 fs-base">
-                                                        <a class="link-reset fw-medium" href="{{ url("/apps/ecommerce/reviews") }}">(859 Reviews)</a>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3 mb-4">
-                                                <h4 class="fs-xl">Apple iMac 24” M3 Chip – 4.5K Retina Display</h4>
-                                            </div>
-                                            <div class="row mb-4">
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">SKU:</h6>
-                                                    <p class="fw-medium mb-0">IMAC-M3-24</p>
-                                                </div>
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">Category:</h6>
-                                                    <p class="fw-medium mb-0">Computers</p>
-                                                </div>
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">Stock:</h6>
-                                                    <p class="fw-medium mb-0">67</p>
-                                                </div>
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">Published:</h6>
-                                                    <p class="fw-medium mb-0">12 Jul, 2025 <small class="text-muted">09:00 AM</small></p>
-                                                </div>
-                                            </div>
-                                            <div class="row mb-4">
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">Orders:</h6>
-                                                    <p class="fw-medium mb-0">1,428</p>
-                                                </div>
-                                                <div class="col-md-4 col-xl-3">
-                                                    <h6 class="mb-1 text-muted text-uppercase">Revenue:</h6>
-                                                    <p class="fw-medium mb-0">$2,350,120.00</p>
-                                                </div>
-                                            </div>
-                                            <h3 class="text-muted d-flex align-items-center gap-2 mb-4">
-                                                <small class="text-decoration-line-through">$1,499.00</small>
-                                                <span class="fw-bold text-danger">$1,299.00</span>
-                                                <small>(13%)</small>
-                                            </h3>
-                                            <h5 class="text-uppercase text-muted fs-xs mb-2">Product Info:</h5>
-                                            <p>
-                                                The Apple iMac 24” with the M3 chip redefines performance and design. Featuring a stunning 4.5K Retina display, ultra-fast processing, and a sleek aluminum chassis in multiple colors, it’s perfect for creatives and professionals
-                                                alike.
-                                            </p>
-                                            <p>Enjoy seamless performance with macOS, optimized apps, and powerful memory — all in an all-in-one setup that fits any workspace.</p>
-                                            <h6 class="mt-3 fs-base">Details :</h6>
-                                            <ul class="d-flex flex-column gap-1 mb-3">
-                                                <li>24” 4.5K Retina Display with True Tone.</li>
-                                                <li>Apple M3 chip with 8-core CPU and 10-core GPU.</li>
-                                                <li>8GB unified memory (configurable to 24GB).</li>
-                                                <li>512GB SSD storage (configurable up to 2TB).</li>
-                                                <li>Color-matched Magic Keyboard and Mouse.</li>
-                                            </ul>
-                                            <a class="link-primary fw-semibold" href="#!">Read More...</a>
-                                            <div class="card mt-5 shadow-none border border-dashed" data-table="" data-table-rows-per-page="5">
-                                                <div class="card-header border-light">
-                                                    <h4 class="card-title">Manage Reviews</h4>
-                                                </div>
-                                                <div class="card-header p-0 d-block">
-                                                    <div class="row align-items-center g-0">
-                                                        <div class="col-xl-7">
-                                                            <div class="d-flex align-items-center gap-4 p-4">
-                                                                <img alt="Product" height="80" src="/images/ratings.svg" />
-                                                                <div>
-                                                                    <h3 class="text-primary d-flex align-items-center gap-2 mb-2 fw-bold">
-                                                                        4.92
-                                                                        <i data-lucide="star"></i>
-                                                                    </h3>
-                                                                    <p class="mb-2">Based on 245 verified reviews</p>
-                                                                    <p class="pe-2 h6 text-muted mb-2 lh-base">Feedback collected from real customers who purchased our templates</p>
-                                                                    <span class="badge badge-label text-bg-success">+12 new this week</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-xl-5">
-                                                            <div class="p-3">
-                                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                                    <div class="flex-shrink-0" style="width: 50px">5 Star</div>
-                                                                    <div class="progress w-100 bg-label-primary" style="height: 8px">
-                                                                        <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="85" class="progress-bar bg-primary" role="progressbar" style="width: 85%"></div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 text-end" style="width: 30px">
-                                                                        <span class="badge text-bg-light">128</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                                    <div class="flex-shrink-0" style="width: 50px">4 Star</div>
-                                                                    <div class="progress w-100 bg-label-primary" style="height: 8px">
-                                                                        <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="10" class="progress-bar bg-primary" role="progressbar" style="width: 10%"></div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 text-end" style="width: 30px">
-                                                                        <span class="badge text-bg-light">37</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                                    <div class="flex-shrink-0" style="width: 50px">3 Star</div>
-                                                                    <div class="progress w-100 bg-label-primary" style="height: 8px">
-                                                                        <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="3" class="progress-bar bg-primary" role="progressbar" style="width: 3%"></div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 text-end" style="width: 30px">
-                                                                        <span class="badge text-bg-light">15</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                                    <div class="flex-shrink-0" style="width: 50px">2 Star</div>
-                                                                    <div class="progress w-100 bg-label-primary" style="height: 8px">
-                                                                        <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="1" class="progress-bar bg-primary" role="progressbar" style="width: 1%"></div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 text-end" style="width: 30px">
-                                                                        <span class="badge text-bg-light">7</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center gap-2">
-                                                                    <div class="flex-shrink-0" style="width: 50px">1 Star</div>
-                                                                    <div class="progress w-100 bg-label-primary" style="height: 8px">
-                                                                        <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="1" class="progress-bar bg-primary" role="progressbar" style="width: 1%"></div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 text-end" style="width: 30px">
-                                                                        <span class="badge text-bg-light">2</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-custom table-centered table-select table-hover w-100 mb-0">
-                                                        <thead class="bg-light align-middle bg-opacity-25">
-                                                            <tr class="text-uppercase fs-xxs">
-                                                                <th>Reviewer</th>
-                                                                <th style="width: 18rem">Review</th>
-                                                                <th data-table-sort="">Date</th>
-                                                                <th data-table-sort="">Status</th>
-                                                                <th class="text-center" style="width: 1%">Actions</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td>
-                                                                    <div class="d-flex justify-content-start align-items-center gap-2">
-                                                                        <div class="avatar avatar-sm">
-                                                                            <img alt="avatar-8" class="img-fluid rounded-circle" src="/images/users/user-8.jpg" />
-                                                                        </div>
-                                                                        <div>
-                                                                            <h5 class="text-nowrap fs-sm mb-0 lh-base">Sophia Lee</h5>
-                                                                            <p class="text-muted fs-xs mb-0">sophia.lee@digitalshop.com</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="text-warning fs-lg">
-                                                                        <i data-lucide="star"></i>
-                                                                        <i data-lucide="star"></i>
-                                                                        <i data-lucide="star"></i>
-                                                                        <i data-lucide="star"></i>
-                                                                        <i data-lucide="star"></i>
-                                                                    </span>
-                                                                    <h5 class="mt-2">Great product, would buy again!</h5>
-                                                                    <p class="text-muted fst-italic mb-0">"These earbuds are amazing, the sound quality is top-notch. Totally worth the price!"</p>
-                                                                </td>
-                                                                <td>
-                                                                    22 Apr, 2025
-                                                                    <small class="text-muted">04:10 PM</small>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="badge badge-soft-success fs-xxs">Published</span>
-                                                                </td>
-                                                                <td>
-                                                                    <div class="d-flex justify-content-center gap-1">
-                                                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                                            <i class="fs-lg" data-lucide="eye"></i>
-                                                                        </a>
-                                                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                                            <i class="fs-lg" data-lucide="square-pen"></i>
-                                                                        </a>
-                                                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" href="#">
-                                                                            <i class="fs-lg" data-lucide="trash-2"></i>
-                                                                        </a>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
+@section('scripts')
+@endsection
                                                                 <td>
                                                                     <div class="d-flex justify-content-start align-items-center gap-2">
                                                                         <div class="avatar avatar-sm">

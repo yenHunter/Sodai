@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -50,8 +51,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
         });
 
         // ── Products: only roles with product permissions ──
-        Route::middleware('permission:product.view')->group(function () {
-            // Route::resource('products', ProductController::class);
+        Route::middleware('permission:product.view')->prefix('products')->name('product.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/store', [ProductController::class, 'store'])->name('store')->middleware('permission:product.create');
+            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+            Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit')->middleware('permission:product.edit');
+            Route::post('/{product}/update', [ProductController::class, 'update'])->name('update')->middleware('permission:product.edit');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
+            Route::patch('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
+            Route::patch('/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured')->middleware('permission:product.edit');
         });
 
         // ── Orders ──

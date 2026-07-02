@@ -83,7 +83,7 @@
                 </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">Ecommerce</li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/categories') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.product.index') }}">
                         <span class="menu-icon"><i data-lucide="shopping-basket"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-products">Products</span>
                     </a>
