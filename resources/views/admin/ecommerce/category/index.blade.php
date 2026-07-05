@@ -1,5 +1,3 @@
-{{-- resources/views/admin/ecommerce/category/index.blade.php --}}
-
 @extends('admin.include.vertical', ['title' => 'Categories'])
 
 @section('styles')

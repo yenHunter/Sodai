@@ -1,4 +1,4 @@
-@extends("shared.base", ["title" => "File Uploads"])
+@extends("admin.include.base", ["title" => "File Uploads"])
 
 @section("styles")
     <link href="{{ asset("plugins/dropzone/dropzone.css") }}" rel="stylesheet" type="text/css" />
@@ -8,11 +8,11 @@
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "Forms", "title" => "File Uploads"])
+                @include("admin.include.partials.page-title", ["subtitle" => "Forms", "title" => "File Uploads"])
 
                 <div class="row">
                     <div class="col-12">
@@ -107,11 +107,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")
