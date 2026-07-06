@@ -1,5 +1,3 @@
-// resources/js/pages/admin-ecommerce-category.js
-
 /**
  * Admin Category Management
  * Handles jQuery availability safely
@@ -572,4 +570,4 @@ waitForJQuery(function ($) {
         return div.innerHTML;
     }
 
-}); // end waitForJQuery
+});

@@ -2,30 +2,58 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasUuids;
 
     protected $fillable = [
-        'name', 'slug', 'sku', 'short_description',
-        'description', 'category_id', 'price', 'sale_price',
-        'stock_quantity', 'low_stock_threshold', 'thumbnail',
-        'weight', 'is_active', 'is_featured', 'meta',
+        'name',
+        'slug',
+        'sku',
+        'short_description',
+        'description',
+        'category_id',
+        'brand_id',
+        'price',
+        'purchase_price',
+        'discount_type',
+        'discount_value',
+        'stock_quantity',
+        'low_stock_threshold',
+        'thumbnail',
+        'weight',
+        'weight_unit',
+        'color',
+        'size',
+        'is_active',
+        'is_featured',
+        'average_rating',
+        'review_count',
+        'total_sales',
+        'meta',
     ];
 
     protected function casts(): array
     {
         return [
-            'price'          => 'decimal:2',
-            'sale_price'     => 'decimal:2',
-            'average_rating' => 'decimal:2',
-            'is_active'      => 'boolean',
-            'is_featured'    => 'boolean',
-            'meta'           => 'array',
+            'price'                => 'decimal:2',
+            'purchase_price'       => 'decimal:2',
+            'discount_value'       => 'decimal:2',
+            'stock_quantity'       => 'integer',
+            'low_stock_threshold'  => 'integer',
+            'weight'               => 'decimal:2',
+            'is_active'            => 'boolean',
+            'is_featured'          => 'boolean',
+            'average_rating'       => 'decimal:2',
+            'review_count'         => 'integer',
+            'total_sales'          => 'integer',
+            'meta'                 => 'array',
         ];
     }
 
@@ -36,6 +64,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function images()
@@ -52,21 +85,10 @@ class Product extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'product_tag');
+        return $this->belongsToMany(Tag::class, 'product_tag')
+                    ->withTimestamps();
     }
 
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    public function approvedReviews()
-    {
-        return $this->hasMany(Review::class)
-                    ->where('status', 'approved');
-    }
-
-    // Manually selected related products (bidirectional)
     public function relatedProducts()
     {
         return $this->belongsToMany(
@@ -74,79 +96,36 @@ class Product extends Model
             'product_relations',
             'product_id',
             'related_product_id'
-        );
-    }
-
-    // ─────────────────────────────────────────────
-    // SMART RELATED PRODUCTS METHOD
-    // ─────────────────────────────────────────────
-
-    /**
-     * Get related products using hybrid approach:
-     * 1. First use manually selected (admin picked)
-     * 2. Fill remaining slots with same category + shared tags
-     */
-    public function getSmartRelatedProducts(int $limit = 8)
-    {
-        // Step 1: Get manually selected related products
-        $manualRelated = $this->relatedProducts()
-                              ->active()
-                              ->inStock()
-                              ->limit($limit)
-                              ->get();
-
-        if ($manualRelated->count() >= $limit) {
-            return $manualRelated;
-        }
-
-        // Step 2: Fill remaining with automatic suggestions
-        $remaining   = $limit - $manualRelated->count();
-        $excludeIds  = $manualRelated->pluck('id')->push($this->id);
-        $tagIds      = $this->tags->pluck('id');
-
-        // By shared tags (most relevant first)
-        $autoRelated = Product::active()
-            ->inStock()
-            ->whereNotIn('id', $excludeIds)
-            ->where(function ($query) use ($tagIds) {
-                // Same category
-                $query->where('category_id', $this->category_id);
-
-                // OR shared tags (if product has tags)
-                if ($tagIds->isNotEmpty()) {
-                    $query->orWhereHas('tags', function ($q) use ($tagIds) {
-                        $q->whereIn('tags.id', $tagIds);
-                    });
-                }
-            })
-            ->limit($remaining)
-            ->get();
-
-        return $manualRelated->merge($autoRelated);
+        )->withTimestamps();
     }
 
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
 
-    public function getCurrentPriceAttribute(): float
+    public function getFinalPriceAttribute(): float
     {
-        return $this->sale_price ?? $this->price;
+        if (!$this->discount_type || !$this->discount_value) {
+            return (float) $this->price;
+        }
+
+        if ($this->discount_type === 'percentage') {
+            return (float) ($this->price - ($this->price * $this->discount_value / 100));
+        }
+
+        // fixed
+        return (float) max(0, $this->price - $this->discount_value);
     }
 
-    public function getIsOnSaleAttribute(): bool
+    public function getDiscountAmountAttribute(): float
     {
-        return !is_null($this->sale_price)
-               && $this->sale_price < $this->price;
+        return (float) ($this->price - $this->final_price);
     }
 
-    public function getDiscountPercentageAttribute(): int
+    public function getDiscountPercentageAttribute(): float
     {
-        if (!$this->is_on_sale) return 0;
-
-        return (int)(
-            (($this->price - $this->sale_price) / $this->price) * 100
-        );
+        if ($this->price <= 0) return 0;
+        return (float) (($this->discount_amount / $this->price) * 100);
     }
 
     public function getIsInStockAttribute(): bool
@@ -156,8 +135,70 @@ class Product extends Model
 
     public function getIsLowStockAttribute(): bool
     {
-        return $this->stock_quantity <= $this->low_stock_threshold
-               && $this->stock_quantity > 0;
+        return $this->stock_quantity > 0 
+            && $this->stock_quantity <= $this->low_stock_threshold;
+    }
+
+    public function getIsOutOfStockAttribute(): bool
+    {
+        return $this->stock_quantity <= 0;
+    }
+
+    public function getHasDiscountAttribute(): bool
+    {
+        return $this->discount_amount > 0;
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if ($this->thumbnail) {
+            return asset('storage/' . $this->thumbnail);
+        }
+
+        // Fallback to primary image if exists
+        if ($this->primaryImage) {
+            return asset('storage/' . $this->primaryImage->image_path);
+        }
+
+        return null;
+    }
+
+    public function getStockStatusAttribute(): string
+    {
+        if ($this->is_out_of_stock) return 'Out of Stock';
+        if ($this->is_low_stock) return 'Low Stock';
+        return 'In Stock';
+    }
+
+    // ─────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────
+
+    public function hasTag(string $tagName): bool
+    {
+        return $this->tags()->where('name', $tagName)->exists();
+    }
+
+    public function canDelete(): bool
+    {
+        // Add logic if needed (e.g., check if product has orders)
+        // return !$this->orders()->exists();
+        return true;
+    }
+
+    public function decrementStock(int $quantity): bool
+    {
+        if ($this->stock_quantity < $quantity) {
+            return false;
+        }
+
+        $this->decrement('stock_quantity', $quantity);
+        return true;
+    }
+
+    public function incrementStock(int $quantity): void
+    {
+        $this->increment('stock_quantity', $quantity);
     }
 
     // ─────────────────────────────────────────────
@@ -169,13 +210,77 @@ class Product extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
     public function scopeFeatured($query)
     {
-        return $query->where('is_featured', true);
+        return $query->where('is_featured', true)
+                    ->where('is_active', true);
     }
 
     public function scopeInStock($query)
     {
         return $query->where('stock_quantity', '>', 0);
+    }
+
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('stock_quantity', '<=', 0);
+    }
+
+    public function scopeLowStock($query)
+    {
+        return $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                    ->where('stock_quantity', '>', 0);
+    }
+
+    public function scopeWithDiscount($query)
+    {
+        return $query->whereNotNull('discount_type')
+                    ->whereNotNull('discount_value')
+                    ->where('discount_value', '>', 0);
+    }
+
+    public function scopeByCategory($query, $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
+
+    public function scopeByBrand($query, $brandId)
+    {
+        return $query->where('brand_id', $brandId);
+    }
+
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('sku', 'like', "%{$search}%")
+              ->orWhere('short_description', 'like', "%{$search}%");
+        });
+    }
+
+    public function scopePriceRange($query, $min, $max)
+    {
+        return $query->whereBetween('price', [$min, $max]);
+    }
+
+    public function scopeNewest($query)
+    {
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    public function scopePopular($query)
+    {
+        return $query->orderBy('total_sales', 'desc');
+    }
+
+    public function scopeTopRated($query)
+    {
+        return $query->where('review_count', '>', 0)
+                    ->orderBy('average_rating', 'desc');
     }
 }
