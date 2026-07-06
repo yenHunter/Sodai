@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -113,7 +114,6 @@ class Product extends Model
             return (float) ($this->price - ($this->price * $this->discount_value / 100));
         }
 
-        // fixed
         return (float) max(0, $this->price - $this->discount_value);
     }
 
@@ -135,7 +135,7 @@ class Product extends Model
 
     public function getIsLowStockAttribute(): bool
     {
-        return $this->stock_quantity > 0 
+        return $this->stock_quantity > 0
             && $this->stock_quantity <= $this->low_stock_threshold;
     }
 
@@ -155,7 +155,6 @@ class Product extends Model
             return asset('storage/' . $this->thumbnail);
         }
 
-        // Fallback to primary image if exists
         if ($this->primaryImage) {
             return asset('storage/' . $this->primaryImage->image_path);
         }
@@ -170,6 +169,26 @@ class Product extends Model
         return 'In Stock';
     }
 
+    /**
+     * Human-readable reason why this product cannot be deleted.
+     * Returns null if the product is safe to delete.
+     * Used by controller to display specific error messages.
+     */
+    public function getDeletionBlockReasonAttribute(): ?string
+    {
+        if (Schema::hasTable('order_items') &&
+            DB::table('order_items')->where('product_id', $this->id)->exists()) {
+            return 'This product has existing order history and cannot be deleted.';
+        }
+
+        if (Schema::hasTable('cart_items') &&
+            DB::table('cart_items')->where('product_id', $this->id)->exists()) {
+            return 'This product is currently in customer carts and cannot be deleted.';
+        }
+
+        return null;
+    }
+
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
@@ -179,11 +198,15 @@ class Product extends Model
         return $this->tags()->where('name', $tagName)->exists();
     }
 
+    /**
+     * Determine if product is safe to delete.
+     * Uses Schema::hasTable() checks so this remains
+     * forward-compatible as Order/Cart modules are built later
+     * without requiring code changes here.
+     */
     public function canDelete(): bool
     {
-        // Add logic if needed (e.g., check if product has orders)
-        // return !$this->orders()->exists();
-        return true;
+        return is_null($this->deletion_block_reason);
     }
 
     public function decrementStock(int $quantity): bool

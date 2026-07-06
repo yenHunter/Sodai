@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProductImage extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'product_id',
         'image_path',
@@ -16,13 +19,41 @@ class ProductImage extends Model
     protected function casts(): array
     {
         return [
+            'product_id' => 'integer',
             'is_primary' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
 
+    // ─────────────────────────────────────────────
+    // RELATIONSHIPS
+    // ─────────────────────────────────────────────
+
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    // ─────────────────────────────────────────────
+    // ACCESSORS
+    // ─────────────────────────────────────────────
+
+    public function getImageUrlAttribute(): string
+    {
+        return asset('storage/' . $this->image_path);
+    }
+
+    // ─────────────────────────────────────────────
+    // SCOPES
+    // ─────────────────────────────────────────────
+
+    public function scopePrimary($query)
+    {
+        return $query->where('is_primary', true);
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order');
     }
 }
