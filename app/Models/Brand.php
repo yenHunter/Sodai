@@ -2,25 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class ProductImage extends Model
+class Brand extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'product_id',
-        'image_path',
-        'is_primary',
+        'name',
+        'slug',
+        'description',
+        'logo',
+        'website',
+        'is_active',
         'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            'product_id' => 'integer',
-            'is_primary' => 'boolean',
+            'is_active'  => 'boolean',
             'sort_order' => 'integer',
         ];
     }
@@ -29,31 +33,36 @@ class ProductImage extends Model
     // RELATIONSHIPS
     // ─────────────────────────────────────────────
 
-    public function product()
+    public function products()
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(Product::class);
     }
 
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
 
-    public function getImageUrlAttribute(): string
+    public function getLogoUrlAttribute(): ?string
     {
-        return asset('storage/' . $this->image_path);
+        return $this->logo ? asset('storage/' . $this->logo) : null;
     }
 
     // ─────────────────────────────────────────────
     // SCOPES
     // ─────────────────────────────────────────────
 
-    public function scopePrimary($query)
+    public function scopeActive($query)
     {
-        return $query->where('is_primary', true);
+        return $query->where('is_active', true);
     }
 
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order');
+        return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function scopeWithProductCount($query)
+    {
+        return $query->withCount('products');
     }
 }

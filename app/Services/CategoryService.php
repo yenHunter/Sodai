@@ -124,8 +124,18 @@ class CategoryService
 
     private function uploadImage(UploadedFile $image): string
     {
-        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-        return $image->storeAs('categories', $filename, 'public');
+        try {
+            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+            $path     = $image->storeAs('categories', $filename, 'public');
+
+            if (!$path) {
+                throw new \Exception('Failed to upload image.');
+            }
+
+            return $path;
+        } catch (\Exception $e) {
+            throw new \Exception('Image upload failed: ' . $e->getMessage());
+        }
     }
 
     private function deleteImage(?string $imagePath): void
@@ -188,19 +198,19 @@ class CategoryService
     public function getParentCategories()
     {
         return Category::parentOnly()
-                       ->active()
-                       ->ordered()
-                       ->get();
+            ->active()
+            ->ordered()
+            ->get();
     }
 
     public function getCategoriesWithChildren()
     {
         return Category::with(['children' => function ($query) {
-                            $query->withCount('products')->ordered();
-                        }])
-                       ->parentOnly()
-                       ->withCount('products')
-                       ->ordered()
-                       ->get();
+            $query->withCount('products')->ordered();
+        }])
+            ->parentOnly()
+            ->withCount('products')
+            ->ordered()
+            ->get();
     }
 }
