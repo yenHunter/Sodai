@@ -13,13 +13,17 @@
                     <h5 class="card-title mb-0">Edit Product</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.ecommerce.product.update', $product) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('admin.ecommerce.product.update', $product) }}" method="POST"
+                        enctype="multipart/form-data">
                         @csrf
-                        @method('POST')
-                        @include('admin.ecommerce.product._form', ['categories' => $categories, 'product' => $product])
-                        <div class="mt-4 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Update Product</button>
-                            <a href="{{ route('admin.ecommerce.product.index') }}" class="btn btn-light">Cancel</a>
+                        @method('PUT')
+                        @include('admin.ecommerce.product.form', [
+                            'categories' => $categories,
+                            'product' => $product,
+                        ])
+                        <div class="mt-2 mb-4 d-flex gap-2 justify-content-center">
+                            <a class="btn btn-danger fw-semibold" href="#!"> Discard </a>
+                            <button type="submit" class="btn btn-success"> Publish </button>
                         </div>
                     </form>
                 </div>

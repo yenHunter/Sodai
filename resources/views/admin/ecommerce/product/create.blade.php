@@ -1,4 +1,4 @@
-@extends("admin.include.vertical", ['title' => "Create Product"])
+@extends('admin.include.vertical', ['title' => 'Create Product'])
 
 @section('styles')
 @endsection
@@ -9,11 +9,13 @@
         <div class="col-xxl-12">
             <form action="{{ route('admin.ecommerce.product.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                @include('admin.ecommerce.product.form', ['categories' => $categories])
+                @include('admin.ecommerce.product.form', [
+                    'categories' => $categories,
+                    'product' => null,
+                ])
                 <div class="mt-2 mb-4 d-flex gap-2 justify-content-center">
                     <a class="btn btn-danger fw-semibold" href="#!"> Discard </a>
-                    <a class="btn btn-secondary" href="#!"> Save as Draft </a>
-                    <a class="btn btn-success" href="#!"> Publish </a>
+                    <button type="submit" class="btn btn-success"> Publish </button>
                 </div>
             </form>
         </div>

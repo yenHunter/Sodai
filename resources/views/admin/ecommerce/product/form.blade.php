@@ -1,5 +1,3 @@
-@php $product = $product ?? null; @endphp
-
 <div class="row">
     <div class="col-xxl-8">
         <div class="card">
@@ -252,7 +250,12 @@
                 <div class="mb-3">
                     <label class="form-label" for="brand">Brand</label>
                     <div class="app-search">
-                        <input class="form-control" id="brand" placeholder="Enter brand name" type="text" />
+                        <select class="form-select form-control my-1 my-md-0" id="brand" name="brand" required>
+                            <option selected="">Choose Brand</option>
+                            <option value="1">Brand A</option>
+                            <option value="2">Brand B</option>
+                            <option value="3">Brand C</option>
+                        </select>
                         <i class="app-search-icon text-muted" data-lucide="layers"></i>
                     </div>
                 </div>
@@ -283,14 +286,14 @@
                     <label class="form-label" for="is_featured">Featured <span class="text-danger">*</span></label>
                     <div class="app-search">
                         <select class="form-select form-control my-1 my-md-0" id="is_featured" name="is_featured" required>
-                            <option selected="">Choose Status</option>
+                            <option selected="">Choose Feature Status</option>
                             <option value="1">Featured</option>
                             <option value="0">Not Featured</option>
                         </select>
                         <i class="app-search-icon text-muted" data-lucide="wand-sparkles"></i>
                     </div>
                 </div>
-                <div class="mb-0">
+                <div class="mb-3">
                     <label class="form-label" for="tags">Tags</label>
                     <div class="app-search">
                         <input class="form-control" id="tags" name="tags" placeholder="Enter tags separated by commas"
