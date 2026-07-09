@@ -16,7 +16,9 @@ import 'select2/dist/css/select2.min.css'
 import Quill from 'quill'
 import Dropzone from 'dropzone'
 import $ from 'jquery'
-import 'select2'
+import select2 from 'select2'
+
+select2(window, $)
 
 // ═══════════════════════════════════════════════
 // CONFIGURATION
@@ -24,7 +26,7 @@ import 'select2'
 Dropzone.autoDiscover = false
 
 // ═══════════════════════════════════════════════
-// QUILL EDITORS
+// QUILL EDITORS (Both with same full toolbar)
 // ═══════════════════════════════════════════════
 
 let shortDescriptionQuill = null
@@ -44,6 +46,18 @@ function initQuillEditors() {
     icons['image'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></svg>'
     icons['clean'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>'
 
+    // ✅ SHARED TOOLBAR CONFIG (same for both editors)
+    const toolbarConfig = [
+        [{ font: [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ color: [] }, { background: [] }],
+        [{ header: [false, 1, 2, 3, 4, 5, 6] }],
+        ['blockquote', 'code-block'],
+        [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
+        ['link', 'image'],
+        ['clean']
+    ]
+
     // Short Description Editor
     const shortDescEditor = document.getElementById('shortDescriptionEditor')
     if (shortDescEditor) {
@@ -51,33 +65,19 @@ function initQuillEditors() {
             theme: 'snow',
             placeholder: 'Enter a brief product description...',
             modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    ['link'],
-                    ['clean']
-                ]
+                toolbar: toolbarConfig
             }
         })
     }
 
-    // Full Description Editor
+    // Full Description Editor (identical toolbar)
     const descEditor = document.getElementById('descriptionEditor')
     if (descEditor) {
         descriptionQuill = new Quill(descEditor, {
             theme: 'snow',
             placeholder: 'Enter detailed product description...',
             modules: {
-                toolbar: [
-                    [{ font: [] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ color: [] }, { background: [] }],
-                    [{ header: [false, 1, 2, 3, 4, 5, 6] }],
-                    ['blockquote', 'code-block'],
-                    [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
+                toolbar: toolbarConfig
             }
         })
     }
@@ -94,31 +94,51 @@ function initDropzones() {
     const thumbnailEl = document.getElementById('thumbnailDropzone')
     const galleryEl = document.getElementById('galleryDropzone')
 
+    // Thumbnail Dropzone
     if (thumbnailEl) {
-        thumbnailDropzone = new Dropzone(thumbnailEl, {
+        const thumbnailPreviewContainer = thumbnailEl.dataset.previewsContainer
+        const thumbnailPreviewTemplate = thumbnailEl.dataset.uploadPreviewTemplate
+
+        const thumbnailOptions = {
             url: '#',
             autoProcessQueue: false,
             uploadMultiple: false,
             maxFiles: 1,
             maxFilesize: 2,
             acceptedFiles: 'image/jpeg,image/jpg,image/png,image/webp',
-            addRemoveLinks: true,
-            previewsContainer: '#thumbnail-previews',
-            previewTemplate: document.getElementById('thumbnailPreviewTemplate').innerHTML,
-            dictDefaultMessage: 'Drop new thumbnail to replace current',
-            dictRemoveFile: 'Remove',
-            init: function() {
-                this.on('addedfile', function(file) {
-                    if (this.files.length > 1) {
-                        this.removeFile(this.files[0])
-                    }
-                })
+            addRemoveLinks: false,
+        }
+
+        if (thumbnailPreviewContainer) {
+            thumbnailOptions.previewsContainer = thumbnailPreviewContainer
+        }
+
+        if (thumbnailPreviewTemplate) {
+            const template = document.querySelector(thumbnailPreviewTemplate)
+            if (template) {
+                thumbnailOptions.previewTemplate = template.innerHTML
             }
-        })
+        }
+
+        try {
+            thumbnailDropzone = new Dropzone(thumbnailEl, thumbnailOptions)
+
+            thumbnailDropzone.on('addedfile', function (file) {
+                if (this.files.length > 1) {
+                    this.removeFile(this.files[0])
+                }
+            })
+        } catch (e) {
+            console.error('Thumbnail Dropzone initialization failed:', e)
+        }
     }
 
+    // Gallery Dropzone
     if (galleryEl) {
-        galleryDropzone = new Dropzone(galleryEl, {
+        const galleryPreviewContainer = galleryEl.dataset.previewsContainer
+        const galleryPreviewTemplate = galleryEl.dataset.uploadPreviewTemplate
+
+        const galleryOptions = {
             url: '#',
             autoProcessQueue: false,
             uploadMultiple: true,
@@ -126,13 +146,30 @@ function initDropzones() {
             maxFiles: 10,
             maxFilesize: 2,
             acceptedFiles: 'image/jpeg,image/jpg,image/png,image/webp',
-            addRemoveLinks: true,
-            previewsContainer: '#gallery-previews',
-            previewTemplate: document.getElementById('galleryPreviewTemplate').innerHTML,
-            dictDefaultMessage: 'Drop new gallery images here (max 10 total)',
-            dictRemoveFile: 'Remove',
-            dictMaxFilesExceeded: 'You can only upload up to 10 images total',
-        })
+            addRemoveLinks: false,
+        }
+
+        if (galleryPreviewContainer) {
+            galleryOptions.previewsContainer = galleryPreviewContainer
+        }
+
+        if (galleryPreviewTemplate) {
+            const template = document.querySelector(galleryPreviewTemplate)
+            if (template) {
+                galleryOptions.previewTemplate = template.innerHTML
+            }
+        }
+
+        try {
+            galleryDropzone = new Dropzone(galleryEl, galleryOptions)
+
+            galleryDropzone.on('maxfilesexceeded', function (file) {
+                alert('Maximum 10 images allowed')
+                this.removeFile(file)
+            })
+        } catch (e) {
+            console.error('Gallery Dropzone initialization failed:', e)
+        }
     }
 }
 
@@ -142,13 +179,13 @@ function initDropzones() {
 
 function initExistingImageManagement() {
     const productId = getProductIdFromUrl()
-    
+
     // Delete Image buttons
     document.querySelectorAll('.delete-image-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             const imageId = this.dataset.imageId
             const imageContainer = this.closest('[data-image-id]')
-            
+
             if (!confirm('Are you sure you want to delete this image?')) {
                 return
             }
@@ -161,25 +198,25 @@ function initExistingImageManagement() {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    imageContainer.remove()
-                    refreshLucideIcons()
-                } else {
-                    alert(data.message || 'Failed to delete image')
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error)
-                alert('An error occurred while deleting the image')
-            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        imageContainer.remove()
+                        refreshLucideIcons()
+                    } else {
+                        alert(data.message || 'Failed to delete image')
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error)
+                    alert('An error occurred while deleting the image')
+                })
         })
     })
 
     // Set Primary Image buttons
     document.querySelectorAll('.set-primary-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             const imageId = this.dataset.imageId
 
             // AJAX set primary
@@ -190,38 +227,38 @@ function initExistingImageManagement() {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove all "Primary" badges
-                    document.querySelectorAll('.badge.bg-success').forEach(badge => {
-                        const btn = document.createElement('button')
-                        btn.type = 'button'
-                        btn.className = 'btn btn-sm btn-primary position-absolute top-0 start-0 m-1 set-primary-btn'
-                        btn.dataset.imageId = badge.closest('[data-image-id]').dataset.imageId
-                        btn.title = 'Set as Primary'
-                        btn.innerHTML = '<i data-lucide="star" style="width:12px;height:12px;"></i>'
-                        badge.replaceWith(btn)
-                    })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove all "Primary" badges
+                        document.querySelectorAll('.badge.bg-success').forEach(badge => {
+                            const btn = document.createElement('button')
+                            btn.type = 'button'
+                            btn.className = 'btn btn-sm btn-primary position-absolute top-0 start-0 m-1 set-primary-btn'
+                            btn.dataset.imageId = badge.closest('[data-image-id]').dataset.imageId
+                            btn.title = 'Set as Primary'
+                            btn.innerHTML = '<i data-lucide="star" style="width:12px;height:12px;"></i>'
+                            badge.replaceWith(btn)
+                        })
 
-                    // Add "Primary" badge to clicked image
-                    const newBadge = document.createElement('span')
-                    newBadge.className = 'badge bg-success position-absolute top-0 start-0 m-1'
-                    newBadge.textContent = 'Primary'
-                    this.replaceWith(newBadge)
+                        // Add "Primary" badge to clicked image
+                        const newBadge = document.createElement('span')
+                        newBadge.className = 'badge bg-success position-absolute top-0 start-0 m-1'
+                        newBadge.textContent = 'Primary'
+                        this.replaceWith(newBadge)
 
-                    refreshLucideIcons()
-                    
-                    // Re-init event listeners for newly created buttons
-                    initExistingImageManagement()
-                } else {
-                    alert(data.message || 'Failed to set primary image')
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error)
-                alert('An error occurred')
-            })
+                        refreshLucideIcons()
+
+                        // Re-init event listeners for newly created buttons
+                        initExistingImageManagement()
+                    } else {
+                        alert(data.message || 'Failed to set primary image')
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error)
+                    alert('An error occurred')
+                })
         })
     })
 }
@@ -243,14 +280,14 @@ function initSelect2() {
             url: '/admin/ecommerce/products/search',
             dataType: 'json',
             delay: 250,
-            data: function(params) {
+            data: function (params) {
                 return {
                     q: params.term,
-                    exclude: getProductIdFromUrl(), // Don't show current product in results
+                    exclude: getProductIdFromUrl(),
                     page: params.page || 1
                 }
             },
-            processResults: function(data) {
+            processResults: function (data) {
                 return {
                     results: data.map(product => ({
                         id: product.id,
@@ -274,7 +311,7 @@ function initFormSubmission() {
 
     if (!form) return
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault()
 
         // Sync Quill content
@@ -289,9 +326,9 @@ function initFormSubmission() {
         const tagsInput = document.querySelector('input[name="tags_input"]')
         if (tagsInput && tagsInput.value.trim()) {
             const tagsArray = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-            
+
             form.querySelectorAll('input[name="tags[]"]').forEach(el => el.remove())
-            
+
             tagsArray.forEach(tag => {
                 const hiddenInput = document.createElement('input')
                 hiddenInput.type = 'hidden'
@@ -303,6 +340,10 @@ function initFormSubmission() {
 
         // Build FormData
         const formData = new FormData(form)
+
+        // ✅ Remove empty fallback file inputs before appending real files
+        formData.delete('thumbnail')
+        formData.delete('images[]')
 
         // Thumbnail (new upload)
         if (thumbnailDropzone && thumbnailDropzone.files.length > 0) {
@@ -325,22 +366,46 @@ function initFormSubmission() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json',           // ✅ Ensure Laravel returns JSON on validation errors
+                'X-Requested-With': 'XMLHttpRequest'    // ✅ Helps Laravel detect AJAX requests
             }
         })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url
-            } else {
-                return response.json()
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error)
-            submitBtn.disabled = false
-            submitBtn.innerHTML = '<i data-lucide="save" class="me-1" style="width:16px;height:16px;"></i> Update Product'
-            alert('An error occurred. Please try again.')
-        })
+            .then(async response => {
+                console.log('Response status:', response.status)
+                console.log('Response redirected:', response.redirected)
+                console.log('Response URL:', response.url)
+
+                if (response.redirected) {
+                    window.location.href = response.url
+                    return
+                }
+
+                // ✅ Read as text first so we can see raw response if it's not JSON
+                const text = await response.text()
+                console.log('Raw response body:', text)
+
+                let data
+                try {
+                    data = JSON.parse(text)
+                } catch (parseError) {
+                    console.error('Response was not valid JSON:', parseError)
+                    throw new Error(`Server returned status ${response.status} with non-JSON response. Check console for raw body.`)
+                }
+
+                if (!response.ok) {
+                    console.error('Server returned error:', data)
+                    throw new Error(data.message || `Server error (status ${response.status})`)
+                }
+
+                return data
+            })
+            .catch(error => {
+                console.error('Full error details:', error)
+                submitBtn.disabled = false
+                submitBtn.innerHTML = '<i data-lucide="save" class="me-1" style="width:16px;height:16px;"></i> Update Product'
+                alert('Error: ' + error.message) // ✅ Now shows the REAL reason
+            })
     })
 }
 
@@ -350,7 +415,10 @@ function initFormSubmission() {
 
 function refreshLucideIcons() {
     if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-        lucide.createIcons()
+        const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
+        if (iconSet) {
+            lucide.createIcons({ icons: iconSet })
+        }
     }
 }
 

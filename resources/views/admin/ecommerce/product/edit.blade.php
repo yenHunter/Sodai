@@ -35,7 +35,7 @@
         <div class="col-xxl-12">
             <form action="{{ route('admin.ecommerce.product.update', $product) }}" method="POST" enctype="multipart/form-data" id="productForm">
                 @csrf
-                @method('PUT')
+                {{-- @method('PUT') --}}
                 @include('admin.ecommerce.product.form', [
                     'categories' => $categories,
                     'brands' => $brands,

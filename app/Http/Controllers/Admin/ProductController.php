@@ -341,4 +341,27 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Search products for Select2 dropdown (Related Products selection)
+     */
+    public function search(Request $request)
+    {
+        $search = $request->input('q', '');
+        $exclude = $request->input('exclude'); // Exclude current product in edit mode
+
+        $products = Product::active()
+            ->select('id', 'name', 'sku')
+            ->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            })
+            ->when($exclude, function ($query) use ($exclude) {
+                $query->where('id', '!=', $exclude);
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json($products);
+    }
 }

@@ -61,6 +61,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
             Route::patch('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
             Route::patch('/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured')->middleware('permission:product.edit');
+            Route::get('/products/search', [ProductController::class, 'search'])->name('product.search');
         });
 
         // ── Orders ──
