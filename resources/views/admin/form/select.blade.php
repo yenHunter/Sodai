@@ -1,4 +1,4 @@
-@extends("shared.base", ["title" => "Form Select"])
+@extends("admin.include.base", ["title" => "Form Select"])
 
 @section("styles")
     <link href="{{ asset("plugins/select2/select2.min.css") }}" rel="stylesheet" />
@@ -6,11 +6,11 @@
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "Forms", "title" => "Select"])
+                @include("admin.include.partials.page-title", ["subtitle" => "Forms", "title" => "Select"])
 
                 <div class="row">
                     <div class="col-12">
@@ -486,11 +486,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")
