@@ -405,11 +405,12 @@ class ProductService
         $category = Category::find($categoryId);
         $prefix   = $this->generateSkuPrefix($category?->name ?? 'PRD');
 
-        // Lock rows matching this prefix to prevent race conditions
-        // when multiple products are created simultaneously
+        // ✅ Database-agnostic ordering — works on MySQL, SQLite, PostgreSQL.
+        // Safe because SKU numbers are zero-padded to a fixed 5-digit width,
+        // so string sort order matches numeric order (ELE-00001 < ELE-00002 < ... < ELE-99999).
         $lastSku = Product::where('sku', 'like', $prefix . '-%')
             ->lockForUpdate()
-            ->orderByRaw('CAST(SUBSTRING_INDEX(sku, "-", -1) AS UNSIGNED) DESC')
+            ->orderBy('sku', 'desc')
             ->value('sku');
 
         $nextNumber = 1;
