@@ -50,18 +50,38 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
                 ->middleware('permission:category.edit');
         });
 
-        // ── Products: only roles with product permissions ──
+        // — Products: only roles with product permissions —
         Route::middleware('permission:product.view')->prefix('products')->name('product.')->group(function () {
-            Route::get('/', [ProductController::class, 'index'])->name('index');
-            Route::get('/create', [ProductController::class, 'create'])->name('create');
-            Route::post('/store', [ProductController::class, 'store'])->name('store')->middleware('permission:product.create');
-            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+
+            Route::get('/',        [ProductController::class, 'index'])->name('index');
+            Route::get('/create',  [ProductController::class, 'create'])->name('create');
+            Route::post('/store',  [ProductController::class, 'store'])->name('store')->middleware('permission:product.create');
+
+            // Bulk destroy BEFORE /{product} wildcard — critical ordering
+            Route::delete('/bulk-destroy', [ProductController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:product.delete');
+
+            // Tag search BEFORE /{product} wildcard
+            Route::get('/tags/search', [ProductController::class, 'searchTags'])->name('tags.search');
+
+            // Product search for Select2 BEFORE /{product} wildcard
+            Route::get('/search', [ProductController::class, 'search'])->name('search');
+
+            // Wildcard routes AFTER all static routes
+            Route::get('/{product}',      [ProductController::class, 'show'])->name('show');
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit')->middleware('permission:product.edit');
             Route::post('/{product}/update', [ProductController::class, 'update'])->name('update')->middleware('permission:product.edit');
-            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
-            Route::patch('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
+            Route::delete('/{product}',   [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
+
+            Route::patch('/{product}/toggle-status',   [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
             Route::patch('/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured')->middleware('permission:product.edit');
-            Route::get('/products/search', [ProductController::class, 'search'])->name('product.search');
+
+            // Image management AJAX endpoints
+            Route::delete('/{product}/images/{image}',         [ProductController::class, 'deleteImage'])->name('images.delete')->middleware('permission:product.edit');
+            Route::patch('/{product}/images/{image}/primary',  [ProductController::class, 'setPrimaryImage'])->name('images.set-primary')->middleware('permission:product.edit');
+            Route::post('/{product}/images/reorder',           [ProductController::class, 'reorderImages'])->name('images.reorder')->middleware('permission:product.edit');
+
+            // Stock quick update
+            Route::patch('/{product}/stock', [ProductController::class, 'updateStock'])->name('stock.update')->middleware('permission:product.edit');
         });
 
         // ── Orders ──

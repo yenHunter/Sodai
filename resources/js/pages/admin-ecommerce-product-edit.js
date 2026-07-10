@@ -273,11 +273,14 @@ function getProductIdFromUrl() {
 // ═══════════════════════════════════════════════
 
 function initSelect2() {
+    const select = document.getElementById('related_products')
+    const searchUrl = select?.dataset.searchUrl
+    
     $('#related_products').select2({
         placeholder: 'Search and select related products',
         allowClear: true,
         ajax: {
-            url: '/admin/ecommerce/products/search',
+            url: searchUrl,
             dataType: 'json',
             delay: 250,
             data: function (params) {

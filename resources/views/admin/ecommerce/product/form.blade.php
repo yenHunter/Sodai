@@ -193,9 +193,9 @@
 
                         @if ($product && $product->thumbnail)
                             <div class="mb-2">
+                                <p class="small text-muted">Current thumbnail (upload new to replace)</p>
                                 <img src="{{ Storage::url($product->thumbnail) }}" alt="Current Thumbnail"
                                     class="img-thumbnail" style="max-width: 150px;" />
-                                <p class="small text-muted mt-1">Current thumbnail (upload new to replace)</p>
                             </div>
                         @endif
 
@@ -229,8 +229,8 @@
                         </label>
 
                         @if ($product && $product->images->count() > 0)
-                            <div class="mb-3">
-                                <p class="small text-muted mb-2">Existing gallery images:</p>
+                            <div class="mb-2">
+                                <p class="small text-muted">Existing gallery images:</p>
                                 <div class="row g-2" id="existingGalleryImages">
                                     @foreach ($product->images as $image)
                                         <div class="col-auto" data-image-id="{{ $image->id }}">
@@ -507,7 +507,8 @@
                         Related Products <span class="text-muted">(Optional)</span>
                     </label>
                     <select class="form-select @error('related_products') is-invalid @enderror" id="related_products"
-                        name="related_products[]" multiple>
+                        name="related_products[]" data-search-url="{{ route('admin.ecommerce.product.search') }}"
+                        multiple>
                         @if ($product && $product->relatedProducts->count() > 0)
                             @foreach ($product->relatedProducts as $related)
                                 <option value="{{ $related->id }}" selected>

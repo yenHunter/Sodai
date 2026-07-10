@@ -22,16 +22,56 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['category_id', 'brand_id', 'status', 'search']);
+        $query = Product::with(['category', 'brand'])
+            ->select(
+                'id',
+                'name',
+                'sku',
+                'thumbnail',
+                'short_description',
+                'category_id',
+                'brand_id',
+                'price',
+                'stock_quantity',
+                'is_active',
+                'is_featured',
+                'average_rating',
+                'review_count',
+                'total_sales'
+            );
 
-        $products = $this->productService->getProductsList($filters);
+        // Search
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if ($categoryId = $request->input('category_id')) {
+            $query->where('category_id', $categoryId);
+        }
+
+        // Status filter
+        if ($status = $request->input('status')) {
+            switch ($status) {
+                case 'active':
+                    $query->where('is_active', true)->where('stock_quantity', '>', 0);
+                    break;
+                case 'inactive':
+                    $query->where('is_active', false);
+                    break;
+                case 'out_of_stock':
+                    $query->where('is_active', true)->where('stock_quantity', '<=', 0);
+                    break;
+            }
+        }
+
+        $products = $query->latest()->paginate(15)->withQueryString();
         $categories = $this->productService->getAssignableCategories();
-        $brands = $this->productService->getActiveBrands();
 
-        return view(
-            'admin.ecommerce.product.index',
-            compact('products', 'categories', 'brands', 'filters')
-        );
+        return view('admin.ecommerce.product.index', compact('products', 'categories'));
     }
 
     // ─────────────────────────────────────────────
