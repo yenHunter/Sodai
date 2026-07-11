@@ -6,7 +6,9 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use App\Services\ProductService;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Admin\Product\StoreProductRequest;
 use App\Http\Requests\Admin\Product\UpdateProductRequest;
 
@@ -23,37 +25,21 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['category', 'brand'])
-            ->select(
-                'id',
-                'name',
-                'sku',
-                'thumbnail',
-                'short_description',
-                'category_id',
-                'brand_id',
-                'price',
-                'stock_quantity',
-                'is_active',
-                'is_featured',
-                'average_rating',
-                'review_count',
-                'total_sales'
-            );
+            ->select('id', 'name', 'sku', 'thumbnail', 'short_description',
+                     'category_id', 'brand_id', 'price', 'stock_quantity',
+                     'is_active', 'is_featured', 'average_rating', 'review_count', 'total_sales');
 
-        // Search
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
-        // Category filter
         if ($categoryId = $request->input('category_id')) {
             $query->where('category_id', $categoryId);
         }
 
-        // Status filter
         if ($status = $request->input('status')) {
             switch ($status) {
                 case 'active':
@@ -75,7 +61,7 @@ class ProductController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // CREATE (data for Add modal, if needed separately)
+    // CREATE
     // ─────────────────────────────────────────────
 
     public function create()
@@ -103,6 +89,11 @@ class ProductController extends Controller
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product \"{$product->name}\" created successfully. SKU: {$product->sku}");
         } catch (\Exception $e) {
+            Log::error('Admin failed to create product.', [
+                'exception' => $e,
+                'admin_id'  => Auth::guard('admin')->id(),
+            ]);
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('error', 'Failed to create product: ' . $e->getMessage())
@@ -141,6 +132,12 @@ class ProductController extends Controller
                 ->route('admin.ecommerce.product.index')
                 ->with('success', 'Product updated successfully.');
         } catch (\Exception $e) {
+            Log::error('Admin failed to update product.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('error', 'Failed to update product: ' . $e->getMessage())
@@ -161,6 +158,12 @@ class ProductController extends Controller
                 ->route('admin.ecommerce.product.index')
                 ->with('success', 'Product deleted successfully.');
         } catch (\Exception $e) {
+            Log::error('Admin failed to delete product.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('error', $e->getMessage());
@@ -193,6 +196,13 @@ class ProductController extends Controller
                 $successCount++;
             } catch (\Exception $e) {
                 $failedNames[] = $product->name;
+
+                Log::warning('Bulk delete: product skipped due to error.', [
+                    'exception'  => $e,
+                    'admin_id'   => Auth::guard('admin')->id(),
+                    'product_id' => $product->id,
+                    'name'       => $product->name,
+                ]);
             }
         }
 
@@ -226,6 +236,12 @@ class ProductController extends Controller
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product {$status} successfully.");
         } catch (\Exception $e) {
+            Log::error('Admin failed to toggle product status.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('error', 'Failed to update status.');
@@ -246,6 +262,12 @@ class ProductController extends Controller
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product {$status}.");
         } catch (\Exception $e) {
+            Log::error('Admin failed to toggle product featured status.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('error', 'Failed to update featured status.');
@@ -256,14 +278,16 @@ class ProductController extends Controller
     // IMAGE MANAGEMENT (AJAX endpoints)
     // ─────────────────────────────────────────────
 
-    /**
-     * Delete a single gallery image via AJAX (used in Edit screen
-     * for instant removal without waiting for full form submit).
-     */
     public function deleteImage(Product $product, ProductImage $image)
     {
         try {
             if ($image->product_id !== $product->id) {
+                Log::warning('Attempted to delete image not belonging to product.', [
+                    'admin_id'   => Auth::guard('admin')->id(),
+                    'product_id' => $product->id,
+                    'image_id'   => $image->id,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Image does not belong to this product.',
@@ -277,6 +301,13 @@ class ProductController extends Controller
                 'message' => 'Image deleted successfully.',
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to delete product image via AJAX.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+                'image_id'   => $image->id,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -284,13 +315,16 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Set a gallery image as the primary image via AJAX.
-     */
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
         try {
             if ($image->product_id !== $product->id) {
+                Log::warning('Attempted to set primary image not belonging to product.', [
+                    'admin_id'   => Auth::guard('admin')->id(),
+                    'product_id' => $product->id,
+                    'image_id'   => $image->id,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Image does not belong to this product.',
@@ -304,6 +338,13 @@ class ProductController extends Controller
                 'message' => 'Primary image updated.',
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to set primary product image via AJAX.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+                'image_id'   => $image->id,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -311,9 +352,6 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Reorder gallery images via AJAX (drag-and-drop sortable UI).
-     */
     public function reorderImages(Request $request, Product $product)
     {
         $request->validate([
@@ -329,6 +367,12 @@ class ProductController extends Controller
                 'message' => 'Image order updated.',
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to reorder product images via AJAX.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -352,7 +396,31 @@ class ProductController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // STOCK QUICK UPDATE (AJAX - optional inline edit)
+    // PRODUCT SEARCH (Select2 AJAX - Related Products)
+    // ─────────────────────────────────────────────
+
+    public function search(Request $request)
+    {
+        $search  = $request->input('q', '');
+        $exclude = $request->input('exclude');
+
+        $products = Product::active()
+            ->select('id', 'name', 'sku')
+            ->where(function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+            })
+            ->when($exclude, function($query) use ($exclude) {
+                $query->where('id', '!=', $exclude);
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json($products);
+    }
+
+    // ─────────────────────────────────────────────
+    // STOCK QUICK UPDATE (AJAX)
     // ─────────────────────────────────────────────
 
     public function updateStock(Request $request, Product $product)
@@ -368,40 +436,23 @@ class ProductController extends Controller
             );
 
             return response()->json([
-                'success'       => true,
-                'message'       => 'Stock updated successfully.',
-                'stock_status'  => $updated->stock_status,
-                'is_low_stock'  => $updated->is_low_stock,
+                'success'         => true,
+                'message'         => 'Stock updated successfully.',
+                'stock_status'    => $updated->stock_status,
+                'is_low_stock'    => $updated->is_low_stock,
                 'is_out_of_stock' => $updated->is_out_of_stock,
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to update product stock via AJAX.', [
+                'exception'  => $e,
+                'admin_id'   => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Search products for Select2 dropdown (Related Products selection)
-     */
-    public function search(Request $request)
-    {
-        $search = $request->input('q', '');
-        $exclude = $request->input('exclude'); // Exclude current product in edit mode
-
-        $products = Product::active()
-            ->select('id', 'name', 'sku')
-            ->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            })
-            ->when($exclude, function ($query) use ($exclude) {
-                $query->where('id', '!=', $exclude);
-            })
-            ->limit(20)
-            ->get();
-
-        return response()->json($products);
     }
 }

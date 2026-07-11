@@ -542,7 +542,7 @@ Route::get('/apps/ecommerce/refunds', function () {
 });
 
 Route::get('/apps/ecommerce/categories', function () {
-    return view('admin.apps.ecommerce.categories');
+    return view('admin.ecommerce.category.categories');
 });
 
 Route::get('/apps/ecommerce/reviews', function () {

@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductImage;
 use App\Models\Tag;
+use App\Models\Brand;
+use App\Models\Product;
+use App\Models\Category;
+use Illuminate\Support\Str;
+use App\Models\ProductImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Intervention\Image\Laravel\Facades\Image;
 
 class ProductService
 {
@@ -20,51 +22,65 @@ class ProductService
 
     public function store(array $data): Product
     {
-        return DB::transaction(function () use ($data) {
+        try {
+            return DB::transaction(function () use ($data) {
 
-            $thumbnailPath = null;
-            if (!empty($data['thumbnail'])) {
-                $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
-            }
+                $thumbnailPath = null;
+                if (!empty($data['thumbnail'])) {
+                    $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
+                }
 
-            $product = Product::create([
-                'name'                 => $data['name'],
-                'slug'                 => $this->generateUniqueSlug($data['name']),
-                'sku'                  => $this->generateUniqueSku($data['category_id']),
-                'short_description'    => $data['short_description'] ?? null,
-                'description'          => $data['description'] ?? null,
-                'category_id'          => $data['category_id'],
-                'brand_id'             => $data['brand_id'] ?? null,
-                'price'                => $data['price'],
-                'purchase_price'       => $data['purchase_price'] ?? null,
-                'discount_type'        => $data['discount_type'] ?? null,
-                'discount_value'       => $data['discount_value'] ?? null,
-                'stock_quantity'       => $data['stock_quantity'],
-                'low_stock_threshold'  => $data['low_stock_threshold'] ?? 5,
-                'thumbnail'            => $thumbnailPath,
-                'weight'               => $data['weight'] ?? null,
-                'weight_unit'          => $data['weight_unit'] ?? null,
-                'color'                => $data['color'] ?? null,
-                'size'                 => $data['size'] ?? null,
-                'is_active'            => $this->resolveBoolean($data['is_active'] ?? false),
-                'is_featured'          => $this->resolveBoolean($data['is_featured'] ?? false),
-                'meta'                 => $data['meta'] ?? null,
+                $product = Product::create([
+                    'name'                 => $data['name'],
+                    'slug'                 => $this->generateUniqueSlug($data['name']),
+                    'sku'                  => $this->generateUniqueSku($data['category_id']),
+                    'short_description'    => $data['short_description'] ?? null,
+                    'description'          => $data['description'] ?? null,
+                    'category_id'          => $data['category_id'],
+                    'brand_id'             => $data['brand_id'] ?? null,
+                    'price'                => $data['price'],
+                    'purchase_price'       => $data['purchase_price'] ?? null,
+                    'discount_type'        => $data['discount_type'] ?? null,
+                    'discount_value'       => $data['discount_value'] ?? null,
+                    'stock_quantity'       => $data['stock_quantity'],
+                    'low_stock_threshold'  => $data['low_stock_threshold'] ?? 5,
+                    'thumbnail'            => $thumbnailPath,
+                    'weight'               => $data['weight'] ?? null,
+                    'weight_unit'          => $data['weight_unit'] ?? null,
+                    'color'                => $data['color'] ?? null,
+                    'size'                 => $data['size'] ?? null,
+                    'is_active'            => $this->resolveBoolean($data['is_active'] ?? false),
+                    'is_featured'          => $this->resolveBoolean($data['is_featured'] ?? false),
+                    'meta'                 => $data['meta'] ?? null,
+                ]);
+
+                if (!empty($data['images'])) {
+                    $this->storeProductImages($product, $data['images']);
+                }
+
+                if (!empty($data['tags'])) {
+                    $this->syncTags($product, $data['tags']);
+                }
+
+                if (!empty($data['related_products'])) {
+                    $this->syncRelatedProducts($product, $data['related_products']);
+                }
+
+                Log::info('Product created successfully.', [
+                    'product_id' => $product->id,
+                    'sku'        => $product->sku,
+                    'name'       => $product->name,
+                ]);
+
+                return $product->fresh(['images', 'tags', 'relatedProducts']);
+            });
+        } catch (\Exception $e) {
+            Log::error('Product creation failed.', [
+                'exception' => $e,
+                'data'      => collect($data)->except(['thumbnail', 'images'])->toArray(),
             ]);
-
-            if (!empty($data['images'])) {
-                $this->storeProductImages($product, $data['images']);
-            }
-
-            if (!empty($data['tags'])) {
-                $this->syncTags($product, $data['tags']);
-            }
-
-            if (!empty($data['related_products'])) {
-                $this->syncRelatedProducts($product, $data['related_products']);
-            }
-
-            return $product->fresh(['images', 'tags', 'relatedProducts']);
-        });
+            throw $e;
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -73,56 +89,70 @@ class ProductService
 
     public function update(Product $product, array $data): Product
     {
-        return DB::transaction(function () use ($product, $data) {
+        try {
+            return DB::transaction(function () use ($product, $data) {
 
-            $thumbnailPath = $product->thumbnail;
-            if (!empty($data['thumbnail'])) {
-                $this->deleteImage($product->thumbnail);
-                $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
-            }
+                $thumbnailPath = $product->thumbnail;
+                if (!empty($data['thumbnail'])) {
+                    $this->deleteImage($product->thumbnail);
+                    $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
+                }
 
-            $slug = $product->slug;
-            if ($product->name !== $data['name']) {
-                $slug = $this->generateUniqueSlug($data['name'], $product->id);
-            }
+                $slug = $product->slug;
+                if ($product->name !== $data['name']) {
+                    $slug = $this->generateUniqueSlug($data['name'], $product->id);
+                }
 
-            // ✅ SKU is immutable — never regenerated or overwritten on update
-            $product->update([
-                'name'                 => $data['name'],
-                'slug'                 => $slug,
-                'short_description'    => $data['short_description'] ?? null,
-                'description'          => $data['description'] ?? null,
-                'category_id'          => $data['category_id'],
-                'brand_id'             => $data['brand_id'] ?? null,
-                'price'                => $data['price'],
-                'purchase_price'       => $data['purchase_price'] ?? null,
-                'discount_type'        => $data['discount_type'] ?? null,
-                'discount_value'       => $data['discount_value'] ?? null,
-                'stock_quantity'       => $data['stock_quantity'],
-                'low_stock_threshold'  => $data['low_stock_threshold'] ?? 5,
-                'thumbnail'            => $thumbnailPath,
-                'weight'               => $data['weight'] ?? null,
-                'weight_unit'          => $data['weight_unit'] ?? null,
-                'color'                => $data['color'] ?? null,
-                'size'                 => $data['size'] ?? null,
-                'is_active'            => $this->resolveBoolean($data['is_active'] ?? false),
-                'is_featured'          => $this->resolveBoolean($data['is_featured'] ?? false),
-                'meta'                 => $data['meta'] ?? null,
+                $product->update([
+                    'name'                 => $data['name'],
+                    'slug'                 => $slug,
+                    'short_description'    => $data['short_description'] ?? null,
+                    'description'          => $data['description'] ?? null,
+                    'category_id'          => $data['category_id'],
+                    'brand_id'             => $data['brand_id'] ?? null,
+                    'price'                => $data['price'],
+                    'purchase_price'       => $data['purchase_price'] ?? null,
+                    'discount_type'        => $data['discount_type'] ?? null,
+                    'discount_value'       => $data['discount_value'] ?? null,
+                    'stock_quantity'       => $data['stock_quantity'],
+                    'low_stock_threshold'  => $data['low_stock_threshold'] ?? 5,
+                    'thumbnail'            => $thumbnailPath,
+                    'weight'               => $data['weight'] ?? null,
+                    'weight_unit'          => $data['weight_unit'] ?? null,
+                    'color'                => $data['color'] ?? null,
+                    'size'                 => $data['size'] ?? null,
+                    'is_active'            => $this->resolveBoolean($data['is_active'] ?? false),
+                    'is_featured'          => $this->resolveBoolean($data['is_featured'] ?? false),
+                    'meta'                 => $data['meta'] ?? null,
+                ]);
+
+                if (!empty($data['delete_image_ids'])) {
+                    $this->deleteProductImages($product, $data['delete_image_ids']);
+                }
+
+                if (!empty($data['images'])) {
+                    $this->storeProductImages($product, $data['images']);
+                }
+
+                $this->syncTags($product, $data['tags'] ?? []);
+                $this->syncRelatedProducts($product, $data['related_products'] ?? []);
+
+                Log::info('Product updated successfully.', [
+                    'product_id' => $product->id,
+                    'sku'        => $product->sku,
+                    'name'       => $product->name,
+                ]);
+
+                return $product->fresh(['images', 'tags', 'relatedProducts']);
+            });
+        } catch (\Exception $e) {
+            Log::error('Product update failed.', [
+                'exception'  => $e,
+                'product_id' => $product->id,
+                'data'       => collect($data)->except(['thumbnail', 'images'])->toArray(),
             ]);
-
-            if (!empty($data['delete_image_ids'])) {
-                $this->deleteProductImages($product, $data['delete_image_ids']);
-            }
-
-            if (!empty($data['images'])) {
-                $this->storeProductImages($product, $data['images']);
-            }
-
-            $this->syncTags($product, $data['tags'] ?? []);
-            $this->syncRelatedProducts($product, $data['related_products'] ?? []);
-
-            return $product->fresh(['images', 'tags', 'relatedProducts']);
-        });
+            throw $e;
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -131,33 +161,57 @@ class ProductService
 
     public function delete(Product $product): bool
     {
-        return DB::transaction(function () use ($product) {
+        if (!$product->canDelete()) {
+            Log::warning('Product deletion blocked.', [
+                'product_id' => $product->id,
+                'sku'        => $product->sku,
+                'reason'     => $product->deletion_block_reason,
+            ]);
 
-            if (!$product->canDelete()) {
-                throw new \Exception($product->deletion_block_reason);
-            }
+            throw new \Exception($product->deletion_block_reason);
+        }
 
-            $this->deleteImage($product->thumbnail);
+        try {
+            return DB::transaction(function () use ($product) {
 
-            foreach ($product->images as $image) {
-                $this->deleteImage($image->image_path);
-            }
-            $product->images()->delete();
+                $this->deleteImage($product->thumbnail);
 
-            $product->tags()->detach();
+                foreach ($product->images as $image) {
+                    $this->deleteImage($image->image_path);
+                }
+                $product->images()->delete();
 
-            // Remove bidirectional relations (both directions)
-            // NOTE: This only deletes rows from product_relations table.
-            // The related products themselves are NOT deleted.
-            $relatedIds = $product->relatedProducts()->pluck('products.id')->toArray();
-            foreach ($relatedIds as $relatedId) {
-                $related = Product::find($relatedId);
-                $related?->relatedProducts()->detach($product->id);
-            }
-            $product->relatedProducts()->detach();
+                $product->tags()->detach();
 
-            return $product->delete();
-        });
+                // Remove bidirectional relations (both directions).
+                // Only rows in product_relations are removed — related
+                // products themselves are never deleted.
+                $relatedIds = $product->relatedProducts()->pluck('products.id')->toArray();
+                foreach ($relatedIds as $relatedId) {
+                    $related = Product::find($relatedId);
+                    $related?->relatedProducts()->detach($product->id);
+                }
+                $product->relatedProducts()->detach();
+
+                $productId = $product->id;
+                $sku       = $product->sku;
+
+                $result = $product->delete();
+
+                Log::info('Product deleted successfully.', [
+                    'product_id' => $productId,
+                    'sku'        => $sku,
+                ]);
+
+                return $result;
+            });
+        } catch (\Exception $e) {
+            Log::error('Product deletion failed.', [
+                'exception'  => $e,
+                'product_id' => $product->id,
+            ]);
+            throw $e;
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -167,12 +221,24 @@ class ProductService
     public function toggleStatus(Product $product): Product
     {
         $product->update(['is_active' => !$product->is_active]);
+
+        Log::info('Product status toggled.', [
+            'product_id' => $product->id,
+            'is_active'  => $product->is_active,
+        ]);
+
         return $product->fresh();
     }
 
     public function toggleFeatured(Product $product): Product
     {
         $product->update(['is_featured' => !$product->is_featured]);
+
+        Log::info('Product featured status toggled.', [
+            'product_id'  => $product->id,
+            'is_featured' => $product->is_featured,
+        ]);
+
         return $product->fresh();
     }
 
@@ -182,7 +248,32 @@ class ProductService
 
     public function updateStock(Product $product, int $quantity): Product
     {
+        $oldQuantity = $product->stock_quantity;
+
         $product->update(['stock_quantity' => max(0, $quantity)]);
+
+        Log::info('Product stock updated.', [
+            'product_id'   => $product->id,
+            'old_quantity' => $oldQuantity,
+            'new_quantity' => $product->stock_quantity,
+        ]);
+
+        if ($product->is_low_stock) {
+            Log::warning('Product stock is low.', [
+                'product_id'    => $product->id,
+                'sku'           => $product->sku,
+                'stock_quantity' => $product->stock_quantity,
+                'threshold'     => $product->low_stock_threshold,
+            ]);
+        }
+
+        if ($product->is_out_of_stock) {
+            Log::warning('Product is out of stock.', [
+                'product_id' => $product->id,
+                'sku'        => $product->sku,
+            ]);
+        }
+
         return $product->fresh();
     }
 
@@ -215,27 +306,6 @@ class ProductService
         }
     }
 
-    /**
-     * Delete a single gallery image immediately (used by AJAX endpoint
-     * in the Edit screen, separate from the bulk delete_image_ids
-     * handled during full product update).
-     */
-    public function deleteSingleImage(Product $product, ProductImage $image): void
-    {
-        DB::transaction(function () use ($product, $image) {
-            $this->deleteImage($image->image_path);
-            $wasPrimary = $image->is_primary;
-            $image->delete();
-
-            if ($wasPrimary) {
-                $next = $product->images()->orderBy('sort_order')->first();
-                if ($next) {
-                    $next->update(['is_primary' => true]);
-                }
-            }
-        });
-    }
-
     private function deleteProductImages(Product $product, array $imageIds): void
     {
         $images = $product->images()->whereIn('id', $imageIds)->get();
@@ -252,23 +322,91 @@ class ProductService
                 }
             }
         }
+
+        Log::info('Product gallery images deleted.', [
+            'product_id' => $product->id,
+            'image_ids'  => $imageIds,
+        ]);
+    }
+
+    /**
+     * Delete a single gallery image immediately (used by AJAX endpoint
+     * in the Edit screen, separate from the bulk delete_image_ids
+     * handled during full product update).
+     */
+    public function deleteSingleImage(Product $product, ProductImage $image): void
+    {
+        try {
+            DB::transaction(function () use ($product, $image) {
+                $this->deleteImage($image->image_path);
+                $wasPrimary = $image->is_primary;
+                $imageId    = $image->id;
+                $image->delete();
+
+                if ($wasPrimary) {
+                    $next = $product->images()->orderBy('sort_order')->first();
+                    if ($next) {
+                        $next->update(['is_primary' => true]);
+                    }
+                }
+
+                Log::info('Single product image deleted.', [
+                    'product_id' => $product->id,
+                    'image_id'   => $imageId,
+                ]);
+            });
+        } catch (\Exception $e) {
+            Log::error('Single product image deletion failed.', [
+                'exception'  => $e,
+                'product_id' => $product->id,
+                'image_id'   => $image->id,
+            ]);
+            throw $e;
+        }
     }
 
     public function setPrimaryImage(Product $product, int $imageId): void
     {
-        DB::transaction(function () use ($product, $imageId) {
-            $product->images()->update(['is_primary' => false]);
-            $product->images()->where('id', $imageId)->update(['is_primary' => true]);
-        });
+        try {
+            DB::transaction(function () use ($product, $imageId) {
+                $product->images()->update(['is_primary' => false]);
+                $product->images()->where('id', $imageId)->update(['is_primary' => true]);
+            });
+
+            Log::info('Product primary image updated.', [
+                'product_id' => $product->id,
+                'image_id'   => $imageId,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Setting primary image failed.', [
+                'exception'  => $e,
+                'product_id' => $product->id,
+                'image_id'   => $imageId,
+            ]);
+            throw $e;
+        }
     }
 
     public function reorderImages(Product $product, array $orderedIds): void
     {
-        DB::transaction(function () use ($orderedIds) {
-            foreach ($orderedIds as $index => $imageId) {
-                ProductImage::where('id', $imageId)->update(['sort_order' => $index]);
-            }
-        });
+        try {
+            DB::transaction(function () use ($orderedIds) {
+                foreach ($orderedIds as $index => $imageId) {
+                    ProductImage::where('id', $imageId)->update(['sort_order' => $index]);
+                }
+            });
+
+            Log::info('Product gallery images reordered.', [
+                'product_id'  => $product->id,
+                'ordered_ids' => $orderedIds,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Reordering product images failed.', [
+                'exception'  => $e,
+                'product_id' => $product->id,
+            ]);
+            throw $e;
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -304,19 +442,15 @@ class ProductService
             ->values()
             ->toArray();
 
-        // Capture existing relations before sync (for removal detection)
         $previousRelatedIds = $product->relatedProducts()->pluck('products.id')->toArray();
 
-        // Sync forward direction (product_id -> related_product_id)
         $product->relatedProducts()->sync($relatedIds);
 
-        // Ensure reverse direction exists for all current relations
         foreach ($relatedIds as $relatedId) {
             $relatedProduct = Product::find($relatedId);
             $relatedProduct?->relatedProducts()->syncWithoutDetaching([$product->id]);
         }
 
-        // Remove reverse direction for relations that were dropped
         $removedIds = array_diff($previousRelatedIds, $relatedIds);
         foreach ($removedIds as $removedId) {
             $removedProduct = Product::find($removedId);
@@ -328,18 +462,32 @@ class ProductService
     // IMAGE UPLOAD / DELETE HELPERS
     // ─────────────────────────────────────────────
 
+    /**
+     * Upload and convert image to WebP format at 70% quality.
+     * Regardless of input format (jpeg/png/webp), output is always
+     * saved as .webp for consistent, optimized storage.
+     */
     private function uploadImage(UploadedFile $image, string $directory): string
     {
         try {
-            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs($directory, $filename, 'public');
+            $filename = Str::uuid() . '.webp';
+            $path     = $directory . '/' . $filename;
 
-            if (!$path) {
+            $encodedImage = Image::read($image)->toWebp(quality: 70);
+
+            $stored = Storage::disk('public')->put($path, (string) $encodedImage);
+
+            if (!$stored) {
                 throw new \Exception('Failed to upload image.');
             }
 
             return $path;
         } catch (\Exception $e) {
+            Log::error('Image upload failed.', [
+                'exception'         => $e,
+                'directory'         => $directory,
+                'original_filename' => $image->getClientOriginalName(),
+            ]);
             throw new \Exception('Image upload failed: ' . $e->getMessage());
         }
     }
@@ -403,11 +551,18 @@ class ProductService
     private function generateUniqueSku(int $categoryId): string
     {
         $category = Category::find($categoryId);
-        $prefix   = $this->generateSkuPrefix($category?->name ?? 'PRD');
 
-        // ✅ Database-agnostic ordering — works on MySQL, SQLite, PostgreSQL.
+        if (!$category) {
+            Log::warning('SKU generation: category not found, using fallback prefix.', [
+                'category_id' => $categoryId,
+            ]);
+        }
+
+        $prefix = $this->generateSkuPrefix($category?->name ?? 'PRD');
+
+        // Database-agnostic ordering (works on MySQL, SQLite, PostgreSQL).
         // Safe because SKU numbers are zero-padded to a fixed 5-digit width,
-        // so string sort order matches numeric order (ELE-00001 < ELE-00002 < ... < ELE-99999).
+        // so string sort order matches numeric order.
         $lastSku = Product::where('sku', 'like', $prefix . '-%')
             ->lockForUpdate()
             ->orderBy('sku', 'desc')
