@@ -56,8 +56,20 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(15)->withQueryString();
         $categories = $this->productService->getAssignableCategories();
+        dd($products, $categories);
 
-        return view('admin.ecommerce.product.index', compact('products', 'categories'));
+        // return view('admin.ecommerce.product.index', compact('products', 'categories'));
+    }
+
+    // ─────────────────────────────────────────────
+    // SHOW
+    // ─────────────────────────────────────────────
+
+    public function show(Product $product)
+    {
+        $product = $this->productService->getProductForDetails($product);
+
+        return view('admin.ecommerce.product.details', compact('product'));
     }
 
     // ─────────────────────────────────────────────

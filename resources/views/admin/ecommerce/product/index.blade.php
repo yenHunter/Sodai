@@ -117,7 +117,7 @@
                                                 <div>
                                                     <h5 class="mb-1">
                                                         <a class="link-reset"
-                                                            href="{{ route('admin.ecommerce.product.edit', $product) }}">
+                                                            href="{{ route('admin.ecommerce.product.show', $product) }}">
                                                             {{ $product->name }}
                                                         </a>
                                                     </h5>
@@ -174,6 +174,11 @@
                                         </td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-1">
+                                                <a class="btn btn-default btn-icon btn-sm rounded-circle"
+                                                    href="{{ route('admin.ecommerce.product.show', $product) }}"
+                                                    title="View Details">
+                                                    <i class="fs-lg" data-lucide="eye"></i>
+                                                </a>
                                                 @admincan('product.edit')
                                                     <a class="btn btn-default btn-icon btn-sm rounded-circle"
                                                         href="{{ route('admin.ecommerce.product.edit', $product) }}"
@@ -187,7 +192,7 @@
                                                         data-product-id="{{ $product->id }}"
                                                         data-product-name="{{ $product->name }}"
                                                         data-delete-url="{{ route('admin.ecommerce.product.destroy', $product) }}"
-                                                        {{-- ✅ Add this --}} title="Delete">
+                                                        title="Delete">
                                                         <i class="fs-lg" data-lucide="trash-2"></i>
                                                     </button>
                                                 @endadmincan

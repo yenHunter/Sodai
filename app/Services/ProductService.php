@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductService
 {
@@ -473,7 +475,10 @@ class ProductService
             $filename = Str::uuid() . '.webp';
             $path     = $directory . '/' . $filename;
 
-            $encodedImage = Image::read($image)->toWebp(quality: 70);
+            $manager = new ImageManager(new Driver());
+
+            $encodedImage = $manager->decode($image->getRealPath())
+                ->save(quality: 70);
 
             $stored = Storage::disk('public')->put($path, (string) $encodedImage);
 
@@ -628,6 +633,28 @@ class ProductService
                 'products.thumbnail',
                 'products.price'
             ),
+        ]);
+    }
+
+    /**
+     * Load relations required for the read-only product details page.
+     * Kept separate from getProductWithRelations() so the edit screen
+     * (which reuses that method) doesn't pay for the reviews query.
+     */
+    public function getProductForDetails(Product $product): Product
+    {
+        return $product->load([
+            'category.parent',
+            'brand',
+            'images' => fn($q) => $q->ordered(),
+            'tags',
+            'relatedProducts' => fn($q) => $q->select(
+                'products.id',
+                'products.name',
+                'products.thumbnail',
+                'products.price'
+            ),
+            'reviews' => fn($q) => $q->latest()->with('user:id,name,avatar'),
         ]);
     }
 
