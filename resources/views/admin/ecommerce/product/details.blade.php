@@ -2,7 +2,10 @@
 
 @section('content')
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Product Details'])
+        @include('admin.include.partials.page-title', [
+            'subtitle' => 'Ecommerce',
+            'title' => 'Product Details',
+        ])
     </div>
 
     <div class="d-flex justify-content-end mb-2">
@@ -45,23 +48,28 @@
                                     @endphp
 
                                     @if ($hasGallery)
-                                        <div class="carousel slide carousel-fade" data-bs-ride="carousel" id="productImagesCarousel">
+                                        <div class="carousel slide carousel-fade" data-bs-ride="carousel"
+                                            id="productImagesCarousel">
                                             <div class="carousel-inner" role="listbox">
                                                 @foreach ($galleryImages as $index => $image)
-                                                    <div class="carousel-item text-center {{ $index === 0 ? 'active' : '' }}">
+                                                    <div
+                                                        class="carousel-item text-center {{ $index === 0 ? 'active' : '' }}">
                                                         <img alt="{{ $product->name }}" class="img-fluid"
                                                             src="{{ Storage::url($image->image_path) }}" />
                                                     </div>
                                                 @endforeach
                                             </div>
                                             @if ($galleryImages->count() > 1)
-                                                <div class="carousel-indicators m-0 mt-3 d-lg-flex d-none position-static h-100 rounded gap-2">
+                                                <div
+                                                    class="carousel-indicators m-0 mt-3 d-lg-flex d-none position-static h-100 rounded gap-2">
                                                     @foreach ($galleryImages as $index => $image)
                                                         <button aria-label="Slide {{ $index + 1 }}"
                                                             class="h-auto rounded bg-light-subtle border {{ $index === 0 ? 'active' : '' }}"
-                                                            data-bs-slide-to="{{ $index }}" data-bs-target="#productImagesCarousel"
+                                                            data-bs-slide-to="{{ $index }}"
+                                                            data-bs-target="#productImagesCarousel"
                                                             style="width: auto !important" type="button">
-                                                            <img alt="thumb" class="d-block avatar-xl" src="{{ Storage::url($image->image_path) }}" />
+                                                            <img alt="thumb" class="d-block avatar-xl"
+                                                                src="{{ Storage::url($image->image_path) }}" />
                                                         </button>
                                                     @endforeach
                                                 </div>
@@ -73,14 +81,16 @@
                                                 src="{{ Storage::url($product->thumbnail) }}" />
                                         </div>
                                     @else
-                                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 320px">
+                                        <div class="d-flex align-items-center justify-content-center bg-light rounded"
+                                            style="height: 320px">
                                             <i class="text-muted" data-lucide="image" style="width: 64px; height: 64px"></i>
                                         </div>
                                     @endif
 
                                     <div class="text-center my-3">
                                         @admincan('product.edit')
-                                            <a class="btn btn-light me-1" href="{{ route('admin.ecommerce.product.edit', $product) }}">
+                                            <a class="btn btn-light me-1"
+                                                href="{{ route('admin.ecommerce.product.edit', $product) }}">
                                                 <i class="fs-lg me-1" data-lucide="pencil"></i>
                                                 Edit
                                             </a>
@@ -90,9 +100,11 @@
                                                 data-activating="{{ $product->is_active ? '0' : '1' }}">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button class="btn {{ $product->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}"
+                                                <button
+                                                    class="btn {{ $product->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}"
                                                     type="submit">
-                                                    <i class="fs-lg me-1" data-lucide="{{ $product->is_active ? 'circle-x' : 'circle-check' }}"></i>
+                                                    <i class="fs-lg me-1"
+                                                        data-lucide="{{ $product->is_active ? 'circle-x' : 'circle-check' }}"></i>
                                                     {{ $product->is_active ? 'Deactivate' : 'Activate' }}
                                                 </button>
                                             </form>
@@ -115,9 +127,8 @@
                                             <label class="form-label mb-0 fw-semibold small" for="quickStockInput">
                                                 Quick Stock Update:
                                             </label>
-                                            <input class="form-control form-control-sm" id="quickStockInput"
-                                                min="0" style="width: 90px" type="number"
-                                                value="{{ $product->stock_quantity }}">
+                                            <input class="form-control form-control-sm" id="quickStockInput" min="0"
+                                                style="width: 90px" type="number" value="{{ $product->stock_quantity }}">
                                             <button class="btn btn-sm btn-primary" id="quickStockUpdateBtn" type="button">
                                                 <i class="fs-xs me-1" data-lucide="refresh-cw"></i>Update
                                             </button>
@@ -138,8 +149,8 @@
                                 @php
                                     $stockBadgeClass = match (true) {
                                         $product->is_out_of_stock => 'bg-danger-subtle text-danger',
-                                        $product->is_low_stock    => 'bg-warning-subtle text-warning',
-                                        default                    => 'bg-success-subtle text-success',
+                                        $product->is_low_stock => 'bg-warning-subtle text-warning',
+                                        default => 'bg-success-subtle text-success',
                                     };
                                 @endphp
 
@@ -150,11 +161,14 @@
                                             {{ $product->stock_status }}
                                         </span>
                                         @if (!$product->is_active)
-                                            <span class="badge bg-secondary px-2 py-1 fs-base rounded-pill ms-1">Inactive</span>
+                                            <span
+                                                class="badge bg-secondary px-2 py-1 fs-base rounded-pill ms-1">Inactive</span>
                                         @endif
                                         @if ($product->is_featured)
-                                            <span class="badge bg-primary-subtle text-primary px-2 py-1 fs-base rounded-pill ms-1">
-                                                <i data-lucide="star" style="width:14px;height:14px" class="fill-current"></i>
+                                            <span
+                                                class="badge bg-primary-subtle text-primary px-2 py-1 fs-base rounded-pill ms-1">
+                                                <i data-lucide="star" style="width:14px;height:14px"
+                                                    class="fill-current"></i>
                                                 Featured
                                             </span>
                                         @endif
@@ -163,7 +177,8 @@
                                         @php $fullStars = (int) floor((float) $product->average_rating); @endphp
                                         <span class="text-warning">
                                             @for ($i = 0; $i < 5; $i++)
-                                                <i @if ($i < $fullStars) class="fill-current" @endif data-lucide="star"></i>
+                                                <i @if ($i < $fullStars) class="fill-current" @endif
+                                                    data-lucide="star"></i>
                                             @endfor
                                         </span>
                                         <span class="ms-1 fs-base">({{ $product->review_count }} Reviews)</span>
@@ -199,7 +214,8 @@
                                 <div class="row mb-4">
                                     <div class="col-md-4 col-xl-3">
                                         <h6 class="mb-1 text-muted text-uppercase">Stock Quantity:</h6>
-                                        <p class="fw-medium mb-0" id="stockQuantityDisplay">{{ $product->stock_quantity }}</p>
+                                        <p class="fw-medium mb-0" id="stockQuantityDisplay">
+                                            {{ $product->stock_quantity }}</p>
                                     </div>
                                     <div class="col-md-4 col-xl-3">
                                         <h6 class="mb-1 text-muted text-uppercase">Low Stock Alert:</h6>
@@ -216,7 +232,8 @@
                                         @if ($product->weight)
                                             <div class="col-md-4 col-xl-3">
                                                 <h6 class="mb-1 text-muted text-uppercase">Weight:</h6>
-                                                <p class="fw-medium mb-0">{{ $product->weight }} {{ $product->weight_unit }}</p>
+                                                <p class="fw-medium mb-0">{{ $product->weight }}
+                                                    {{ $product->weight_unit }}</p>
                                             </div>
                                         @endif
                                         @if ($product->color)
@@ -237,8 +254,10 @@
                                 <div class="mb-4">
                                     @if ($product->has_discount)
                                         <h3 class="text-muted d-flex align-items-center gap-2 mb-1">
-                                            <small class="text-decoration-line-through">${{ number_format((float) $product->price, 2) }}</small>
-                                            <span class="fw-bold text-danger">${{ number_format($product->final_price, 2) }}</span>
+                                            <small
+                                                class="text-decoration-line-through">${{ number_format((float) $product->price, 2) }}</small>
+                                            <span
+                                                class="fw-bold text-danger">${{ number_format($product->final_price, 2) }}</span>
                                             <small>
                                                 ({{ $product->discount_type === 'percentage'
                                                     ? number_format((float) $product->discount_value, 0) . '%'
@@ -260,7 +279,9 @@
                                 </div>
 
                                 @if ($product->short_description)
-                                    <p class="text-muted">{{ $product->short_description }}</p>
+                                    <div class="text-muted product-description-content">
+                                        {!! $product->short_description !!}
+                                    </div>
                                 @endif
 
                                 @if ($product->description)
@@ -275,12 +296,16 @@
                                     <div class="mt-3">
                                         <h6 class="text-uppercase text-muted fs-xs mb-2">Tags:</h6>
                                         @foreach ($product->tags as $tag)
-                                            <span class="badge bg-light text-dark border me-1 mb-1">{{ $tag->name }}</span>
+                                            <span
+                                                class="badge bg-light text-dark border me-1 mb-1">{{ $tag->name }}</span>
                                         @endforeach
                                     </div>
                                 @endif
 
-                                @if (!empty($product->meta['meta_title']) || !empty($product->meta['meta_description']) || !empty($product->meta['meta_keywords']))
+                                @if (
+                                    !empty($product->meta['meta_title']) ||
+                                        !empty($product->meta['meta_description']) ||
+                                        !empty($product->meta['meta_keywords']))
                                     <h6 class="mt-4 fs-base">SEO Meta:</h6>
                                     <table class="table table-sm table-borderless mb-0">
                                         @if (!empty($product->meta['meta_title']))
@@ -323,7 +348,8 @@
                         <div class="row g-3">
                             @foreach ($product->relatedProducts as $related)
                                 <div class="col-md-3 col-6">
-                                    <a class="text-decoration-none" href="{{ route('admin.ecommerce.product.show', $related) }}">
+                                    <a class="text-decoration-none"
+                                        href="{{ route('admin.ecommerce.product.show', $related) }}">
                                         <div class="border rounded p-2 text-center h-100">
                                             @if ($related->thumbnail)
                                                 <img alt="{{ $related->name }}" class="img-fluid rounded mb-2"
@@ -335,8 +361,10 @@
                                                     <i class="text-muted" data-lucide="image"></i>
                                                 </div>
                                             @endif
-                                            <p class="mb-0 small fw-semibold text-truncate text-body">{{ $related->name }}</p>
-                                            <p class="mb-0 small text-muted">${{ number_format((float) $related->price, 2) }}</p>
+                                            <p class="mb-0 small fw-semibold text-truncate text-body">{{ $related->name }}
+                                            </p>
+                                            <p class="mb-0 small text-muted">
+                                                ${{ number_format((float) $related->price, 2) }}</p>
                                         </div>
                                     </a>
                                 </div>
@@ -386,7 +414,8 @@
                                                         <img alt="avatar" class="img-fluid rounded-circle"
                                                             src="{{ Storage::url($review->user->avatar) }}" />
                                                     @else
-                                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                        <span
+                                                            class="avatar-title bg-primary-subtle text-primary rounded-circle">
                                                             {{ strtoupper(substr($review->user?->name ?? '?', 0, 1)) }}
                                                         </span>
                                                     @endif
@@ -415,10 +444,11 @@
                                                 $statusClass = match ($review->status) {
                                                     'approved' => 'badge-soft-success',
                                                     'rejected' => 'badge-soft-danger',
-                                                    default    => 'badge-soft-warning',
+                                                    default => 'badge-soft-warning',
                                                 };
                                             @endphp
-                                            <span class="badge {{ $statusClass }} fs-xxs">{{ ucfirst($review->status) }}</span>
+                                            <span
+                                                class="badge {{ $statusClass }} fs-xxs">{{ ucfirst($review->status) }}</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -466,8 +496,8 @@
                     <div class="modal-footer">
                         <button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancel</button>
                         @if ($product->canDelete())
-                            <form action="{{ route('admin.ecommerce.product.destroy', $product) }}"
-                                id="deleteProductForm" method="POST">
+                            <form action="{{ route('admin.ecommerce.product.destroy', $product) }}" id="deleteProductForm"
+                                method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-danger" id="confirmDeleteBtn" type="submit">

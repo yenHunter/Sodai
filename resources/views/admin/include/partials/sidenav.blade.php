@@ -83,16 +83,31 @@
                 </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">Ecommerce</li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ route('admin.ecommerce.product.index') }}">
+                    <a aria-controls="orders" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
+                        href="#orders">
                         <span class="menu-icon"><i data-lucide="shopping-basket"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-products">Products</span>
+                        <span class="menu-arrow"></span>
                     </a>
-                </li>
-                <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ route('admin.ecommerce.category.index') }}">
-                        <span class="menu-icon"><i data-lucide="chart-bar-stacked"></i></span>
-                        <span class="menu-text" data-lang="apps-ecommerce-categories">Categories</span>
-                    </a>
+                    <div class="collapse" id="orders">
+                        <ul class="sub-menu">
+                            <li class="side-nav-item">
+                                <a class="side-nav-link" href="{{ route('admin.ecommerce.product.index') }}">
+                                    <span class="menu-text" data-lang="apps-ecommerce-products">Products</span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a class="side-nav-link" href="{{ route('admin.ecommerce.category.index') }}">
+                                    <span class="menu-text" data-lang="apps-ecommerce-categories">Categories</span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a class="side-nav-link" href="{{ route('admin.ecommerce.brand.index') }}">
+                                    <span class="menu-text" data-lang="apps-ecommerce-order-add">Brand</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <li class="side-nav-item">
                     <a aria-controls="orders" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"

@@ -6,6 +6,10 @@ Route::get('/', function () {
     return view('visitor.pages.index');
 })->name('visitor.index');
 
+Route::get('/about', function () {
+    return view('visitor.pages.about');
+})->name('visitor.about');
+
 // ── Auth Guest Routes (coming soon) ───────────────────────
 // Route::middleware('guest:customer')->group(function () {
 //     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
