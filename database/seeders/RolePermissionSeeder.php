@@ -29,6 +29,12 @@ class RolePermissionSeeder extends Seeder
             'category.edit',
             'category.delete',
 
+            // Brands
+            'brand.view',
+            'brand.create',
+            'brand.edit',
+            'brand.delete',
+
             // Products
             'product.view',
             'product.create',
@@ -111,6 +117,11 @@ class RolePermissionSeeder extends Seeder
             'category.edit',
             'category.delete',
 
+            'brand.view',
+            'brand.create',
+            'brand.edit',
+            'brand.delete',
+
             'product.view',
             'product.create',
             'product.edit',
@@ -171,6 +182,10 @@ class RolePermissionSeeder extends Seeder
             'category.view',
             'category.create',
             'category.edit',
+
+            'brand.view',
+            'brand.create',
+            'brand.edit',
 
             'product.view',
             'product.create',

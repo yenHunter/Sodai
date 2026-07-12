@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/pages/admin-auth-reset-password.js',
                 // ───────────── E-commerce Pages ─────────────
                 'resources/js/pages/admin-ecommerce-category.js',
+                'resources/js/pages/admin-ecommerce-brand.js',
                 'resources/js/pages/admin-ecommerce-product-index.js',
                 'resources/js/pages/admin-ecommerce-product-create.js',
                 'resources/js/pages/admin-ecommerce-product-edit.js',

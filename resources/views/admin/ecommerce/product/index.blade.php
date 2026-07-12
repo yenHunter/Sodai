@@ -66,7 +66,7 @@
                         </div>
                         <div>
                             @admincan('product.create')
-                                <a class="btn btn-danger" href="{{ route('admin.ecommerce.product.create') }}">
+                                <a class="btn btn-primary" href="{{ route('admin.ecommerce.product.create') }}">
                                     <i class="fs-sm me-2" data-lucide="plus"></i>
                                     Add Product
                                 </a>

@@ -43,35 +43,31 @@
                 </div>
             @endif
 
-            {{-- Toolbar --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    {{-- ✅ Bulk Delete Button --}}
-                    @admincan('category.delete')
-                        <button class="btn btn-danger d-none" id="bulkDeleteBtn" type="button">
-                            <i class="fs-sm me-1" data-lucide="trash-2"></i>
-                            Delete Selected
-                        </button>
-                    @endadmincan
-                </div>
-                <div>
-                    {{-- ✅ Add Category Button --}}
-                    @admincan('category.create')
-                        <button class="btn btn-primary" type="button" id="addCategoryBtn" data-bs-toggle="modal"
-                            data-bs-target="#categoryModal">
-                            <i class="fs-sm me-1" data-lucide="plus"></i>
-                            Add Category
-                        </button>
-                    @endadmincan
-                </div>
-            </div>
-
             <div class="card">
-                <div class="card-header">
+                <div class="card-header justify-content-between">
                     <h5 class="card-title mb-0">Category List</h5>
+                    <div>
+                        {{-- Bulk Delete Button --}}
+                        @admincan('category.delete')
+                            <button class="btn btn-danger d-none" id="bulkDeleteBtn" type="button">
+                                <i class="fs-sm me-1" data-lucide="trash-2"></i>
+                                Delete Selected
+                            </button>
+                        @endadmincan
+
+                        {{-- Add Category Button --}}
+                        @admincan('category.create')
+                            <button class="btn btn-primary" type="button" id="addCategoryBtn" data-bs-toggle="modal"
+                                data-bs-target="#categoryModal">
+                                <i class="fs-sm me-1" data-lucide="plus"></i>
+                                Add Category
+                            </button>
+                        @endadmincan
+                    </div>
                 </div>
                 <div class="card-body">
-                    <table id="categoryTable" class="table table-striped dt-responsive checkbox-select-datatable align-middle mb-0">
+                    <table id="categoryTable"
+                        class="table table-striped dt-responsive checkbox-select-datatable align-middle mb-0">
                         <thead>
                             <tr>
                                 <th width="30">
