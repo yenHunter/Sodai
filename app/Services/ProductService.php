@@ -11,10 +11,10 @@ use App\Models\ProductImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Laravel\Facades\Image;
 use Intervention\Image\ImageManager;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\WebpEncoder;
 
 class ProductService
 {
@@ -478,7 +478,7 @@ class ProductService
             $manager = new ImageManager(new Driver());
 
             $encodedImage = $manager->decode($image->getRealPath())
-                ->save(quality: 70);
+                ->encode(new WebpEncoder(quality: 70));
 
             $stored = Storage::disk('public')->put($path, (string) $encodedImage);
 
