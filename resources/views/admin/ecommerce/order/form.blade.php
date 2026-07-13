@@ -195,11 +195,11 @@
                 <div id="quickCustomerError" class="alert alert-danger d-none"></div>
                 <div class="mb-3">
                     <label class="form-label">Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="quickCustomerName" required>
+                    <input type="text" class="form-control" id="quickCustomerName">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" id="quickCustomerEmail" required>
+                    <input type="email" class="form-control" id="quickCustomerEmail">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Phone <span class="text-muted">(Optional)</span></label>

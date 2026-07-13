@@ -180,22 +180,7 @@
                                         <td>{{ $order->items_count }}</td>
                                         <td>${{ number_format((float) $order->total_amount, 2) }}</td>
                                         <td>
-                                            @admincan('order.update-status')
-                                                <form action="{{ route('admin.ecommerce.order.status.update', $order) }}"
-                                                    method="POST" class="d-inline status-update-form">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <select name="status" class="form-select form-select-sm badge-select {{ $order->status_badge_class }}">
-                                                        @foreach (\App\Models\Order::STATUSES as $status)
-                                                            <option value="{{ $status }}" {{ $order->status === $status ? 'selected' : '' }}>
-                                                                {{ ucfirst($status) }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </form>
-                                            @else
-                                                <span class="badge {{ $order->status_badge_class }}">{{ ucfirst($order->status) }}</span>
-                                            @endadmincan
+                                            <span class="badge {{ $order->status_badge_class }} fs-xxs">{{ ucfirst($order->status) }}</span>
                                         </td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-1">

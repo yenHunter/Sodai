@@ -10,7 +10,6 @@ import 'daterangepicker'
 document.addEventListener('DOMContentLoaded', () => {
     initDateRangePicker()
     initAutoSubmitFilters()
-    initStatusChangeConfirm()
 })
 
 // ═══════════════════════════════════════════════
@@ -95,21 +94,4 @@ function initAutoSubmitFilters() {
     if (statusFilter) {
         statusFilter.addEventListener('change', () => form.submit())
     }
-}
-
-// ═══════════════════════════════════════════════
-// STATUS CHANGE CONFIRM
-// ═══════════════════════════════════════════════
-
-function initStatusChangeConfirm() {
-    document.querySelectorAll('.status-update-form select[name="status"]').forEach(select => {
-        select.addEventListener('change', function () {
-            if (this.value === 'cancelled') {
-                if (!confirm('Cancelling will restore stock for all items in this order. Continue?')) {
-                    return
-                }
-            }
-            this.closest('form').submit()
-        })
-    })
 }
