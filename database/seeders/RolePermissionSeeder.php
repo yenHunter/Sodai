@@ -43,6 +43,8 @@ class RolePermissionSeeder extends Seeder
 
             // Orders
             'order.view',
+            'order.create',
+            'order.edit',
             'order.update-status',
             'order.cancel',
             'order.delete',
@@ -128,6 +130,8 @@ class RolePermissionSeeder extends Seeder
             'product.delete',
 
             'order.view',
+            'order.create',
+            'order.edit',
             'order.update-status',
             'order.cancel',
             'order.delete',
@@ -164,6 +168,8 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view',
 
             'order.view',
+            'order.create',
+            'order.edit',
             'order.update-status',
             'order.cancel',
 

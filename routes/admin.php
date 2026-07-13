@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -71,8 +72,24 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
         });
 
         // ── Orders ──
-        Route::middleware('permission:order.view')->group(function () {
-            // Route::resource('orders', OrderController::class);
+        Route::middleware('permission:order.view')->prefix('orders')->name('order.')->group(function () {
+            Route::get('/',       [OrderController::class, 'index'])->name('index');
+            Route::get('/create', [OrderController::class, 'create'])->name('create')->middleware('permission:order.create');
+            Route::post('/store', [OrderController::class, 'store'])->name('store')->middleware('permission:order.create');
+
+            // POS AJAX endpoints — must be BEFORE the {order} wildcard
+            Route::get('/customers/search',            [OrderController::class, 'searchCustomers'])->name('customers.search');
+            Route::post('/customers/quick-create',      [OrderController::class, 'quickCreateCustomer'])->name('customers.quick-create')->middleware('permission:order.create');
+            Route::get('/customers/{customer}/address', [OrderController::class, 'getCustomerAddress'])->name('customers.address');
+            Route::get('/products/search',              [OrderController::class, 'searchProducts'])->name('products.search');
+
+            Route::get('/{order}',        [OrderController::class, 'show'])->name('show');
+            Route::get('/{order}/edit',    [OrderController::class, 'edit'])->name('edit')->middleware('permission:order.edit');
+            Route::post('/{order}/update', [OrderController::class, 'update'])->name('update')->middleware('permission:order.edit');
+            Route::delete('/{order}',      [OrderController::class, 'destroy'])->name('destroy')->middleware('permission:order.delete');
+
+            Route::patch('/{order}/status', [OrderController::class, 'updateStatus'])->name('status.update')->middleware('permission:order.update-status');
+            Route::patch('/{order}/cancel',  [OrderController::class, 'cancel'])->name('cancel')->middleware('permission:order.cancel');
         });
     });
 

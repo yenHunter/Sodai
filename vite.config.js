@@ -17,6 +17,8 @@ export default defineConfig({
                 'resources/js/pages/admin-ecommerce-product-create.js',
                 'resources/js/pages/admin-ecommerce-product-edit.js',
                 'resources/js/pages/admin-ecommerce-product-details.js',
+                'resources/js/pages/admin-ecommerce-order-index.js',
+                'resources/js/pages/admin-ecommerce-order-pos.js',
 
                 'resources/js/app.js',
                 'resources/js/maps/leaflet-data.js',

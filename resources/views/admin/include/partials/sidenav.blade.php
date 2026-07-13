@@ -83,13 +83,13 @@
                 </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">Ecommerce</li>
                 <li class="side-nav-item">
-                    <a aria-controls="orders" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
-                        href="#orders">
+                    <a aria-controls="products" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
+                        href="#products">
                         <span class="menu-icon"><i data-lucide="shopping-basket"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-products">Products</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse" id="orders">
+                    <div class="collapse" id="products">
                         <ul class="sub-menu">
                             <li class="side-nav-item">
                                 <a class="side-nav-link" href="{{ route('admin.ecommerce.product.index') }}">
@@ -119,7 +119,7 @@
                     <div class="collapse" id="orders">
                         <ul class="sub-menu">
                             <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/ecommerce/orders') }}">
+                                <a class="side-nav-link" href="{{ route('admin.ecommerce.order.index') }}">
                                     <span class="menu-text" data-lang="apps-ecommerce-orders">Orders</span>
                                 </a>
                             </li>
