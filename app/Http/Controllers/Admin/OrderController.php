@@ -26,8 +26,9 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = $this->orderService->getOrdersList($request->only(['search', 'status', 'date_from', 'date_to']));
+        $stats  = $this->orderService->getOrderStats();
 
-        return view('admin.ecommerce.order.index', compact('orders'));
+        return view('admin.ecommerce.order.index', compact('orders', 'stats'));
     }
 
     // ─────────────────────────────────────────────
@@ -38,7 +39,7 @@ class OrderController extends Controller
     {
         $order = $this->orderService->getOrderForDetails($order);
 
-        return view('admin.ecommerce.order.show', compact('order'));
+        return view('admin.ecommerce.order.details', compact('order'));
     }
 
     // ─────────────────────────────────────────────

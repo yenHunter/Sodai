@@ -3,356 +3,356 @@
  * Handles: customer select2, product select2, cart management, live totals
  */
 
-function waitForJQuery(callback) {
-    if (typeof window.jQuery !== 'undefined') {
-        callback(window.jQuery)
-    } else {
-        setTimeout(() => waitForJQuery(callback), 50)
+import 'select2/dist/css/select2.min.css'
+import $ from 'jquery'
+import select2 from 'select2'
+
+select2(window, $)
+
+let cart = []
+
+document.addEventListener('DOMContentLoaded', () => {
+    initCustomerSelect2()
+    initProductSelect2()
+    seedExistingCart()
+    initSummaryInputs()
+    initQuickCustomerModal()
+    initFormSubmit()
+    renderCart()
+    refreshIcons()
+})
+
+// ─────────────────────────────────────────────
+// CUSTOMER SELECT2
+// ─────────────────────────────────────────────
+
+function initCustomerSelect2() {
+    const el = document.getElementById('customerSelect')
+    if (!el) return
+
+    const searchUrl = el.dataset.searchUrl
+    const addressUrlTemplate = el.dataset.addressUrlTemplate
+
+    $('#customerSelect').select2({
+        placeholder: 'Search customer by name, email, or phone',
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: searchUrl,
+            dataType: 'json',
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: data => ({
+                results: data.map(c => ({ id: c.id, text: `${c.name} (${c.email})` })),
+            }),
+        },
+        minimumInputLength: 2,
+    })
+
+    $('#customerSelect').on('select2:select', function (e) {
+        const customerId = e.params.data.id
+        const url = addressUrlTemplate.replace('__ID__', customerId)
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                setVal('shippingName', data.name)
+                setVal('shippingEmail', data.email)
+                if (data.phone) setVal('shippingPhone', data.phone)
+                if (data.address) setVal('shippingAddress', data.address)
+                if (data.city) setVal('shippingCity', data.city)
+                if (data.state) setVal('shippingState', data.state)
+                if (data.zip) setVal('shippingZip', data.zip)
+                if (data.country) setVal('shippingCountry', data.country)
+            })
+            .catch(() => {})
+    })
+}
+
+// ─────────────────────────────────────────────
+// QUICK ADD CUSTOMER
+// ─────────────────────────────────────────────
+
+function initQuickCustomerModal() {
+    const btn = document.getElementById('quickCustomerSubmitBtn')
+    if (!btn) return
+
+    btn.addEventListener('click', function () {
+        const name = document.getElementById('quickCustomerName').value.trim()
+        const email = document.getElementById('quickCustomerEmail').value.trim()
+        const phone = document.getElementById('quickCustomerPhone').value.trim()
+        const errorBox = document.getElementById('quickCustomerError')
+        const token = document.querySelector('input[name="_token"]').value
+
+        if (!name || !email) {
+            errorBox.textContent = 'Name and email are required.'
+            errorBox.classList.remove('d-none')
+            return
+        }
+
+        btn.disabled = true
+
+        fetch('/admin/ecommerce/orders/customers/quick-create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+            },
+            body: JSON.stringify({ name, email, phone }),
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const c = data.customer
+                    const option = new Option(`${c.name} (${c.email})`, c.id, true, true)
+                    $('#customerSelect').append(option).trigger('change')
+
+                    setVal('shippingName', c.name)
+                    setVal('shippingEmail', c.email)
+                    if (c.phone) setVal('shippingPhone', c.phone)
+
+                    errorBox.classList.add('d-none')
+                    document.getElementById('quickCustomerName').value = ''
+                    document.getElementById('quickCustomerEmail').value = ''
+                    document.getElementById('quickCustomerPhone').value = ''
+
+                    bootstrap.Modal.getInstance(document.getElementById('quickCustomerModal'))?.hide()
+                } else {
+                    errorBox.textContent = data.message || 'Failed to create customer.'
+                    errorBox.classList.remove('d-none')
+                }
+            })
+            .catch(() => {
+                errorBox.textContent = 'An error occurred. Please try again.'
+                errorBox.classList.remove('d-none')
+            })
+            .finally(() => {
+                btn.disabled = false
+            })
+    })
+}
+
+// ─────────────────────────────────────────────
+// PRODUCT SELECT2
+// ─────────────────────────────────────────────
+
+function initProductSelect2() {
+    const el = document.getElementById('productSearchSelect')
+    if (!el) return
+
+    const searchUrl = el.dataset.searchUrl
+
+    $('#productSearchSelect').select2({
+        placeholder: 'Search product by name or SKU',
+        width: '100%',
+        ajax: {
+            url: searchUrl,
+            dataType: 'json',
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: data => ({
+                results: data.map(p => ({
+                    id: p.id,
+                    text: `${p.name} (${p.sku}) — $${p.price.toFixed(2)} — Stock: ${p.stock_quantity}`,
+                    raw: p,
+                })),
+            }),
+        },
+        minimumInputLength: 2,
+    })
+
+    $('#productSearchSelect').on('select2:select', function (e) {
+        addToCart(e.params.data.raw)
+        $(this).val(null).trigger('change')
+    })
+}
+
+// ─────────────────────────────────────────────
+// CART
+// ─────────────────────────────────────────────
+
+function seedExistingCart() {
+    if (Array.isArray(window.__existingCartItems)) {
+        cart = window.__existingCartItems.map(i => ({ ...i }))
     }
 }
 
-waitForJQuery(function ($) {
+function addToCart(product) {
+    const existing = cart.find(i => i.product_id === product.id)
 
-    let cart = []
-
-    $(document).ready(function () {
-        initCustomerSelect2()
-        initProductSelect2()
-        seedExistingCart()
-        initSummaryInputs()
-        initQuickCustomerModal()
-        initFormSubmit()
-        renderCart()
-        refreshIcons()
-    })
-
-    // ─────────────────────────────────────────────
-    // CUSTOMER SELECT2
-    // ─────────────────────────────────────────────
-
-    function initCustomerSelect2() {
-        const el = document.getElementById('customerSelect')
-        if (!el) return
-
-        const searchUrl = el.dataset.searchUrl
-        const addressUrlTemplate = el.dataset.addressUrlTemplate
-
-        $('#customerSelect').select2({
-            placeholder: 'Search customer by name, email, or phone',
-            allowClear: true,
-            ajax: {
-                url: searchUrl,
-                dataType: 'json',
-                delay: 250,
-                data: params => ({ q: params.term }),
-                processResults: data => ({
-                    results: data.map(c => ({ id: c.id, text: `${c.name} (${c.email})` })),
-                }),
-            },
-            minimumInputLength: 2,
-        })
-
-        $('#customerSelect').on('select2:select', function (e) {
-            const customerId = e.params.data.id
-            const url = addressUrlTemplate.replace('__ID__', customerId)
-
-            fetch(url)
-                .then(r => r.json())
-                .then(data => {
-                    setVal('shippingName', data.name)
-                    setVal('shippingEmail', data.email)
-                    if (data.phone) setVal('shippingPhone', data.phone)
-                    if (data.address) setVal('shippingAddress', data.address)
-                    if (data.city) setVal('shippingCity', data.city)
-                    if (data.state) setVal('shippingState', data.state)
-                    if (data.zip) setVal('shippingZip', data.zip)
-                    if (data.country) setVal('shippingCountry', data.country)
-                })
-                .catch(() => {})
-        })
-    }
-
-    // ─────────────────────────────────────────────
-    // QUICK ADD CUSTOMER
-    // ─────────────────────────────────────────────
-
-    function initQuickCustomerModal() {
-        const btn = document.getElementById('quickCustomerSubmitBtn')
-        if (!btn) return
-
-        btn.addEventListener('click', function () {
-            const name = document.getElementById('quickCustomerName').value.trim()
-            const email = document.getElementById('quickCustomerEmail').value.trim()
-            const phone = document.getElementById('quickCustomerPhone').value.trim()
-            const errorBox = document.getElementById('quickCustomerError')
-            const token = document.querySelector('input[name="_token"]').value
-
-            if (!name || !email) {
-                errorBox.textContent = 'Name and email are required.'
-                errorBox.classList.remove('d-none')
-                return
-            }
-
-            btn.disabled = true
-
-            fetch('/admin/ecommerce/orders/customers/quick-create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                },
-                body: JSON.stringify({ name, email, phone }),
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const c = data.customer
-                        const option = new Option(`${c.name} (${c.email})`, c.id, true, true)
-                        $('#customerSelect').append(option).trigger('change')
-
-                        setVal('shippingName', c.name)
-                        setVal('shippingEmail', c.email)
-                        if (c.phone) setVal('shippingPhone', c.phone)
-
-                        errorBox.classList.add('d-none')
-                        bootstrap.Modal.getInstance(document.getElementById('quickCustomerModal'))?.hide()
-                    } else {
-                        errorBox.textContent = data.message || 'Failed to create customer.'
-                        errorBox.classList.remove('d-none')
-                    }
-                })
-                .catch(() => {
-                    errorBox.textContent = 'An error occurred. Please try again.'
-                    errorBox.classList.remove('d-none')
-                })
-                .finally(() => {
-                    btn.disabled = false
-                })
-        })
-    }
-
-    // ─────────────────────────────────────────────
-    // PRODUCT SELECT2
-    // ─────────────────────────────────────────────
-
-    function initProductSelect2() {
-        const el = document.getElementById('productSearchSelect')
-        if (!el) return
-
-        const searchUrl = el.dataset.searchUrl
-
-        $('#productSearchSelect').select2({
-            placeholder: 'Search product by name or SKU',
-            ajax: {
-                url: searchUrl,
-                dataType: 'json',
-                delay: 250,
-                data: params => ({ q: params.term }),
-                processResults: data => ({
-                    results: data.map(p => ({
-                        id: p.id,
-                        text: `${p.name} (${p.sku}) — $${p.price.toFixed(2)} — Stock: ${p.stock_quantity}`,
-                        raw: p,
-                    })),
-                }),
-            },
-            minimumInputLength: 2,
-        })
-
-        $('#productSearchSelect').on('select2:select', function (e) {
-            addToCart(e.params.data.raw)
-            $(this).val(null).trigger('change')
-        })
-    }
-
-    // ─────────────────────────────────────────────
-    // CART
-    // ─────────────────────────────────────────────
-
-    function seedExistingCart() {
-        if (Array.isArray(window.__existingCartItems)) {
-            cart = window.__existingCartItems.map(i => ({ ...i }))
+    if (existing) {
+        if (existing.quantity + 1 > product.stock_quantity) {
+            alert(`Only ${product.stock_quantity} unit(s) of "${product.name}" available.`)
+            return
         }
+        existing.quantity += 1
+    } else {
+        cart.push({
+            product_id: product.id,
+            name: product.name,
+            sku: product.sku,
+            thumbnail_url: product.thumbnail_url,
+            price: product.price,
+            quantity: 1,
+            stock_quantity: product.stock_quantity,
+        })
     }
 
-    function addToCart(product) {
-        const existing = cart.find(i => i.product_id === product.id)
+    renderCart()
+}
 
-        if (existing) {
-            if (existing.quantity + 1 > product.stock_quantity) {
-                alert(`Only ${product.stock_quantity} unit(s) of "${product.name}" available.`)
-                return
-            }
-            existing.quantity += 1
-        } else {
-            cart.push({
-                product_id: product.id,
-                name: product.name,
-                sku: product.sku,
-                thumbnail_url: product.thumbnail_url,
-                price: product.price,
-                quantity: 1,
-                stock_quantity: product.stock_quantity,
-            })
-        }
+function updateQuantity(productId, quantity) {
+    const item = cart.find(i => i.product_id === productId)
+    if (!item) return
 
-        renderCart()
+    quantity = Math.max(1, parseInt(quantity, 10) || 1)
+
+    if (quantity > item.stock_quantity) {
+        alert(`Only ${item.stock_quantity} unit(s) available.`)
+        quantity = item.stock_quantity
     }
 
-    function updateQuantity(productId, quantity) {
-        const item = cart.find(i => i.product_id === productId)
-        if (!item) return
+    item.quantity = quantity
+    renderCart()
+}
 
-        quantity = Math.max(1, parseInt(quantity, 10) || 1)
+function removeFromCart(productId) {
+    cart = cart.filter(i => i.product_id !== productId)
+    renderCart()
+}
 
-        if (quantity > item.stock_quantity) {
-            alert(`Only ${item.stock_quantity} unit(s) available.`)
-            quantity = item.stock_quantity
-        }
+function renderCart() {
+    const body = document.getElementById('cartBody')
+    if (!body) return
 
-        item.quantity = quantity
-        renderCart()
-    }
-
-    function removeFromCart(productId) {
-        cart = cart.filter(i => i.product_id !== productId)
-        renderCart()
-    }
-
-    function renderCart() {
-        const body = document.getElementById('cartBody')
-        if (!body) return
-
-        if (cart.length === 0) {
-            body.innerHTML = `
-                <tr id="cartEmptyRow">
-                    <td colspan="5" class="text-center text-muted py-4">Cart is empty. Search a product above to add it.</td>
-                </tr>`
-        } else {
-            body.innerHTML = cart.map(item => `
-                <tr data-product-id="${item.product_id}">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            ${item.thumbnail_url ? `<img src="${item.thumbnail_url}" class="avatar-sm rounded me-2" alt="">` : ''}
-                            <div>
-                                <h5 class="mb-0 fs-sm">${escapeHtml(item.name)}</h5>
-                                <small class="text-muted">${escapeHtml(item.sku)}</small>
-                            </div>
+    if (cart.length === 0) {
+        body.innerHTML = `
+            <tr id="cartEmptyRow">
+                <td colspan="5" class="text-center text-muted py-4">Cart is empty. Search a product above to add it.</td>
+            </tr>`
+    } else {
+        body.innerHTML = cart.map(item => `
+            <tr data-product-id="${item.product_id}">
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${item.thumbnail_url ? `<img src="${item.thumbnail_url}" class="avatar-sm rounded me-2" alt="">` : ''}
+                        <div>
+                            <h5 class="mb-0 fs-sm">${escapeHtml(item.name)}</h5>
+                            <small class="text-muted">${escapeHtml(item.sku)}</small>
                         </div>
-                    </td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td>
-                        <input type="number" class="form-control form-control-sm cart-qty-input" min="1"
-                            max="${item.stock_quantity}" value="${item.quantity}" data-product-id="${item.product_id}">
-                    </td>
-                    <td class="text-end fw-semibold cart-line-total">$${(item.price * item.quantity).toFixed(2)}</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-icon btn-default rounded-circle cart-remove-btn" data-product-id="${item.product_id}">
-                            <i data-lucide="x" style="width:14px;height:14px"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('')
+                    </div>
+                </td>
+                <td>$${item.price.toFixed(2)}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm cart-qty-input" min="1"
+                        max="${item.stock_quantity}" value="${item.quantity}" data-product-id="${item.product_id}">
+                </td>
+                <td class="text-end fw-semibold cart-line-total">$${(item.price * item.quantity).toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-icon btn-default rounded-circle cart-remove-btn" data-product-id="${item.product_id}">
+                        <i data-lucide="x" style="width:14px;height:14px"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('')
 
-            body.querySelectorAll('.cart-qty-input').forEach(input => {
-                input.addEventListener('change', function () {
-                    updateQuantity(parseInt(this.dataset.productId, 10), this.value)
-                })
+        body.querySelectorAll('.cart-qty-input').forEach(input => {
+            input.addEventListener('change', function () {
+                updateQuantity(parseInt(this.dataset.productId, 10), this.value)
             })
+        })
 
-            body.querySelectorAll('.cart-remove-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    removeFromCart(parseInt(this.dataset.productId, 10))
-                })
+        body.querySelectorAll('.cart-remove-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                removeFromCart(parseInt(this.dataset.productId, 10))
             })
-        }
-
-        refreshIcons()
-        recalculateSummary()
-    }
-
-    // ─────────────────────────────────────────────
-    // SUMMARY
-    // ─────────────────────────────────────────────
-
-    function initSummaryInputs() {
-        ;['discountAmount', 'shippingCharge', 'taxAmount'].forEach(id => {
-            const el = document.getElementById(id)
-            if (el) el.addEventListener('input', recalculateSummary)
         })
     }
 
-    function recalculateSummary() {
-        const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
-        const discount = parseFloat(document.getElementById('discountAmount')?.value) || 0
-        const shipping = parseFloat(document.getElementById('shippingCharge')?.value) || 0
-        const tax = parseFloat(document.getElementById('taxAmount')?.value) || 0
+    refreshIcons()
+    recalculateSummary()
+}
 
-        const total = Math.max(0, subtotal - discount + shipping + tax)
+// ─────────────────────────────────────────────
+// SUMMARY
+// ─────────────────────────────────────────────
 
-        setText('summarySubtotal', `$${subtotal.toFixed(2)}`)
-        setText('summaryTotal', `$${total.toFixed(2)}`)
-    }
-
-    // ─────────────────────────────────────────────
-    // FORM SUBMIT
-    // ─────────────────────────────────────────────
-
-    function initFormSubmit() {
-        const form = document.getElementById('orderForm')
-        if (!form) return
-
-        form.addEventListener('submit', function (e) {
-            if (cart.length === 0) {
-                e.preventDefault()
-                alert('Please add at least one product to the order.')
-                return
-            }
-
-            const container = document.getElementById('cartItemsInputs')
-            container.innerHTML = ''
-
-            cart.forEach((item, index) => {
-                container.insertAdjacentHTML('beforeend', `
-                    <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
-                    <input type="hidden" name="items[${index}][quantity]" value="${item.quantity}">
-                `)
-            })
-
-            const btn = document.getElementById('submitOrderBtn')
-            if (btn) {
-                btn.disabled = true
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...'
-            }
-        })
-    }
-
-    // ─────────────────────────────────────────────
-    // HELPERS
-    // ─────────────────────────────────────────────
-
-    function setVal(id, value) {
+function initSummaryInputs() {
+    ;['discountAmount', 'shippingCharge', 'taxAmount'].forEach(id => {
         const el = document.getElementById(id)
-        if (el) el.value = value ?? ''
-    }
+        if (el) el.addEventListener('input', recalculateSummary)
+    })
+}
 
-    function setText(id, value) {
-        const el = document.getElementById(id)
-        if (el) el.textContent = value
-    }
+function recalculateSummary() {
+    const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
+    const discount = parseFloat(document.getElementById('discountAmount')?.value) || 0
+    const shipping = parseFloat(document.getElementById('shippingCharge')?.value) || 0
+    const tax = parseFloat(document.getElementById('taxAmount')?.value) || 0
 
-    function escapeHtml(text) {
-        const div = document.createElement('div')
-        div.appendChild(document.createTextNode(text ?? ''))
-        return div.innerHTML
-    }
+    const total = Math.max(0, subtotal - discount + shipping + tax)
 
-    function refreshIcons() {
-        if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-            const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
-            if (iconSet) lucide.createIcons({ icons: iconSet })
+    setText('summarySubtotal', `$${subtotal.toFixed(2)}`)
+    setText('summaryTotal', `$${total.toFixed(2)}`)
+}
+
+// ─────────────────────────────────────────────
+// FORM SUBMIT
+// ─────────────────────────────────────────────
+
+function initFormSubmit() {
+    const form = document.getElementById('orderForm')
+    if (!form) return
+
+    form.addEventListener('submit', function (e) {
+        if (cart.length === 0) {
+            e.preventDefault()
+            alert('Please add at least one product to the order.')
+            return
         }
-    }
 
-})
+        const container = document.getElementById('cartItemsInputs')
+        container.innerHTML = ''
+
+        cart.forEach((item, index) => {
+            container.insertAdjacentHTML('beforeend', `
+                <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
+                <input type="hidden" name="items[${index}][quantity]" value="${item.quantity}">
+            `)
+        })
+
+        const btn = document.getElementById('submitOrderBtn')
+        if (btn) {
+            btn.disabled = true
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...'
+        }
+    })
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function setVal(id, value) {
+    const el = document.getElementById(id)
+    if (el) el.value = value ?? ''
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id)
+    if (el) el.textContent = value
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.appendChild(document.createTextNode(text ?? ''))
+    return div.innerHTML
+}
+
+function refreshIcons() {
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
+        if (iconSet) lucide.createIcons({ icons: iconSet })
+    }
+}
