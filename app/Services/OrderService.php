@@ -332,6 +332,21 @@ class OrderService
         return $query->latest()->paginate(15)->withQueryString();
     }
 
+    public function getOrderStats(): array
+    {
+        $counts = Order::selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        return [
+            'total'     => (int) $counts->sum(),
+            'pending'   => (int) ($counts->get('pending') ?? 0),
+            'completed' => (int) ($counts->get('delivered') ?? 0),
+            'cancelled' => (int) ($counts->get('cancelled') ?? 0),
+            'returned'  => (int) ($counts->get('refunded') ?? 0),
+        ];
+    }
+
     public function getOrderForEdit(Order $order): Order
     {
         return $order->load(['items.product', 'user']);

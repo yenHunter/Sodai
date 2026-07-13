@@ -3,6 +3,87 @@
 @section('content')
     @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Orders'])
 
+    {{-- ═══════════════════════════════════════════
+         OVERVIEW CARDS
+    ═══════════════════════════════════════════ --}}
+    <div class="row row-cols-xxl-5 row-cols-md-3 row-cols-1 align-items-center g-1">
+        <div class="col">
+            <div class="card mb-1">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h3 class="mb-0">{{ $stats['completed'] }}</h3>
+                        <div class="avatar-md flex-shrink-0">
+                            <span class="avatar-title text-bg-success rounded-circle fs-22">
+                                <i data-lucide="check"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-uppercase fs-xs fw-bold">Delivered Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-1">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h3 class="mb-0">{{ $stats['pending'] }}</h3>
+                        <div class="avatar-md flex-shrink-0">
+                            <span class="avatar-title text-bg-warning rounded-circle fs-22">
+                                <i data-lucide="hourglass"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-uppercase fs-xs fw-bold">Pending Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-1">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h3 class="mb-0">{{ $stats['cancelled'] }}</h3>
+                        <div class="avatar-md flex-shrink-0">
+                            <span class="avatar-title text-bg-danger rounded-circle fs-22">
+                                <i data-lucide="x"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-uppercase fs-xs fw-bold">Cancelled Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-1">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h3 class="mb-0">{{ $stats['total'] }}</h3>
+                        <div class="avatar-md flex-shrink-0">
+                            <span class="avatar-title text-bg-info rounded-circle fs-22">
+                                <i data-lucide="shopping-cart"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-uppercase fs-xs fw-bold">Total Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-1">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h3 class="mb-0">{{ $stats['returned'] }}</h3>
+                        <div class="avatar-md flex-shrink-0">
+                            <span class="avatar-title text-bg-primary rounded-circle fs-22">
+                                <i data-lucide="refresh-ccw"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-uppercase fs-xs fw-bold">Refunded Orders</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
 
@@ -43,8 +124,18 @@
                                 </select>
                                 <i class="app-search-icon text-muted" data-lucide="activity"></i>
                             </div>
-                            <input type="date" class="form-control" name="date_from" value="{{ request('date_from') }}" id="dateFromFilter">
-                            <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}" id="dateToFilter">
+                            <div class="app-search">
+                                <input type="text" class="form-control" id="dateRangeFilter" placeholder="Date Range"
+                                    autocomplete="off" readonly>
+                                <i class="app-search-icon text-muted" data-lucide="calendar"></i>
+                            </div>
+                            <input type="hidden" name="date_from" id="dateFromInput" value="{{ request('date_from') }}">
+                            <input type="hidden" name="date_to" id="dateToInput" value="{{ request('date_to') }}">
+                            @if (request('date_from') || request('date_to') || request('status') || request('search'))
+                                <a href="{{ route('admin.ecommerce.order.index') }}" class="btn btn-light btn-icon" title="Clear filters">
+                                    <i data-lucide="x" class="fs-sm"></i>
+                                </a>
+                            @endif
                         </div>
                         <div>
                             @admincan('order.create')
@@ -94,8 +185,7 @@
                                                     method="POST" class="d-inline status-update-form">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <select name="status" class="form-select form-select-sm badge-select {{ $order->status_badge_class }}"
-                                                        {{ !$order->isCancellable() && $order->status !== 'cancelled' ? '' : '' }}>
+                                                    <select name="status" class="form-select form-select-sm badge-select {{ $order->status_badge_class }}">
                                                         @foreach (\App\Models\Order::STATUSES as $status)
                                                             <option value="{{ $status }}" {{ $order->status === $status ? 'selected' : '' }}>
                                                                 {{ ucfirst($status) }}
