@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\Auth;
 use App\Services\AdminService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Admin\Profile\UpdateProfileRequest;
 use App\Http\Requests\Admin\Profile\UpdatePasswordRequest;
 
