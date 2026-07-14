@@ -84,6 +84,12 @@ class RolePermissionSeeder extends Seeder
             'admin.create',
             'admin.edit',
             'admin.delete',
+
+            // Role Management
+            'role.view',
+            'role.create',
+            'role.edit',
+            'role.delete',
         ];
 
         // Create all permissions for admin guard

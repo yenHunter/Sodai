@@ -860,7 +860,7 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 

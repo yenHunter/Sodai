@@ -38,6 +38,24 @@ class Admin extends Authenticatable
     }
 
     // ─────────────────────────────────────────────
+    // ACCESSORS
+    // ─────────────────────────────────────────────
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
+
+    // ─────────────────────────────────────────────
+    // SCOPES
+    // ─────────────────────────────────────────────
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    // ─────────────────────────────────────────────
     // RELATIONSHIPS
     // ─────────────────────────────────────────────
 

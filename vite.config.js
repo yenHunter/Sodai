@@ -20,6 +20,10 @@ export default defineConfig({
                 'resources/js/pages/admin-ecommerce-order-index.js',
                 'resources/js/pages/admin-ecommerce-order-pos.js',
 
+                // ───────────── Settings Pages ─────────────
+                'resources/js/pages/admin-settings-users-index.js',
+                'resources/js/pages/admin-settings-users-role-details.js',
+
                 'resources/js/app.js',
                 'resources/js/maps/leaflet-data.js',
                 'resources/js/pages/apps-api-keys.js',

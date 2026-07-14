@@ -110,32 +110,10 @@
                     </div>
                 </li>
                 <li class="side-nav-item">
-                    <a aria-controls="orders" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
-                        href="#orders">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.order.index') }}">
                         <span class="menu-icon"><i data-lucide="shopping-cart"></i></span>
                         <span class="menu-text" data-lang="orders">Orders</span>
-                        <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse" id="orders">
-                        <ul class="sub-menu">
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ route('admin.ecommerce.order.index') }}">
-                                    <span class="menu-text" data-lang="apps-ecommerce-orders">Orders</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/ecommerce/order-details') }}">
-                                    <span class="menu-text" data-lang="apps-ecommerce-order-details">Order
-                                        Details</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/ecommerce/order-add') }}">
-                                    <span class="menu-text" data-lang="apps-ecommerce-order-add">Add/Edit Order</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
                 <li class="side-nav-item">
                     <a class="side-nav-link" href="{{ url('/apps/ecommerce/customers') }}">
@@ -218,34 +196,23 @@
                     <div class="collapse" id="users">
                         <ul class="sub-menu">
                             <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/contacts') }}">
-                                    <span class="menu-text" data-lang="apps-users-contacts">Contacts</span>
+                                <a class="side-nav-link" href="{{ route('admin.users.index') }}">
+                                    <span class="menu-text" data-lang="apps-users-contacts">Users</span>
                                 </a>
                             </li>
                             <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/profile') }}">
-                                    <span class="menu-text" data-lang="apps-users-profile">Profile</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/account-settings') }}">
-                                    <span class="menu-text" data-lang="apps-users-account-settings">Account
-                                        Settings</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/roles') }}">
+                                <a class="side-nav-link" href="{{ route('admin.users.roles.index') }}">
                                     <span class="menu-text" data-lang="apps-users-roles">Roles</span>
                                 </a>
                             </li>
                             <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/role-details') }}">
-                                    <span class="menu-text" data-lang="apps-users-role-details">Role Details</span>
+                                <a class="side-nav-link" href="{{ route('admin.users.permissions.index') }}">
+                                    <span class="menu-text" data-lang="apps-users-permissions">Permissions</span>
                                 </a>
                             </li>
                             <li class="side-nav-item">
-                                <a class="side-nav-link" href="{{ url('/apps/users/permissions') }}">
-                                    <span class="menu-text" data-lang="apps-users-permissions">Permissions</span>
+                                <a class="side-nav-link" href="{{ route('admin.users.profile.show') }}">
+                                    <span class="menu-text" data-lang="apps-users-profile">Profile</span>
                                 </a>
                             </li>
                         </ul>

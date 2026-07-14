@@ -2,9 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 
@@ -94,12 +97,34 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     });
 
     // ── Admin Management: super-admin only ──
-    Route::middleware('permission:admin.view')->group(function () {
-        // Route::resource('admins', AdminController::class);
-    });
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::middleware('permission:admin.view')->group(function () {
+            Route::get('/', [AdminController::class, 'index'])->name('index');
+            Route::post('/store', [AdminController::class, 'store'])->name('store')->middleware('permission:admin.create');
+            Route::post('/{admin}/update', [AdminController::class, 'update'])->name('update')->middleware('permission:admin.edit');
+            Route::delete('/{admin}', [AdminController::class, 'destroy'])->name('destroy')->middleware('permission:admin.delete');
+            Route::patch('/{admin}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:admin.edit');
+        });
 
-    // ── Settings: super-admin only ──
-    Route::middleware('permission:setting.view')->group(function () {
-        // Route::get('settings', ...)->name('settings.index');
+        // ── Role & Permission Management: super-admin only ──
+        Route::middleware('permission:role.view')->group(function () {
+            Route::prefix('roles')->name('roles.')->group(function () {
+                Route::get('/', [RoleController::class, 'index'])->name('index');
+                Route::post('/store', [RoleController::class, 'store'])->name('store')->middleware('permission:role.create');
+                Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit')->middleware('permission:role.edit');
+                Route::post('/{role}/update', [RoleController::class, 'update'])->name('update')->middleware('permission:role.edit');
+                Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy')->middleware('permission:role.delete');
+            });
+
+            Route::get('/permissions', [RoleController::class, 'permissions'])->name('permissions.index');
+        });
+
+        // ── Own Profile: any authenticated admin ──
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [ProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+            Route::post('/update', [ProfileController::class, 'update'])->name('update');
+            Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password');
+        });
     });
 });
