@@ -566,7 +566,7 @@ Route::get('/apps/ecommerce/product-details', function () {
 });
 
 Route::get('/apps/ecommerce/customers', function () {
-    return view('admin.apps.ecommerce.customers');
+    return view('admin.ecommerce.customer.index');
 });
 
 Route::get('/apps/ecommerce/attributes', function () {
