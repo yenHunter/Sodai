@@ -7,8 +7,10 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Support\Str;
+use App\Models\OrderStatusHistory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class OrderService
@@ -47,6 +49,8 @@ class OrderService
                 ]);
 
                 $this->persistItemsAndAdjustStock($order, $items, decrement: true);
+
+                $this->recordStatusHistory($order, null, 'pending', 'Order placed.');
 
                 Log::info('Order created successfully.', [
                     'order_id'     => $order->id,
@@ -116,17 +120,22 @@ class OrderService
     // STATUS TRANSITIONS
     // ─────────────────────────────────────────────
 
-    public function updateStatus(Order $order, string $status): Order
+    public function updateStatus(Order $order, string $status, ?string $note = null): Order
     {
         if (!in_array($status, Order::STATUSES)) {
             throw new \Exception('Invalid order status.');
         }
 
-        if ($status === 'cancelled') {
-            return $this->cancel($order, null);
+        if ($status === $order->status) {
+            throw new \Exception('Order is already in this status.');
         }
 
-        return DB::transaction(function () use ($order, $status) {
+        if ($status === 'cancelled') {
+            return $this->cancel($order, $note);
+        }
+
+        return DB::transaction(function () use ($order, $status, $note) {
+            $previousStatus = $order->status;
             $update = ['status' => $status];
 
             if ($status === 'shipped')   $update['shipped_at']   = now();
@@ -138,7 +147,9 @@ class OrderService
 
             $order->update($update);
 
-            Log::info('Order status updated.', ['order_id' => $order->id, 'status' => $status]);
+            $this->recordStatusHistory($order, $previousStatus, $status, $note);
+
+            Log::info('Order status updated.', ['order_id' => $order->id, 'from' => $previousStatus, 'to' => $status]);
 
             return $order->fresh();
         });
@@ -151,6 +162,8 @@ class OrderService
         }
 
         return DB::transaction(function () use ($order, $reason) {
+            $previousStatus = $order->status;
+
             $this->restoreStockForItems($order->items);
 
             $order->update([
@@ -158,6 +171,8 @@ class OrderService
                 'cancelled_at'  => now(),
                 'cancel_reason' => $reason,
             ]);
+
+            $this->recordStatusHistory($order, $previousStatus, 'cancelled', $reason);
 
             Log::info('Order cancelled.', ['order_id' => $order->id, 'reason' => $reason]);
 
@@ -276,6 +291,17 @@ class OrderService
         }
     }
 
+    private function recordStatusHistory(Order $order, ?string $fromStatus, string $toStatus, ?string $note = null): void
+    {
+        OrderStatusHistory::create([
+            'order_id'    => $order->id,
+            'from_status' => $fromStatus,
+            'to_status'   => $toStatus,
+            'changed_by'  => Auth::guard('admin')->id(),
+            'note'        => $note,
+        ]);
+    }
+
     private function calculateTotal(float $subtotal, array $data): float
     {
         $total = $subtotal
@@ -354,6 +380,6 @@ class OrderService
 
     public function getOrderForDetails(Order $order): Order
     {
-        return $order->load(['items.product', 'user']);
+        return $order->load(['items.product', 'user', 'statusHistories.admin']);
     }
 }

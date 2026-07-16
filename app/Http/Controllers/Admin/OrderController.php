@@ -146,10 +146,11 @@ class OrderController extends Controller
     {
         $request->validate([
             'status' => ['required', 'in:' . implode(',', Order::STATUSES)],
+            'note'   => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
-            $this->orderService->updateStatus($order, $request->input('status'));
+            $this->orderService->updateStatus($order, $request->input('status'), $request->input('note'));
 
             return redirect()
                 ->back()

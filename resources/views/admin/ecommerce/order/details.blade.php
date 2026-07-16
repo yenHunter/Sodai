@@ -2,7 +2,10 @@
 
 @section('content')
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Order #' . $order->order_number])
+        @include('admin.include.partials.page-title', [
+            'subtitle' => 'Ecommerce',
+            'title' => 'Order #' . $order->order_number,
+        ])
     </div>
 
     @if (session('success'))
@@ -42,8 +45,8 @@
                         @endadmincan
                         @admincan('order.delete')
                             @if ($order->isDeletable())
-                                <form action="{{ route('admin.ecommerce.order.destroy', $order) }}" method="POST" class="d-inline"
-                                    onsubmit="return confirm('Delete this order permanently?');">
+                                <form action="{{ route('admin.ecommerce.order.destroy', $order) }}" method="POST"
+                                    class="d-inline" onsubmit="return confirm('Delete this order permanently?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">
@@ -79,7 +82,8 @@
                                                         <img alt="{{ $item->product_name }}" class="img-fluid rounded"
                                                             src="{{ Storage::url($item->product_image) }}" />
                                                     @else
-                                                        <div class="bg-light rounded d-flex align-items-center justify-content-center h-100">
+                                                        <div
+                                                            class="bg-light rounded d-flex align-items-center justify-content-center h-100">
                                                             <i class="text-muted" data-lucide="image"></i>
                                                         </div>
                                                     @endif
@@ -87,7 +91,8 @@
                                                 <div>
                                                     <h5 class="mb-1">
                                                         @if ($item->product)
-                                                            <a class="link-reset" href="{{ route('admin.ecommerce.product.show', $item->product) }}">
+                                                            <a class="link-reset"
+                                                                href="{{ route('admin.ecommerce.product.show', $item->product) }}">
                                                                 {{ $item->product_name }}
                                                             </a>
                                                         @else
@@ -109,7 +114,8 @@
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-semibold" colspan="3">Discount</td>
-                                    <td class="text-end text-danger fw-semibold">-${{ number_format((float) $order->discount_amount, 2) }}</td>
+                                    <td class="text-end text-danger fw-semibold">
+                                        -${{ number_format((float) $order->discount_amount, 2) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-semibold" colspan="3">Shipping fee</td>
@@ -121,13 +127,15 @@
                                 </tr>
                                 <tr class="border-top">
                                     <td class="text-end fw-bold text-uppercase" colspan="3">Grand Total</td>
-                                    <td class="fw-bold text-end table-active">${{ number_format((float) $order->total_amount, 2) }}</td>
+                                    <td class="fw-bold text-end table-active">
+                                        ${{ number_format((float) $order->total_amount, 2) }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     @if ($order->coupon_code)
-                        <p class="text-muted small mb-0">Coupon applied: <span class="fw-semibold">{{ $order->coupon_code }}</span></p>
+                        <p class="text-muted small mb-0">Coupon applied: <span
+                                class="fw-semibold">{{ $order->coupon_code }}</span></p>
                     @endif
                     @if ($order->notes)
                         <div class="alert alert-light border mt-3 mb-0">
@@ -138,58 +146,42 @@
             </div>
 
             {{-- ═══════════════════════════════════════════
-                 ORDER TIMELINE (derived from real timestamps)
+                 ORDER STATUS HISTORY
             ═══════════════════════════════════════════ --}}
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Order Timeline</h4>
+                    <h4 class="card-title">Status History</h4>
                 </div>
                 <div class="card-body p-4">
-                    <div class="timeline">
-                        @if ($order->status === 'cancelled')
-                            <div class="timeline-item d-flex align-items-stretch">
-                                <div class="timeline-time pe-3 text-muted">{{ $order->cancelled_at?->format('d M, h:i A') }}</div>
-                                <div class="timeline-dot bg-danger"></div>
-                                <div class="timeline-content ps-3 pb-4">
-                                    <h5 class="mb-1">Order Cancelled</h5>
-                                    @if ($order->cancel_reason)
-                                        <p class="mb-0 text-muted">{{ $order->cancel_reason }}</p>
-                                    @endif
+                    @if ($order->statusHistories->isNotEmpty())
+                        <div class="timeline">
+                            @foreach ($order->statusHistories as $history)
+                                <div class="timeline-item d-flex align-items-stretch">
+                                    <div class="timeline-time pe-3 text-muted">
+                                        {{ $history->created_at->format('d M, h:i A') }}
+                                    </div>
+                                    <div class="timeline-dot {{ $history->status_badge_class }}"></div>
+                                    <div class="timeline-content ps-3 {{ !$loop->last ? 'pb-4' : '' }}">
+                                        <h5 class="mb-1">
+                                            @if ($history->from_status)
+                                                {{ ucfirst($history->from_status) }} → {{ ucfirst($history->to_status) }}
+                                            @else
+                                                Order Placed
+                                            @endif
+                                        </h5>
+                                        @if ($history->note)
+                                            <p class="mb-1 text-muted">{{ $history->note }}</p>
+                                        @endif
+                                        <span class="fw-semibold fs-xxs text-muted">
+                                            By {{ $history->admin?->name ?? 'System' }}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        @endif
-
-                        @if ($order->delivered_at)
-                            <div class="timeline-item d-flex align-items-stretch">
-                                <div class="timeline-time pe-3 text-muted">{{ $order->delivered_at->format('d M, h:i A') }}</div>
-                                <div class="timeline-dot bg-success"></div>
-                                <div class="timeline-content ps-3 pb-4">
-                                    <h5 class="mb-1">Delivered</h5>
-                                    <p class="mb-0 text-muted">Order was delivered to the customer.</p>
-                                </div>
-                            </div>
-                        @endif
-
-                        @if ($order->shipped_at)
-                            <div class="timeline-item d-flex align-items-stretch">
-                                <div class="timeline-time pe-3 text-muted">{{ $order->shipped_at->format('d M, h:i A') }}</div>
-                                <div class="timeline-dot bg-success"></div>
-                                <div class="timeline-content ps-3 pb-4">
-                                    <h5 class="mb-1">Shipped</h5>
-                                    <p class="mb-0 text-muted">Order left the warehouse for delivery.</p>
-                                </div>
-                            </div>
-                        @endif
-
-                        <div class="timeline-item d-flex align-items-stretch">
-                            <div class="timeline-time pe-3 text-muted">{{ $order->created_at->format('d M, h:i A') }}</div>
-                            <div class="timeline-dot bg-success"></div>
-                            <div class="timeline-content ps-3">
-                                <h5 class="mb-1">Order Placed</h5>
-                                <p class="mb-0 text-muted">Order #{{ $order->order_number }} was created.</p>
-                            </div>
+                            @endforeach
                         </div>
-                    </div>
+                    @else
+                        <p class="text-muted mb-0">No status history recorded yet.</p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -206,7 +198,8 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="me-2">
                             @if ($order->user?->avatar)
-                                <img alt="avatar" class="rounded-circle avatar-lg" src="{{ Storage::url($order->user->avatar) }}" />
+                                <img alt="avatar" class="rounded-circle avatar-lg"
+                                    src="{{ Storage::url($order->user->avatar) }}" />
                             @else
                                 <span class="avatar-lg avatar-title bg-primary-subtle text-primary rounded-circle fs-xl">
                                     {{ strtoupper(substr($order->user?->name ?? '?', 0, 1)) }}
@@ -275,14 +268,18 @@
                 </div>
                 <div class="card-body">
                     @admincan('order.update-status')
-                        <form action="{{ route('admin.ecommerce.order.status.update', $order) }}" method="POST" class="mb-2">
+                        <form action="{{ route('admin.ecommerce.order.status.update', $order) }}" method="POST"
+                            class="mb-2">
                             @csrf
                             @method('PATCH')
                             <select name="status" class="form-select mb-2">
                                 @foreach (\App\Models\Order::STATUSES as $status)
-                                    <option value="{{ $status }}" {{ $order->status === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                    <option value="{{ $status }}" {{ $order->status === $status ? 'selected' : '' }}>
+                                        {{ ucfirst($status) }}</option>
                                 @endforeach
                             </select>
+                            <textarea name="note" class="form-control mb-2" rows="2"
+                                placeholder="Optional note (e.g. tracking number, reason)"></textarea>
                             <button class="btn btn-primary w-100" type="submit">Update Status</button>
                         </form>
                     @endadmincan

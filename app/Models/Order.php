@@ -76,6 +76,11 @@ class Order extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function statusHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class)->latest();
+    }
+
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
