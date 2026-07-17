@@ -51,6 +51,8 @@ class RolePermissionSeeder extends Seeder
 
             // Customers
             'customer.view',
+            'customer.create',
+            'customer.edit',
             'customer.ban',
             'customer.delete',
 
@@ -143,6 +145,8 @@ class RolePermissionSeeder extends Seeder
             'order.delete',
 
             'customer.view',
+            'customer.create',
+            'customer.edit',
             'customer.ban',
 
             'coupon.view',

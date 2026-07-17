@@ -116,7 +116,7 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/customers') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.customer.index') }}">
                         <span class="menu-icon"><i data-lucide="users-round"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-customers">Customers</span>
                     </a>

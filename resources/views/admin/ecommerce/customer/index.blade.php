@@ -1,515 +1,260 @@
 @extends('admin.include.vertical', ['title' => 'Customers'])
 
-@section('styles')
-@endsection
-
 @section('content')
     @include('admin.include.partials.page-title', ['subtitle' => 'Ecommerce', 'title' => 'Customers'])
 
     <div class="row">
-        <div class="col-xxl-12">
-            <div class="card" data-table="" data-table-rows-per-page="8">
-                <div class="card-header border-light d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div class="d-flex gap-2">
-                        <div class="app-search">
-                            <input class="form-control" data-table-search="" placeholder="Search customer..."
-                                type="search" />
-                            <i class="app-search-icon text-muted" data-lucide="search"></i>
-                        </div>
-                        <button class="btn btn-danger d-none" data-table-delete-selected="">Delete</button>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <div>
-                            <select class="form-select form-control my-1 my-md-0" data-table-set-rows-per-page="">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                            </select>
-                        </div>
-                        <div class="dropdown">
-                            <button aria-expanded="false" class="btn btn-default dropdown-toggle drop-arrow-none"
-                                data-bs-toggle="dropdown" type="button">
-                                <i class="me-1" data-lucide="download"></i> Export <i class="align-middle ms-1"
-                                    data-lucide="chevron-down"></i>
+        <div class="col-12">
+
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-2">
+                    <i class="me-2" data-lucide="circle-check"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mb-2">
+                    <i class="me-2" data-lucide="triangle-alert"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show mb-2">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            <div class="card">
+                <div class="card-header justify-content-between">
+                    <h5 class="card-title mb-0">Customer List</h5>
+                    <div>
+                        @admincan('customer.delete')
+                            <button class="btn btn-danger d-none" id="bulkDeleteBtn" type="button">
+                                <i class="fs-sm me-1" data-lucide="trash-2"></i> Delete Selected
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#">Export as PDF</a></li>
-                                <li><a class="dropdown-item" href="#">Export as CSV</a></li>
-                                <li><a class="dropdown-item" href="#">Export as Excel</a></li>
-                            </ul>
-                        </div>
-                        <a class="btn btn-primary" data-bs-target="#addCustomerModal" data-bs-toggle="modal" href="#!">
-                            <i class="me-1 fs-sm" data-lucide="plus"></i> Add Customer </a>
+                        @endadmincan
+                        @admincan('customer.create')
+                            <button class="btn btn-primary" type="button" id="addCustomerBtn" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                <i class="fs-sm me-1" data-lucide="plus"></i> Add Customer
+                            </button>
+                        @endadmincan
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-custom table-centered table-select table-hover w-100 mb-0">
-                        <thead class="bg-light bg-opacity-25 thead-sm">
-                            <tr class="text-uppercase fs-xxs">
-                                <th class="ps-3" style="width: 1%">
-                                    <input class="form-check-input form-check-input-light fs-14 mt-0"
-                                        data-table-select-all="" id="select-all-products" type="checkbox" />
-                                </th>
-                                <th data-table-sort="customer">Clients Name</th>
-                                <th data-table-sort="">Email</th>
-                                <th data-table-sort="">Phone</th>
-                                <th data-table-sort="">Country</th>
-                                <th data-table-sort="">Joined</th>
-                                <th data-table-sort="">Orders</th>
-                                <th data-table-sort="">Total Spends</th>
-                                <th class="text-center">Actions</th>
+                <div class="card-body">
+                    <table id="customerTable" class="table table-striped dt-responsive align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th width="30"><input type="checkbox" class="form-check-input" id="selectAllCheckbox"></th>
+                                <th width="60">Avatar</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Country</th>
+                                <th>Joined</th>
+                                <th>Orders</th>
+                                <th>Total Spend</th>
+                                <th>Status</th>
+                                <th width="150">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-7" class="img-fluid rounded-circle"
-                                                src="/images/users/user-7.jpg" />
+                            @foreach ($customers as $customer)
+                                <tr>
+                                    <td><input type="checkbox" class="form-check-input row-checkbox" value="{{ $customer->id }}"></td>
+                                    <td>
+                                        @if ($customer->avatar_url)
+                                            <img src="{{ $customer->avatar_url }}" class="rounded-circle" width="40" height="40" style="object-fit:cover" alt="">
+                                        @else
+                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px">
+                                                {{ strtoupper(substr($customer->name, 0, 1)) }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold">{{ $customer->name }}</td>
+                                    <td>{{ $customer->email }}</td>
+                                    <td>{{ $customer->phone ?? '—' }}</td>
+                                    <td>{{ $customer->defaultAddress?->country ?? '—' }}</td>
+                                    <td>
+                                        {{ $customer->created_at->format('d M, Y') }}
+                                        <small class="text-muted d-block">{{ $customer->created_at->format('h:i A') }}</small>
+                                    </td>
+                                    <td><span class="badge bg-secondary">{{ $customer->orders_count }}</span></td>
+                                    <td>${{ number_format((float) ($customer->total_spent ?? 0), 2) }}</td>
+                                    <td>
+                                        @if ($customer->status === 'banned')
+                                            <span class="badge bg-danger">Banned</span>
+                                        @elseif ($customer->status === 'active')
+                                            @admincan('customer.edit')
+                                                <form action="{{ route('admin.ecommerce.customer.toggle-status', $customer) }}" method="POST" class="d-inline toggle-status-form">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" class="badge border-0 bg-success" style="cursor:pointer">Active</button>
+                                                </form>
+                                            @else
+                                                <span class="badge bg-success">Active</span>
+                                            @endadmincan
+                                        @else
+                                            @admincan('customer.edit')
+                                                <form action="{{ route('admin.ecommerce.customer.toggle-status', $customer) }}" method="POST" class="d-inline toggle-status-form">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" class="badge border-0 bg-warning text-dark" style="cursor:pointer">Inactive</button>
+                                                </form>
+                                            @else
+                                                <span class="badge bg-warning text-dark">Inactive</span>
+                                            @endadmincan
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            @admincan('customer.edit')
+                                                <button type="button" class="btn btn-default btn-icon btn-sm rounded-circle" data-bs-toggle="modal"
+                                                    data-bs-target="#customerModal" data-mode="edit" data-id="{{ $customer->id }}"
+                                                    data-name="{{ $customer->name }}" data-email="{{ $customer->email }}"
+                                                    data-phone="{{ $customer->phone }}" data-status="{{ $customer->status }}"
+                                                    data-image="{{ $customer->avatar_url }}"
+                                                    data-update-url="{{ route('admin.ecommerce.customer.update', $customer) }}"
+                                                    title="Edit">
+                                                    <i class="fs-lg" data-lucide="square-pen"></i>
+                                                </button>
+                                                {{-- <form action="{{ route('admin.ecommerce.customer.resend-set-password', $customer) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-default btn-icon btn-sm rounded-circle" title="Resend Set-Password Email">
+                                                        <i class="fs-lg" data-lucide="mail"></i>
+                                                    </button>
+                                                </form> --}}
+                                            @endadmincan
+                                            @admincan('customer.delete')
+                                                <button type="button" class="btn btn-default btn-icon btn-sm rounded-circle" data-bs-toggle="modal"
+                                                    data-bs-target="#deleteCustomerModal" data-name="{{ $customer->name }}"
+                                                    data-orders="{{ $customer->orders_count }}"
+                                                    data-delete-url="{{ route('admin.ecommerce.customer.destroy', $customer) }}"
+                                                    title="Delete">
+                                                    <i class="fs-lg" data-lucide="trash-2"></i>
+                                                </button>
+                                            @endadmincan
                                         </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Carlos Méndez</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>carlos@techlaunch.mx</td>
-                                <td>+1 (415) 992-3412</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/us.svg" /> United States</td>
-                                <td>2 Feb, 2024 <small class="text-muted">08:34 AM</small></td>
-                                <td>58</td>
-                                <td>$198.25</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-2" class="img-fluid rounded-circle"
-                                                src="/images/users/user-2.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Sophie
-                                                    Laurent</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>sophie.laurent@eurotech.fr</td>
-                                <td>+33 6 12 34 56 78</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/fr.svg" /> France</td>
-                                <td>15 Mar, 2024 <small class="text-muted">10:22 AM</small></td>
-                                <td>42</td>
-                                <td>$245.80</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-3" class="img-fluid rounded-circle"
-                                                src="/images/users/user-3.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Akira
-                                                    Tanaka</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>akira.tanaka@techjapan.co.jp</td>
-                                <td>+81 90-1234-5678</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/jp.svg" /> Japan</td>
-                                <td>28 Jan, 2024 <small class="text-muted">03:15 PM</small></td>
-                                <td>75</td>
-                                <td>$320.50</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-4" class="img-fluid rounded-circle"
-                                                src="/images/users/user-4.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Emma Watson</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>emma.watson@britinnovate.uk</td>
-                                <td>+44 7700 900123</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/gb.svg" /> United Kingdom</td>
-                                <td>10 Apr, 2024 <small class="text-muted">09:47 AM</small></td>
-                                <td>29</td>
-                                <td>$175.30</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-5" class="img-fluid rounded-circle"
-                                                src="/images/users/user-5.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Lucas
-                                                    Schmidt</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>lucas.schmidt@techdeutsch.de</td>
-                                <td>+49 151 23456789</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/de.svg" /> Germany</td>
-                                <td>20 Feb, 2024 <small class="text-muted">02:10 PM</small></td>
-                                <td>63</td>
-                                <td>$280.75</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-6" class="img-fluid rounded-circle"
-                                                src="/images/users/user-6.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Isabella
-                                                    Rossi</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>isabella.rossi@italiatech.it</td>
-                                <td>+39 333 4567890</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/it.svg" /> Italy</td>
-                                <td>5 Mar, 2024 <small class="text-muted">11:25 AM</small></td>
-                                <td>51</td>
-                                <td>$210.40</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-8" class="img-fluid rounded-circle"
-                                                src="/images/users/user-8.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Mateo
-                                                    Vargas</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>mateo.vargas@latamtech.ar</td>
-                                <td>+54 9 11 2345 6789</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/ar.svg" /> Argentina</td>
-                                <td>18 Apr, 2024 <small class="text-muted">04:50 PM</small></td>
-                                <td>37</td>
-                                <td>$190.20</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-9" class="img-fluid rounded-circle"
-                                                src="/images/users/user-9.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Priya
-                                                    Sharma</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>priya.sharma@indotech.in</td>
-                                <td>+91 98765 43210</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/in.svg" /> India</td>
-                                <td>10 Jan, 2024 <small class="text-muted">06:30 AM</small></td>
-                                <td>82</td>
-                                <td>$350.90</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-10" class="img-fluid rounded-circle"
-                                                src="/images/users/user-10.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Liam
-                                                    O’Connor</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>liam.oconnor@ausinnovate.au</td>
-                                <td>+61 400 123 456</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/au.svg" /> Australia</td>
-                                <td>25 Mar, 2024 <small class="text-muted">01:15 PM</small></td>
-                                <td>45</td>
-                                <td>$230.65</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">
-                                    <input class="form-check-input form-check-input-light fs-14" type="checkbox"
-                                        value="option" />
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar avatar-sm">
-                                            <img alt="avatar-1" class="img-fluid rounded-circle"
-                                                src="/images/users/user-1.jpg" />
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-0">
-                                                <a class="link-reset" data-sort="customer" href="#!">Olga
-                                                    Petrova</a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>olga.petrova@rus-tech.ru</td>
-                                <td>+7 912 345 67 89</td>
-                                <td><img alt="" class="rounded-circle me-1" height="16"
-                                        src="/images/flags/ru.svg" /> Russia</td>
-                                <td>8 Feb, 2024 <small class="text-muted">07:40 AM</small></td>
-                                <td>68</td>
-                                <td>$295.15</td>
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="eye"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle"
-                                            href="javascript:void(0);"> <i class="fs-lg"
-                                                data-lucide="square-pen"></i></a>
-                                        <a class="btn btn-default btn-icon btn-sm rounded-circle" data-table-delete-row=""
-                                            href="javascript:void(0);"> <i class="fs-lg" data-lucide="trash-2"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
-                </div>
-                <div class="card-footer border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div data-table-pagination-info="customers"></div>
-                        <div data-table-pagination=""></div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div aria-hidden="true" aria-labelledby="addCustomerModalLabel" class="modal fade" id="addCustomerModal"
-        tabindex="-1">
+
+    {{-- ADD/EDIT MODAL --}}
+    <div class="modal fade" id="customerModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
-                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                    <h5 class="modal-title" id="customerModalLabel">Add New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="addCustomerForm">
+                <form id="customerForm" method="POST" enctype="multipart/form-data" data-store-url="{{ route('admin.ecommerce.customer.store') }}">
+                    @csrf
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label" for="customerName">Full Name</label>
-                                <input class="form-control" id="customerName" placeholder="e.g. Carlos Méndez"
-                                    required="" type="text" />
+                                <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="customerName" name="name" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="customerEmail">Email</label>
-                                <input class="form-control" id="customerEmail" placeholder="e.g. carlos@domain.com"
-                                    required="" type="email" />
+                                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="customerEmail" name="email" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="customerPhone">Phone</label>
-                                <input class="form-control" id="customerPhone" placeholder="+1 (415) 992-3412"
-                                    required="" type="tel" />
+                                <label class="form-label fw-semibold">Phone <span class="text-muted fw-normal">(Optional)</span></label>
+                                <input type="text" class="form-control" id="customerPhone" name="phone">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="customerCountry">Country</label>
-                                <select class="form-select" id="customerCountry" required="">
-                                    <option value="">Select Country</option>
-                                    <option value="United States">🇺🇸 United States</option>
-                                    <option value="Canada">🇨🇦 Canada</option>
-                                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
-                                    <option value="India">🇮🇳 India</option>
+                                <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="customerStatus" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="customerAvatar">Avatar</label>
-                                <input accept="image/*" class="form-control" id="customerAvatar" type="file" />
+                                <label class="form-label fw-semibold">Avatar</label>
+                                <input type="file" class="form-control" id="customerAvatar" name="avatar" accept="image/jpeg,image/jpg,image/png,image/webp">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="joinedDate">Join Date</label>
-                                <input class="form-control" data-date-format="d M, Y" data-provider="flatpickr"
-                                    id="joinedDate" required="" type="date" />
+                            <div class="col-12 d-none" id="avatarPreviewContainer">
+                                <img id="avatarPreview" src="" class="rounded border" style="width:70px;height:70px;object-fit:cover" alt="">
+                            </div>
+                            <div class="col-12" id="newCustomerNotice">
+                                <div class="alert alert-info mb-0">
+                                    <i class="me-1" data-lucide="info"></i>
+                                    A temporary account will be created and an email will be sent to the customer
+                                    with a link to set their own password.
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancel</button>
-                        <button class="btn btn-primary" type="submit">Add Customer</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="customerSubmitBtn"><i data-lucide="plus" class="fs-sm me-1"></i> Add Customer</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    {{-- DELETE MODAL --}}
+    @admincan('customer.delete')
+        <div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger"><i data-lucide="triangle-alert" class="me-2"></i>Delete Customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="deleteModalBody"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <form id="deleteSingleForm" method="POST">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-danger" id="confirmDeleteBtn"><i data-lucide="trash-2" class="fs-sm me-1"></i>Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- BULK DELETE MODAL --}}
+        <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger"><i data-lucide="triangle-alert" class="me-2"></i>Delete Selected Customers</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="bulkDeleteMessage"></p>
+                        <div class="alert alert-warning mb-0">
+                            <i class="me-2" data-lucide="triangle-alert"></i>
+                            Customers with existing orders cannot be deleted. This action cannot be undone.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <form id="bulkDeleteForm" action="{{ route('admin.ecommerce.customer.bulk-destroy') }}" method="POST">
+                            @csrf @method('DELETE')
+                            <input type="hidden" name="ids" id="bulkDeleteIds">
+                            <button type="submit" class="btn btn-danger" id="confirmBulkDeleteBtn"><i data-lucide="trash-2" class="fs-sm me-1"></i>Delete Selected</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endadmincan
+
     @include('admin.include.partials.footer-scripts')
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/custom-table.js'])
+    @vite(['resources/js/pages/admin-ecommerce-customer.js'])
 @endsection

@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Visitor\AuthController as VisitorAuthController;
+
+Route::get('/set-password/{token}', [VisitorAuthController::class, 'setPasswordView'])->name('customer.set-password.view');
+Route::post('/set-password', [VisitorAuthController::class, 'setPasswordAttempt'])->name('customer.set-password.attempt');
 
 Route::get('/', function () {
     return view('visitor.pages.index');

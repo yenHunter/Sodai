@@ -56,6 +56,15 @@ class User extends Authenticatable
     }
 
     // ─────────────────────────────────────────────
+    // ACCESSORS
+    // ─────────────────────────────────────────────
+    
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
+
+    // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
 

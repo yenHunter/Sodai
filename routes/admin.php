@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 
@@ -93,6 +94,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
             Route::patch('/{order}/status', [OrderController::class, 'updateStatus'])->name('status.update')->middleware('permission:order.update-status');
             Route::patch('/{order}/cancel',  [OrderController::class, 'cancel'])->name('cancel')->middleware('permission:order.cancel');
+        });
+
+        // ── Customers ──
+        Route::middleware('permission:customer.view')->prefix('customers')->name('customer.')->group(function () {
+            Route::get('/', [CustomerController::class, 'index'])->name('index');
+            Route::post('/store', [CustomerController::class, 'store'])->name('store')->middleware('permission:customer.create');
+            Route::post('/{customer}/update', [CustomerController::class, 'update'])->name('update')->middleware('permission:customer.edit');
+            Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy')->middleware('permission:customer.delete');
+            Route::delete('/', [CustomerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:customer.delete');
+            Route::patch('/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:customer.edit');
         });
     });
 
