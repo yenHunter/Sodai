@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\CartController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
@@ -105,6 +106,15 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/', [CustomerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:customer.delete');
             Route::patch('/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:customer.edit');
             Route::post('/{customer}/resend-set-password', [CustomerController::class, 'resendSetPassword'])->name('resend-set-password')->middleware('permission:customer.edit');
+        });
+
+        // ── Cart ──
+        Route::middleware('permission:cart.view')->prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [CartController::class, 'index'])->name('index');
+            Route::get('/{cart}', [CartController::class, 'show'])->name('show');
+            Route::delete('/{cart}', [CartController::class, 'destroy'])->name('destroy')->middleware('permission:cart.delete');
+            Route::delete('/', [CartController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:cart.delete');
+            Route::post('/{cart}/send-reminder', [CartController::class, 'sendReminder'])->name('send-reminder');
         });
     });
 

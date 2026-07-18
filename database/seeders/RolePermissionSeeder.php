@@ -56,6 +56,10 @@ class RolePermissionSeeder extends Seeder
             'customer.ban',
             'customer.delete',
 
+            // Carts
+            'cart.view',
+            'cart.delete',
+
             // Coupons
             'coupon.view',
             'coupon.create',
@@ -148,6 +152,9 @@ class RolePermissionSeeder extends Seeder
             'customer.create',
             'customer.edit',
             'customer.ban',
+
+            'cart.view',
+            'cart.delete',
 
             'coupon.view',
             'coupon.create',
