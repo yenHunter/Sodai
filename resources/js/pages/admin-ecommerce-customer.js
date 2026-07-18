@@ -24,7 +24,7 @@ waitForJQuery(function ($) {
         if (!document.getElementById('customerTable')) return
         dataTable = $('#customerTable').DataTable({
             pageLength: 10,
-            columnDefs: [{ orderable: false, searchable: false, targets: [0, 1, 10] }],
+            columnDefs: [{ orderable: false, searchable: false, targets: [0, 1, 9] }],
             dom:
                 '<"row mb-3"<"col-md-6"l><"col-md-6"f>>' +
                 '<"row"<"col-12"tr>>' +
