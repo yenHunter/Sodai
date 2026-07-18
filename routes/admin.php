@@ -104,6 +104,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy')->middleware('permission:customer.delete');
             Route::delete('/', [CustomerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:customer.delete');
             Route::patch('/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:customer.edit');
+            Route::post('/{customer}/resend-set-password', [CustomerController::class, 'resendSetPassword'])->name('resend-set-password')->middleware('permission:customer.edit');
         });
     });
 
