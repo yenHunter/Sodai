@@ -550,7 +550,7 @@ Route::get('/apps/users/profile', function () {
 });
 
 Route::get('/apps/ecommerce/refunds', function () {
-    return view('admin.apps.ecommerce.refunds');
+    return view('admin.ecommerce.refunds');
 });
 
 Route::get('/apps/ecommerce/categories', function () {
@@ -598,7 +598,7 @@ Route::get('/apps/ecommerce/products-grid', function () {
 });
 
 Route::get('/apps/ecommerce/cart', function () {
-    return view('admin.apps.ecommerce.cart');
+    return view('admin.ecommerce.cart');
 });
 
 Route::get('/apps/ecommerce/product-add', function () {
