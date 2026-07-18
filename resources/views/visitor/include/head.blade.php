@@ -3,7 +3,7 @@
 <meta http-equiv="x-ua-compatible" content="ie=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
-<title>@yield('title', 'Sodai')</title>
+<title>Sodai | {{ $title }}</title>
 <meta name="keywords"
     content="apparel, catalog, clean, ecommerce, ecommerce HTML, electronics, fashion, html eCommerce, html store, minimal, multipurpose, multipurpose ecommerce, online store, responsive ecommerce template, shops" />
 <meta name="description" content="Best ecommerce html template for single and multi vendor store.">
@@ -26,5 +26,10 @@
 <link rel="stylesheet" href="{{ asset('visitor/css/plugins/bootstrap.css') }}" />
 
 <!-- Main Style -->
-<link rel="stylesheet" href="{{ asset('visitor/css/demo4.css') }}" />
+@yield("styles")
+<link rel="stylesheet" href="{{ asset('visitor/css/style.css') }}" />
+<link rel="stylesheet" href="{{ asset('visitor/css/responsive.css') }}" />
+
+<!-- Background css -->
+<link rel="stylesheet" id="bg-switcher-css" href="{{ asset('visitor/css/backgrounds/bg-4.css') }}">
 <!-- ----- Head Section End ----- -->

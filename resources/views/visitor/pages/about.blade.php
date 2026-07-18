@@ -1,6 +1,13 @@
-@extends('visitor.layout.app')
+@extends('visitor.layout.app', ['title' => 'Sodai - About Us', 'bodyClass' => 'about-us-page'])
 
-@section('title', 'Sodai')
+@section('styles')
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ asset('visitor/css/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('visitor/css/responsive.css') }}" />
+
+    <!-- Background css -->
+    <link rel="stylesheet" id="bg-switcher-css" href="{{ asset('visitor/css/backgrounds/bg-4.css') }}">
+@endsection
 
 @section('content')
     <!-- Ec breadcrumb start -->
@@ -41,7 +48,7 @@
                     <div class="row">
                         <div class="col-md-6 ec-cms-block ec-abcms-block text-center">
                             <div class="ec-cms-block-inner">
-                                <img class="a-img" src="assets/images/offer-image/1.jpg" alt="about">
+                                <img class="a-img" src="{{ asset('visitor/images/offer-image/1.jpg') }}" alt="about">
                             </div>
                         </div>
                         <div class="col-md-6 ec-cms-block ec-abcms-block text-center">
@@ -88,8 +95,10 @@
                         <li class="ec-test-item">
                             <i class="fi-rr-quote-right top"></i>
                             <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="assets/images/testimonial/1.jpg" /></div>
+                                <div class="ec-test-img">
+                                    <img alt="testimonial" title="testimonial"
+                                        src="{{ asset('visitor/images/testimonial/1.jpg') }}" />
+                                </div>
                                 <div class="ec-test-content">
                                     <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
                                         typesetting industry. Lorem Ipsum has been the industry's standard dummy text
@@ -111,8 +120,10 @@
                         <li class="ec-test-item ">
                             <i class="fi-rr-quote-right top"></i>
                             <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="assets/images/testimonial/2.jpg" /></div>
+                                <div class="ec-test-img">
+                                    <img alt="testimonial" title="testimonial"
+                                        src="{{ asset('visitor/images/testimonial/2.jpg') }}" />
+                                </div>
                                 <div class="ec-test-content">
                                     <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
                                         typesetting industry. Lorem Ipsum has been the industry's standard dummy text
@@ -134,8 +145,10 @@
                         <li class="ec-test-item">
                             <i class="fi-rr-quote-right top"></i>
                             <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="assets/images/testimonial/3.jpg" /></div>
+                                <div class="ec-test-img">
+                                    <img alt="testimonial" title="testimonial"
+                                        src="{{ asset('visitor/images/testimonial/3.jpg') }}" />
+                                </div>
                                 <div class="ec-test-content">
                                     <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
                                         typesetting industry. Lorem Ipsum has been the industry's standard dummy text
@@ -235,53 +248,60 @@
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/1.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/1.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/2.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/2.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/3.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/3.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/4.jpg"
-                                        alt="insta"></a>
-                            </div>
-                        </div>
-                        <!-- instagram item -->
-                        <!-- instagram item -->
-                        <div class="ec-insta-item">
-                            <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/5.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/4.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/6.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/5.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
                         <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
-                                <a href="#" target="_blank"><img src="assets/images/instragram-image/7.jpg"
-                                        alt="insta"></a>
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/6.jpg') }}" alt="insta">
+                                </a>
+                            </div>
+                        </div>
+                        <!-- instagram item -->
+                        <!-- instagram item -->
+                        <div class="ec-insta-item">
+                            <div class="ec-insta-inner">
+                                <a href="#" target="_blank">
+                                    <img src="{{ asset('visitor/images/instragram-image/7.jpg') }}" alt="insta">
+                                </a>
                             </div>
                         </div>
                         <!-- instagram item -->
@@ -292,4 +312,7 @@
         </div>
     </section>
     <!-- Ec Instagram End -->
+@endsection
+
+@section('scripts')
 @endsection

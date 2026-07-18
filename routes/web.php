@@ -10,9 +10,13 @@ Route::get('/', function () {
     return view('visitor.pages.index');
 })->name('visitor.index');
 
-Route::get('/about', function () {
+Route::get('about', function () {
     return view('visitor.pages.about');
 })->name('visitor.about');
+
+Route::get('contact', function () {
+    return view('visitor.pages.contact');
+})->name('visitor.contact');
 
 // ── Auth Guest Routes (coming soon) ───────────────────────
 // Route::middleware('guest:customer')->group(function () {
