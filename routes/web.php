@@ -558,11 +558,11 @@ Route::get('/apps/ecommerce/categories', function () {
 });
 
 Route::get('/apps/ecommerce/reviews', function () {
-    return view('admin.apps.ecommerce.reviews');
+    return view('admin.ecommerce.reviews');
 });
 
 Route::get('/apps/ecommerce/sellers', function () {
-    return view('admin.apps.ecommerce.sellers');
+    return view('admin.ecommerce.sellers');
 });
 
 Route::get('/apps/ecommerce/orders', function () {
@@ -578,7 +578,7 @@ Route::get('/apps/ecommerce/customers', function () {
 });
 
 Route::get('/apps/ecommerce/attributes', function () {
-    return view('admin.apps.ecommerce.attributes');
+    return view('admin.ecommerce.attributes');
 });
 
 Route::get('/apps/ecommerce/order-details', function () {
@@ -586,7 +586,7 @@ Route::get('/apps/ecommerce/order-details', function () {
 });
 
 Route::get('/apps/ecommerce/seller-details', function () {
-    return view('admin.apps.ecommerce.seller-details');
+    return view('admin.ecommerce.seller-details');
 });
 
 Route::get('/apps/ecommerce/order-add', function () {
