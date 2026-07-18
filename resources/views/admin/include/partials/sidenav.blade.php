@@ -122,13 +122,13 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/cart') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.cart.index') }}">
                         <span class="menu-icon"><i data-lucide="shopping-bag"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-cart">Cart</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/refunds') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.refund.index') }}">
                         <span class="menu-icon"><i data-lucide="dollar-sign"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-refunds">Refunds</span>
                     </a>

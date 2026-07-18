@@ -60,6 +60,13 @@ class RolePermissionSeeder extends Seeder
             'cart.view',
             'cart.delete',
 
+            // Refunds
+            'refund.view',
+            'refund.create',
+            'refund.edit',
+            'refund.approve',
+            'refund.delete',
+
             // Coupons
             'coupon.view',
             'coupon.create',
@@ -155,6 +162,12 @@ class RolePermissionSeeder extends Seeder
 
             'cart.view',
             'cart.delete',
+
+            'refund.view',
+            'refund.create',
+            'refund.edit',
+            'refund.approve',
+            'refund.delete',
 
             'coupon.view',
             'coupon.create',

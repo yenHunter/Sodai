@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CartController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -115,6 +116,17 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{cart}', [CartController::class, 'destroy'])->name('destroy')->middleware('permission:cart.delete');
             Route::delete('/', [CartController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:cart.delete');
             Route::post('/{cart}/send-reminder', [CartController::class, 'sendReminder'])->name('send-reminder');
+        });
+
+        // ── Refunds ──
+        Route::middleware('permission:refund.view')->prefix('refunds')->name('refund.')->group(function () {
+            Route::get('/', [RefundController::class, 'index'])->name('index');
+            Route::post('/store', [RefundController::class, 'store'])->name('store')->middleware('permission:refund.create');
+            Route::post('/{refund}/update', [RefundController::class, 'update'])->name('update')->middleware('permission:refund.edit');
+            Route::delete('/{refund}', [RefundController::class, 'destroy'])->name('destroy')->middleware('permission:refund.delete');
+            Route::delete('/', [RefundController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:refund.delete');
+            Route::patch('/{refund}/approve', [RefundController::class, 'approve'])->name('approve')->middleware('permission:refund.approve');
+            Route::patch('/{refund}/reject', [RefundController::class, 'reject'])->name('reject')->middleware('permission:refund.approve');
         });
     });
 

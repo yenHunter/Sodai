@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Cart;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\Customer\CartReminderMail;
+use App\Mail\Admin\CartReminderMail;
 
 class CartService
 {

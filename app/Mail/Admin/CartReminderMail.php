@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail\Customer;
+namespace App\Mail\Admin;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -29,7 +29,7 @@ class CartReminderMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'customer.emails.cart-reminder',
+            view: 'admin.emails.cart-reminder',
         );
     }
 }
