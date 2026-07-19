@@ -22,6 +22,8 @@ export default defineConfig({
                 'resources/js/pages/admin-ecommerce-customer.js',
                 'resources/js/pages/admin-ecommerce-cart.js',
                 'resources/js/pages/admin-ecommerce-refund.js',
+                'resources/js/pages/admin-ecommerce-attribute.js',
+                'resources/js/pages/admin-ecommerce-review.js',
 
                 // ───────────── Settings Pages ─────────────
                 'resources/js/pages/admin-settings-users-index.js',

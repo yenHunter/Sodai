@@ -134,13 +134,13 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/reviews') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.review.index') }}">
                         <span class="menu-icon"><i data-lucide="star"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-reviews">Reviews</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/ecommerce/attributes') }}">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.attribute.index') }}">
                         <span class="menu-icon"><i data-lucide="columns-3-cog"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-attributes">Attributes</span>
                     </a>

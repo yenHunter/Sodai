@@ -18,6 +18,15 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 class ProductService
 {
+    public function __construct(
+        private AttributeService $attributeService
+    ) {}
+
+    public function getActiveAttributeKeys(): array
+    {
+        return $this->attributeService->getActiveKeys();
+    }
+
     // ─────────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────────

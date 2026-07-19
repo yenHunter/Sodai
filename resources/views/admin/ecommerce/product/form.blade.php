@@ -103,74 +103,84 @@
                     </div>
 
                     {{-- Physical Attributes --}}
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label class="form-label" for="productWeight">
-                                Weight <span class="text-muted">(Optional)</span>
-                            </label>
-                            <input class="form-control @error('weight') is-invalid @enderror" id="productWeight"
-                                name="weight" placeholder="0.00" type="number" step="0.01"
-                                value="{{ old('weight', $product->weight ?? '') }}" />
-                            @error('weight')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    @if (in_array('weight', $activeAttrs ?? []))
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label class="form-label" for="productWeight">
+                                    Weight <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input class="form-control @error('weight') is-invalid @enderror" id="productWeight"
+                                    name="weight" placeholder="0.00" type="number" step="0.01"
+                                    value="{{ old('weight', $product->weight ?? '') }}" />
+                                @error('weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label class="form-label" for="weightUnit">
-                                Unit <span class="text-muted">(Optional)</span>
-                            </label>
-                            <select class="form-select @error('weight_unit') is-invalid @enderror" id="weightUnit"
-                                name="weight_unit">
-                                <option value="">Select Unit</option>
-                                <option value="kg"
-                                    {{ old('weight_unit', $product->weight_unit ?? '') == 'kg' ? 'selected' : '' }}>kg
-                                </option>
-                                <option value="g"
-                                    {{ old('weight_unit', $product->weight_unit ?? '') == 'g' ? 'selected' : '' }}>g
-                                </option>
-                                <option value="lb"
-                                    {{ old('weight_unit', $product->weight_unit ?? '') == 'lb' ? 'selected' : '' }}>lb
-                                </option>
-                                <option value="oz"
-                                    {{ old('weight_unit', $product->weight_unit ?? '') == 'oz' ? 'selected' : '' }}>oz
-                                </option>
-                            </select>
-                            @error('weight_unit')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label class="form-label" for="weightUnit">
+                                    Unit <span class="text-muted">(Optional)</span>
+                                </label>
+                                <select class="form-select @error('weight_unit') is-invalid @enderror" id="weightUnit"
+                                    name="weight_unit">
+                                    <option value="">Select Unit</option>
+                                    <option value="kg"
+                                        {{ old('weight_unit', $product->weight_unit ?? '') == 'kg' ? 'selected' : '' }}>
+                                        kg
+                                    </option>
+                                    <option value="g"
+                                        {{ old('weight_unit', $product->weight_unit ?? '') == 'g' ? 'selected' : '' }}>
+                                        g
+                                    </option>
+                                    <option value="lb"
+                                        {{ old('weight_unit', $product->weight_unit ?? '') == 'lb' ? 'selected' : '' }}>
+                                        lb
+                                    </option>
+                                    <option value="oz"
+                                        {{ old('weight_unit', $product->weight_unit ?? '') == 'oz' ? 'selected' : '' }}>
+                                        oz
+                                    </option>
+                                </select>
+                                @error('weight_unit')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label class="form-label" for="productColor">
-                                Color <span class="text-muted">(Optional)</span>
-                            </label>
-                            <input class="form-control @error('color') is-invalid @enderror" id="productColor"
-                                name="color" placeholder="e.g., Blue" type="text"
-                                value="{{ old('color', $product->color ?? '') }}" />
-                            @error('color')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    @if (in_array('color', $activeAttrs ?? []))
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label class="form-label" for="productColor">
+                                    Color <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input class="form-control @error('color') is-invalid @enderror" id="productColor"
+                                    name="color" placeholder="e.g., Blue" type="text"
+                                    value="{{ old('color', $product->color ?? '') }}" />
+                                @error('color')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label class="form-label" for="productSize">
-                                Size <span class="text-muted">(Optional)</span>
-                            </label>
-                            <input class="form-control @error('size') is-invalid @enderror" id="productSize"
-                                name="size" placeholder="e.g., Medium" type="text"
-                                value="{{ old('size', $product->size ?? '') }}" />
-                            @error('size')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    @if (in_array('size', $activeAttrs ?? []))
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label class="form-label" for="productSize">
+                                    Size <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input class="form-control @error('size') is-invalid @enderror" id="productSize"
+                                    name="size" placeholder="e.g., Medium" type="text"
+                                    value="{{ old('size', $product->size ?? '') }}" />
+                                @error('size')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                 </div>
             </div>

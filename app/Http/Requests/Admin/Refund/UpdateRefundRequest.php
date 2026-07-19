@@ -17,7 +17,26 @@ class UpdateRefundRequest extends FormRequest
     {
         return [
             'order_id' => ['required', 'integer', 'exists:orders,id'],
-            'amount'   => ['required', 'numeric', 'min:0.01'],
+            'amount'   => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($attribute, $value, $fail) {
+                    $order = \App\Models\Order::find($this->input('order_id'));
+                    if (!$order) return;
+
+                    $currentRefundId = $this->route('refund')->id;
+                    $alreadyCommitted = (float) $order->refunds()
+                        ->whereIn('status', ['pending', 'approved'])
+                        ->where('id', '!=', $currentRefundId)
+                        ->sum('amount');
+
+                    $remaining = (float) $order->total_amount - $alreadyCommitted;
+                    if ($value > $remaining) {
+                        $fail("Refund amount cannot exceed the remaining refundable balance of \${$remaining}.");
+                    }
+                },
+            ],
             'reason'   => ['required', 'string', 'max:1000'],
         ];
     }
