@@ -227,7 +227,10 @@
                                     </div>
                                 </div>
 
-                                @if ($product->weight || $product->color || $product->size)
+                                @if (
+                                    ($product->weight && in_array('weight', $activeAttrs ?? [])) ||
+                                        ($product->color && in_array('color', $activeAttrs ?? [])) ||
+                                        ($product->size && in_array('size', $activeAttrs ?? [])))
                                     <div class="row mb-4">
                                         @if ($product->weight)
                                             <div class="col-md-4 col-xl-3">

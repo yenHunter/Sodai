@@ -8,10 +8,12 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\DashboardController;
 
 // Guest
@@ -127,6 +129,22 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/', [RefundController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:refund.delete');
             Route::patch('/{refund}/approve', [RefundController::class, 'approve'])->name('approve')->middleware('permission:refund.approve');
             Route::patch('/{refund}/reject', [RefundController::class, 'reject'])->name('reject')->middleware('permission:refund.approve');
+        });
+
+        // ── Attributes ──
+        Route::middleware('permission:attribute.view')->prefix('attributes')->name('attribute.')->group(function () {
+            Route::get('/', [AttributeController::class, 'index'])->name('index');
+            Route::post('/{attribute}/update', [AttributeController::class, 'update'])->name('update')->middleware('permission:attribute.edit');
+            Route::patch('/{attribute}/toggle-status', [AttributeController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:attribute.edit');
+        });
+
+        // ── Reviews ──
+        Route::middleware('permission:review.view')->prefix('reviews')->name('review.')->group(function () {
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::patch('/{review}/approve', [ReviewController::class, 'approve'])->name('approve')->middleware('permission:review.approve');
+            Route::patch('/{review}/reject', [ReviewController::class, 'reject'])->name('reject')->middleware('permission:review.approve');
+            Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy')->middleware('permission:review.delete');
+            Route::delete('/', [ReviewController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:review.delete');
         });
     });
 

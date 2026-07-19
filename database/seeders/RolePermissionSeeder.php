@@ -67,6 +67,10 @@ class RolePermissionSeeder extends Seeder
             'refund.approve',
             'refund.delete',
 
+            // Attributes
+            'attribute.view',
+            'attribute.edit',
+
             // Coupons
             'coupon.view',
             'coupon.create',
@@ -82,7 +86,6 @@ class RolePermissionSeeder extends Seeder
             // Reviews
             'review.view',
             'review.approve',
-            'review.reject',
             'review.delete',
 
             // Reports
@@ -169,6 +172,9 @@ class RolePermissionSeeder extends Seeder
             'refund.approve',
             'refund.delete',
 
+            'attribute.view',
+            'attribute.edit',
+
             'coupon.view',
             'coupon.create',
             'coupon.edit',
@@ -181,7 +187,6 @@ class RolePermissionSeeder extends Seeder
 
             'review.view',
             'review.approve',
-            'review.reject',
             'review.delete',
 
             'report.view',
@@ -247,7 +252,6 @@ class RolePermissionSeeder extends Seeder
 
             'review.view',
             'review.approve',
-            'review.reject',
         ]);
     }
 }

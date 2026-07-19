@@ -81,6 +81,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class)->latest();
     }
 
+    public function refunds()
+    {
+        return $this->hasMany(\App\Models\Refund::class);
+    }
+
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
@@ -112,6 +117,13 @@ class Order extends Model
             'refunded'   => 'badge-soft-secondary',
             default      => 'badge-soft-secondary',
         };
+    }
+
+    public function getRefundedAmountAttribute(): float
+    {
+        return (float) $this->refunds()
+            ->whereIn('status', ['pending', 'approved'])
+            ->sum('amount');
     }
 
     // ─────────────────────────────────────────────

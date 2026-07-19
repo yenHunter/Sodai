@@ -25,14 +25,27 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['category', 'brand'])
-            ->select('id', 'name', 'sku', 'thumbnail', 'short_description',
-                     'category_id', 'brand_id', 'price', 'stock_quantity',
-                     'is_active', 'is_featured', 'average_rating', 'review_count', 'total_sales');
+            ->select(
+                'id',
+                'name',
+                'sku',
+                'thumbnail',
+                'short_description',
+                'category_id',
+                'brand_id',
+                'price',
+                'stock_quantity',
+                'is_active',
+                'is_featured',
+                'average_rating',
+                'review_count',
+                'total_sales'
+            );
 
         if ($search = $request->input('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -66,9 +79,10 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product = $this->productService->getProductForDetails($product);
+        $product        = $this->productService->getProductForDetails($product);
+        $activeAttrs    = $this->productService->getActiveAttributeKeys();
 
-        return view('admin.ecommerce.product.details', compact('product'));
+        return view('admin.ecommerce.product.details', compact('product', 'activeAttrs'));
     }
 
     // ─────────────────────────────────────────────
@@ -77,13 +91,14 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = $this->productService->getAssignableCategories();
-        $brands     = $this->productService->getActiveBrands();
-        $products   = $this->productService->getProductsForRelation();
+        $categories     = $this->productService->getAssignableCategories();
+        $brands         = $this->productService->getActiveBrands();
+        $products       = $this->productService->getProductsForRelation();
+        $activeAttrs    = $this->productService->getActiveAttributeKeys();
 
         return view(
             'admin.ecommerce.product.create',
-            compact('categories', 'brands', 'products')
+            compact('categories', 'brands', 'products', 'activeAttrs')
         );
     }
 
@@ -417,11 +432,11 @@ class ProductController extends Controller
 
         $products = Product::active()
             ->select('id', 'name', 'sku')
-            ->where(function($query) use ($search) {
+            ->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             })
-            ->when($exclude, function($query) use ($exclude) {
+            ->when($exclude, function ($query) use ($exclude) {
                 $query->where('id', '!=', $exclude);
             })
             ->limit(20)
