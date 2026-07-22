@@ -84,9 +84,10 @@ class RefundService
                 'processed_at' => now(),
             ]);
 
-            // Sync order status + restore stock via existing order workflow.
             $order = $refund->order;
-            if ($order && $order->isCancellable()) {
+
+            // Sync order status + restore stock, unless already refunded/cancelled (idempotency guard).
+            if ($order && !in_array($order->status, ['refunded', 'cancelled'])) {
                 $this->orderService->updateStatus($order, 'refunded', "Refund #{$refund->refund_number} approved.");
             }
 

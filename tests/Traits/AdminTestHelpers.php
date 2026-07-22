@@ -8,13 +8,13 @@ use Spatie\Permission\Models\Role;
 
 trait AdminTestHelpers
 {
+    protected bool $permissionsSeededForTest = false;
+
     protected function ensurePermissionsSeeded(): void
     {
-        static $seeded = false;
-
-        if (!$seeded) {
+        if (!$this->permissionsSeededForTest) {
             $this->seed(RolePermissionSeeder::class);
-            $seeded = true;
+            $this->permissionsSeededForTest = true;
         }
     }
 
