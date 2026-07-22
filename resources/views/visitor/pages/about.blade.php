@@ -1,12 +1,6 @@
 @extends('visitor.layout.app', ['title' => 'Sodai - About Us', 'bodyClass' => 'about-us-page'])
 
 @section('styles')
-    <!-- Main Style -->
-    <link rel="stylesheet" href="{{ asset('visitor/css/style.css') }}" />
-    <link rel="stylesheet" href="{{ asset('visitor/css/responsive.css') }}" />
-
-    <!-- Background css -->
-    <link rel="stylesheet" id="bg-switcher-css" href="{{ asset('visitor/css/backgrounds/bg-4.css') }}">
 @endsection
 
 @section('content')

@@ -18,6 +18,14 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
+Route::get('login', function () {
+    return view('visitor.pages.login');
+})->name('visitor.login');
+
+Route::get('register', function () {
+    return view('visitor.pages.register');
+})->name('visitor.register');
+
 // ── Auth Guest Routes (coming soon) ───────────────────────
 // Route::middleware('guest:customer')->group(function () {
 //     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

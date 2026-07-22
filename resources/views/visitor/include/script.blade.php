@@ -18,6 +18,7 @@
     <script src="{{ asset('visitor/js/plugins/jquery.sticky-sidebar.js') }}"></script>
 
     <!-- Main Js -->
+    @yield('scripts')
     <script src="{{ asset('visitor/js/vendor/index.js') }}"></script>
     <script src="{{ asset('visitor/js/main.js') }}"></script>
 
