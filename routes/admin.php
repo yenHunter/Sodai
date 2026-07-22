@@ -150,6 +150,14 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
     // ── Admin Management: super-admin only ──
     Route::prefix('users')->name('users.')->group(function () {
+        // ── Own Profile: static paths MUST come before {admin} wildcard routes below ──
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [ProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+            Route::post('/update', [ProfileController::class, 'update'])->name('update');
+            Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password');
+        });
+
         Route::middleware('permission:admin.view')->group(function () {
             Route::get('/', [AdminController::class, 'index'])->name('index');
             Route::post('/store', [AdminController::class, 'store'])->name('store')->middleware('permission:admin.create');
@@ -169,14 +177,6 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             });
 
             Route::get('/permissions', [RoleController::class, 'permissions'])->name('permissions.index');
-        });
-
-        // ── Own Profile: any authenticated admin ──
-        Route::prefix('profile')->name('profile.')->group(function () {
-            Route::get('/', [ProfileController::class, 'show'])->name('show');
-            Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
-            Route::post('/update', [ProfileController::class, 'update'])->name('update');
-            Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password');
         });
     });
 });
