@@ -125,7 +125,7 @@ class CustomerService
             'created_at' => now(),
         ]);
 
-        $setPasswordUrl = route('customer.set-password.view', [
+        $setPasswordUrl = route('visitor.set-password.view', [
             'token' => $token,
             'email' => $customer->email,
         ]);

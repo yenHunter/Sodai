@@ -24,5 +24,5 @@ Route::middleware('auth.customer')->group(function () {
 });
 
 // ── Set Password (admin-created account bootstrap; token itself is the auth, no guest gate needed) ──
-Route::get('/set-password/{token}', [AuthController::class, 'setPasswordView'])->name('customer.set-password.view');
-Route::post('/set-password', [AuthController::class, 'setPasswordAttempt'])->name('customer.set-password.attempt');
+Route::get('/set-password/{token}', [AuthController::class, 'setPasswordView'])->name('set-password.view');
+Route::post('/set-password', [AuthController::class, 'setPasswordAttempt'])->name('set-password.attempt');

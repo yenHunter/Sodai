@@ -97,12 +97,12 @@ class CustomerModuleTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->post(route('customer.set-password.attempt'), [
+        $this->post(route('visitor.set-password.attempt'), [
             'token'                 => $token,
             'email'                 => $customer->email,
             'password'              => 'NewPass123',
             'password_confirmation' => 'NewPass123',
-        ])->assertRedirect(route('visitor.index'));
+        ])->assertRedirect(route('visitor.login'));
 
         $this->assertTrue(Hash::check('NewPass123', $customer->fresh()->password));
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $customer->email]);
@@ -119,7 +119,7 @@ class CustomerModuleTest extends TestCase
             'created_at' => now()->subHours(2), // beyond 60-minute expiry
         ]);
 
-        $this->post(route('customer.set-password.attempt'), [
+        $this->post(route('visitor.set-password.attempt'), [
             'token'                 => $token,
             'email'                 => $customer->email,
             'password'              => 'NewPass123',
