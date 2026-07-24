@@ -8,8 +8,9 @@
                     <!-- Ec Header Logo Start -->
                     <div class="align-self-center">
                         <div class="header-logo">
-                            <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" /><img
-                                    class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
+                            <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}"
+                                    alt="Site Logo" /><img class="dark-logo"
+                                    src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
                                     style="display: none;" /></a>
                         </div>
                     </div>
@@ -36,9 +37,20 @@
                                 <button class="dropdown-toggle" data-bs-toggle="dropdown"><i
                                         class="fi-rr-user"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-right">
-                                    <li><a class="dropdown-item" href="register.html">Register</a></li>
-                                    <li><a class="dropdown-item" href="checkout.html">Checkout</a></li>
-                                    <li><a class="dropdown-item" href="login.html">Login</a></li>
+                                    @auth('customer')
+                                        <li><span class="dropdown-item-text text-muted">Hi,
+                                                {{ auth('customer')->user()->name }}</span></li>
+                                        <li><a class="dropdown-item" href="#">Checkout</a></li>
+                                        <li>
+                                            <form action="{{ route('visitor.logout') }}" method="POST" class="m-0">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item">Logout</button>
+                                            </form>
+                                        </li>
+                                    @else
+                                        <li><a class="dropdown-item" href="{{ route('visitor.register') }}">Register</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('visitor.login') }}">Login</a></li>
+                                    @endauth
                                 </ul>
                             </div>
                             <!-- Header User End -->
@@ -69,8 +81,9 @@
                 <!-- Ec Header Logo Start -->
                 <div class="col">
                     <div class="header-logo">
-                        <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" /><img
-                                class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
+                        <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}"
+                                alt="Site Logo" /><img class="dark-logo"
+                                src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
                                 style="display: none;" /></a>
                     </div>
                 </div>
@@ -79,8 +92,7 @@
                 <div class="col">
                     <div class="header-search">
                         <form class="ec-btn-group-form" action="#">
-                            <input class="form-control ec-search-bar" placeholder="Search products..."
-                                type="text">
+                            <input class="form-control ec-search-bar" placeholder="Search products..." type="text">
                             <button class="submit" type="submit"><i class="fi-rr-search"></i></button>
                         </form>
                     </div>
@@ -156,16 +168,20 @@
                                     <li>
                                         <ul class="ec-main-banner w-100">
                                             <li><a class="p-0" href="shop-left-sidebar-col-3.html"><img
-                                                        class="img-responsive" src="{{ asset('visitor/images/menu-banner/1.jpg') }}"
+                                                        class="img-responsive"
+                                                        src="{{ asset('visitor/images/menu-banner/1.jpg') }}"
                                                         alt=""></a></li>
                                             <li><a class="p-0" href="shop-left-sidebar-col-4.html"><img
-                                                        class="img-responsive" src="{{ asset('visitor/images/menu-banner/2.jpg') }}"
+                                                        class="img-responsive"
+                                                        src="{{ asset('visitor/images/menu-banner/2.jpg') }}"
                                                         alt=""></a></li>
                                             <li><a class="p-0" href="shop-right-sidebar-col-3.html"><img
-                                                        class="img-responsive" src="{{ asset('visitor/images/menu-banner/3.jpg') }}"
+                                                        class="img-responsive"
+                                                        src="{{ asset('visitor/images/menu-banner/3.jpg') }}"
                                                         alt=""></a></li>
                                             <li><a class="p-0" href="shop-right-sidebar-col-4.html"><img
-                                                        class="img-responsive" src="{{ asset('visitor/images/menu-banner/4.jpg') }}"
+                                                        class="img-responsive"
+                                                        src="{{ asset('visitor/images/menu-banner/4.jpg') }}"
                                                         alt=""></a></li>
                                         </ul>
                                     </li>

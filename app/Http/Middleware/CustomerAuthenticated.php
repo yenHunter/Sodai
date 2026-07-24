@@ -18,6 +18,14 @@ class CustomerAuthenticated
 
         $user = Auth::guard('customer')->user();
 
+        if (!$user->hasVerifiedEmail()) {
+            Auth::guard('customer')->logout();
+            return redirect()
+                ->route('login')
+                ->with('error', 'Please verify your email address before continuing.')
+                ->with('unverified_email', $user->email);
+        }
+
         if ($user->isBanned()) {
             Auth::guard('customer')->logout();
             return redirect()

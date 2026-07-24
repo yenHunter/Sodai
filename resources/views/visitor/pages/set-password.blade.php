@@ -25,7 +25,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('customer.set-password.attempt') }}" method="POST">
+                <form action="{{ route('visitor.set-password.attempt') }}" method="POST">
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}">
                     <input type="hidden" name="email" value="{{ $email }}">

@@ -1342,12 +1342,6 @@ function ecCheckCookie() {
         });
     });
 
-    /*----------------------------- Recent auto popup -----------------------------------*/
-    setInterval(function () { $(".recent-purchase").stop().slideToggle('slow'); }, 10000);
-    $(".recent-close").click(function () {
-        $(".recent-purchase").stop().slideToggle('slow');
-    });
-
     /*----------------------------- Whatsapp chat --------------------------------*/
     $(document).ready(function () {
 

@@ -1,10 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Visitor\AuthController as VisitorAuthController;
+use App\Http\Controllers\Visitor\AuthController;
 
-Route::get('/set-password/{token}', [VisitorAuthController::class, 'setPasswordView'])->name('customer.set-password.view');
-Route::post('/set-password', [VisitorAuthController::class, 'setPasswordAttempt'])->name('customer.set-password.attempt');
+// ── Email Verification (public — customer has no session until verified) ──
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware('signed')
+    ->name('verification.verify');
+
+Route::get('/email/verify', [AuthController::class, 'verificationNotice'])
+    ->name('verification.notice');
+
+Route::post('/email/verify/resend', [AuthController::class, 'resendVerificationEmail'])
+    ->name('verification.send');
 
 Route::get('/', function () {
     return view('visitor.pages.index');
@@ -17,45 +25,6 @@ Route::get('about', function () {
 Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
-
-Route::get('login', function () {
-    return view('visitor.pages.login');
-})->name('visitor.login');
-
-Route::get('register', function () {
-    return view('visitor.pages.register');
-})->name('visitor.register');
-
-// ── Auth Guest Routes (coming soon) ───────────────────────
-// Route::middleware('guest:customer')->group(function () {
-//     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-//     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-//     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-//     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-// });
-
-// ── Authenticated Customer Routes (coming soon) ────────────
-// Route::middleware('auth.customer')->group(function () {
-//     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-// });
-
-// ── Products (coming soon) ────────────────────────────────
-// Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-// Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
-
-// ── Cart (coming soon) ────────────────────────────────────
-// Route::prefix('cart')->name('cart.')->group(function () {});
-
-// ── Checkout (coming soon) ────────────────────────────────
-// Route::prefix('checkout')->name('checkout.')->group(function () {});
-
-// ── Orders (coming soon) ──────────────────────────────────
-// Route::prefix('orders')->name('orders.')->group(function () {});
-
-// ── Wishlist (coming soon) ────────────────────────────────
-// Route::prefix('wishlist')->name('wishlist.')->group(function () {});
-
-
 
 Route::get('/widgets', function () {
     return view('admin.widgets');

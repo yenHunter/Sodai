@@ -1,11 +1,14 @@
-@extends('visitor.layout.app', ['title' => 'Sodai', 'bodyClass' => 'register_page'])
+@extends('visitor.layout.app', ['title' => 'Register', 'bodyClass' => 'register_page'])
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('visitor/css/demo1.css') }}" />
 @endsection
 
+@push('head')
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+@endpush
+
 @section('content')
-    <!-- Ec breadcrumb start -->
     <div class="sticky-header-next-sec  ec-breadcrumb section-space-mb">
         <div class="container">
             <div class="row">
@@ -15,21 +18,17 @@
                             <h2 class="ec-breadcrumb-title">Register</h2>
                         </div>
                         <div class="col-md-6 col-sm-12">
-                            <!-- ec-breadcrumb-list start -->
                             <ul class="ec-breadcrumb-list">
-                                <li class="ec-breadcrumb-item"><a href="index.html">Home</a></li>
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
                                 <li class="ec-breadcrumb-item active">Register</li>
                             </ul>
-                            <!-- ec-breadcrumb-list end -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Ec breadcrumb end -->
 
-    <!-- Start Register -->
     <section class="ec-page-content section-space-p">
         <div class="container">
             <div class="row">
@@ -40,84 +39,55 @@
                         <p class="sub-title mb-3">Best place to buy and sell digital products</p>
                     </div>
                 </div>
+
+                @if ($errors->any())
+                    <div class="col-md-6 offset-md-3 mb-3">
+                        <div class="alert alert-danger">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="ec-register-wrapper">
                     <div class="ec-register-container">
                         <div class="ec-register-form">
-                            <form action="#" method="post">
-                                <span class="ec-register-wrap ec-register-half">
-                                    <label>First Name*</label>
-                                    <input type="text" name="firstname" placeholder="Enter your first name" required />
-                                </span>
-                                <span class="ec-register-wrap ec-register-half">
-                                    <label>Last Name*</label>
-                                    <input type="text" name="lastname" placeholder="Enter your last name" required />
+                            <form id="customerRegisterForm" action="{{ route('visitor.register.attempt') }}" method="post">
+                                @csrf
+                                <span class="ec-register-wrap">
+                                    <label>Full Name*</label>
+                                    <input type="text" name="name" value="{{ old('name') }}"
+                                        placeholder="Enter your full name" required />
                                 </span>
                                 <span class="ec-register-wrap ec-register-half">
                                     <label>Email*</label>
-                                    <input type="email" name="email" placeholder="Enter your email add..." required />
+                                    <input type="email" name="email" value="{{ old('email') }}"
+                                        placeholder="Enter your email add..." required />
                                 </span>
                                 <span class="ec-register-wrap ec-register-half">
-                                    <label>Phone Number*</label>
-                                    <input type="text" name="phonenumber" placeholder="Enter your phone number"
-                                        required />
-                                </span>
-                                <span class="ec-register-wrap">
-                                    <label>Address</label>
-                                    <input type="text" name="address" placeholder="Address Line 1" />
+                                    <label>Phone Number <small>(Optional)</small></label>
+                                    <input type="text" name="phone" value="{{ old('phone') }}"
+                                        placeholder="Enter your phone number" />
                                 </span>
                                 <span class="ec-register-wrap ec-register-half">
-                                    <label>City *</label>
-                                    <span class="ec-rg-select-inner">
-                                        <select name="ec_select_city" id="ec-select-city" class="ec-register-select">
-                                            <option selected disabled>City</option>
-                                            <option value="1">City 1</option>
-                                            <option value="2">City 2</option>
-                                            <option value="3">City 3</option>
-                                            <option value="4">City 4</option>
-                                            <option value="5">City 5</option>
-                                        </select>
-                                    </span>
+                                    <label>Password*</label>
+                                    <input type="password" name="password" placeholder="Create a password" required />
+                                    <small class="text-muted">At least 8 characters, with uppercase, lowercase, and a number.</small>
                                 </span>
                                 <span class="ec-register-wrap ec-register-half">
-                                    <label>Post Code</label>
-                                    <input type="text" name="postalcode" placeholder="Post Code" />
+                                    <label>Confirm Password*</label>
+                                    <input type="password" name="password_confirmation" placeholder="Confirm your password" required />
                                 </span>
-                                <span class="ec-register-wrap ec-register-half">
-                                    <label>Country *</label>
-                                    <span class="ec-rg-select-inner">
-                                        <select name="ec_select_country" id="ec-select-country" class="ec-register-select">
-                                            <option selected disabled>Country</option>
-                                            <option value="1">Country 1</option>
-                                            <option value="2">Country 2</option>
-                                            <option value="3">Country 3</option>
-                                            <option value="4">Country 4</option>
-                                            <option value="5">Country 5</option>
-                                        </select>
-                                    </span>
-                                </span>
-                                <span class="ec-register-wrap ec-register-half">
-                                    <label>Region State</label>
-                                    <span class="ec-rg-select-inner">
-                                        <select name="ec_select_state" id="ec-select-state" class="ec-register-select">
-                                            <option selected disabled>Region/State</option>
-                                            <option value="1">Region/State 1</option>
-                                            <option value="2">Region/State 2</option>
-                                            <option value="3">Region/State 3</option>
-                                            <option value="4">Region/State 4</option>
-                                            <option value="5">Region/State 5</option>
-                                        </select>
-                                    </span>
-                                </span>
-                                <span class="ec-register-wrap ec-recaptcha">
-                                    <span class="g-recaptcha" data-sitekey="6LfKURIUAAAAAO50vlwWZkyK_G2ywqE52NU7YO0S"
-                                        data-callback="verifyRecaptchaCallback"
-                                        data-expired-callback="expiredRecaptchaCallback"></span>
-                                    <input class="form-control d-none" data-recaptcha="true" required
-                                        data-error="Please complete the Captcha">
-                                    <span class="help-block with-errors"></span>
-                                </span>
+
+                                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                                <input type="hidden" id="recaptchaSiteKey" value="{{ config('services.recaptcha.site_key') }}">
+
                                 <span class="ec-register-wrap ec-register-btn">
-                                    <button class="btn btn-primary" type="submit">Register</button>
+                                    <button class="btn btn-primary" type="submit" id="registerBtn">Register</button>
+                                </span>
+                                <span class="ec-register-wrap text-center mt-3">
+                                    Already have an account? <a href="{{ route('visitor.login') }}">Login here</a>
                                 </span>
                             </form>
                         </div>
@@ -126,8 +96,8 @@
             </div>
         </div>
     </section>
-    <!-- End Register -->
 @endsection
 
 @section('scripts')
+    @vite(['resources/js/pages/visitor-auth-register.js'])
 @endsection
