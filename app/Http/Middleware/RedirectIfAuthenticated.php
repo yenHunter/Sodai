@@ -27,7 +27,7 @@ class RedirectIfAuthenticated
                 // ── Customer Guard ──
                 case 'customer':
                     if (Auth::guard('customer')->check()) {
-                        return redirect()->route('visitor.home');
+                        return redirect()->route('visitor.index');
                     }
                     break;
 

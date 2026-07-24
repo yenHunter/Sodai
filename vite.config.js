@@ -6,10 +6,23 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+                // =============== Visitor Pages Starts =================
+
+                // ───────────── Auth Pages ─────────────
+                'resources/js/pages/visitor-auth-login.js',
+                'resources/js/pages/visitor-auth-register.js',
+                'resources/js/pages/visitor-auth-forgot-password.js',
+                'resources/js/pages/visitor-auth-reset-password.js',
+                
+                // =============== Visitor Pages Ends =================
+
+                // ================ Admin Pages Starts =================
+
                 // ───────────── Auth Pages ─────────────
                 'resources/js/pages/admin-auth-login.js',
                 'resources/js/pages/admin-auth-forgot-password.js',
                 'resources/js/pages/admin-auth-reset-password.js',
+
                 // ───────────── E-commerce Pages ─────────────
                 'resources/js/pages/admin-ecommerce-category.js',
                 'resources/js/pages/admin-ecommerce-brand.js',
