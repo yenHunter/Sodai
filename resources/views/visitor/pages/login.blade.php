@@ -85,16 +85,17 @@
                                     <label>Password*</label>
                                     <input type="password" name="password" placeholder="Enter your password" required />
                                 </span>
-                                <span class="ec-login-wrap">
+                                <span class="ec-login-wrap d-flex justify-content-between align-items-center">
                                     <label class="d-flex align-items-center gap-2">
-                                        <input type="checkbox" name="remember" value="1" style="width:auto" />
-                                        Remember Me
+                                        <input class="mt-3" type="checkbox" name="remember" value="1"
+                                            style="width:auto" />
+                                        <span>Remember Me</span>
                                     </label>
+                                    <span class="ec-login-wrap ec-login-fp mb-2">
+                                        <label><a href="{{ route('visitor.password.request') }}">Forgot
+                                                Password?</a></label>
+                                    </span>
                                 </span>
-                                <span class="ec-login-wrap ec-login-fp">
-                                    <label><a href="{{ route('visitor.password.request') }}">Forgot Password?</a></label>
-                                </span>
-
                                 <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                                 <input type="hidden" id="recaptchaSiteKey"
                                     value="{{ config('services.recaptcha.site_key') }}">

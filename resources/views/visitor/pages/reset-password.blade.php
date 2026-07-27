@@ -76,7 +76,7 @@
                                 <input type="hidden" id="recaptchaSiteKey" value="{{ config('services.recaptcha.site_key') }}">
 
                                 <span class="ec-login-wrap ec-login-btn">
-                                    <button class="btn btn-primary" type="submit" id="resetBtn">Update Password</button>
+                                    <button class="btn btn-primary" type="submit" id="resetBtn">Update</button>
                                 </span>
                             </form>
                         </div>

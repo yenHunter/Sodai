@@ -70,8 +70,8 @@
                                 <input type="hidden" id="recaptchaSiteKey" value="{{ config('services.recaptcha.site_key') }}">
 
                                 <span class="ec-login-wrap ec-login-btn">
-                                    <button class="btn btn-primary" type="submit" id="sendLinkBtn">Send Reset Link</button>
-                                    <a href="{{ route('visitor.login') }}" class="btn btn-secondary">Back to Login</a>
+                                    <button class="btn btn-primary" type="submit" id="sendLinkBtn">Send</button>
+                                    <a href="{{ route('visitor.login') }}" class="btn btn-success">Login</a>
                                 </span>
                             </form>
                         </div>

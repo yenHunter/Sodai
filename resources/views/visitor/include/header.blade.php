@@ -8,10 +8,11 @@
                     <!-- Ec Header Logo Start -->
                     <div class="align-self-center">
                         <div class="header-logo">
-                            <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}"
-                                    alt="Site Logo" /><img class="dark-logo"
-                                    src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
-                                    style="display: none;" /></a>
+                            <a href="{{ route('visitor.index') }}">
+                                <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" />
+                                <img class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}"
+                                    alt="Site Logo" style="display: none;" />
+                            </a>
                         </div>
                     </div>
                     <!-- Ec Header Logo End -->
@@ -38,8 +39,10 @@
                                         class="fi-rr-user"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-right">
                                     @auth('customer')
-                                        <li><span class="dropdown-item-text text-muted">Hi,
-                                                {{ auth('customer')->user()->name }}</span></li>
+                                        <li>
+                                            <span class="dropdown-item-text text-muted">
+                                                Welcome back</span>
+                                        </li>
                                         <li><a class="dropdown-item" href="#">Checkout</a></li>
                                         <li>
                                             <form action="{{ route('visitor.logout') }}" method="POST" class="m-0">
@@ -48,7 +51,8 @@
                                             </form>
                                         </li>
                                     @else
-                                        <li><a class="dropdown-item" href="{{ route('visitor.register') }}">Register</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('visitor.register') }}">Register</a>
+                                        </li>
                                         <li><a class="dropdown-item" href="{{ route('visitor.login') }}">Login</a></li>
                                     @endauth
                                 </ul>

@@ -73,15 +73,20 @@
                                 <span class="ec-register-wrap ec-register-half">
                                     <label>Password*</label>
                                     <input type="password" name="password" placeholder="Create a password" required />
-                                    <small class="text-muted">At least 8 characters, with uppercase, lowercase, and a number.</small>
                                 </span>
                                 <span class="ec-register-wrap ec-register-half">
                                     <label>Confirm Password*</label>
-                                    <input type="password" name="password_confirmation" placeholder="Confirm your password" required />
+                                    <input type="password" name="password_confirmation" placeholder="Confirm your password"
+                                        required />
+                                </span>
+                                <span class="ec-register-wrap">
+                                    <small class="text-muted">At least 8 characters, with uppercase, lowercase and a
+                                        number.</small>
                                 </span>
 
                                 <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
-                                <input type="hidden" id="recaptchaSiteKey" value="{{ config('services.recaptcha.site_key') }}">
+                                <input type="hidden" id="recaptchaSiteKey"
+                                    value="{{ config('services.recaptcha.site_key') }}">
 
                                 <span class="ec-register-wrap ec-register-btn">
                                     <button class="btn btn-primary" type="submit" id="registerBtn">Register</button>

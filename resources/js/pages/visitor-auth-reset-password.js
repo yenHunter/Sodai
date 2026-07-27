@@ -30,5 +30,4 @@ function initResetPasswordForm() {
 function setLoadingState(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
-    button.innerHTML = isLoading ? 'Updating...' : 'Update Password';
 }

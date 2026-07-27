@@ -30,5 +30,4 @@ function initForgotPasswordForm() {
 function setLoadingState(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
-    button.innerHTML = isLoading ? 'Sending...' : 'Send Reset Link';
 }

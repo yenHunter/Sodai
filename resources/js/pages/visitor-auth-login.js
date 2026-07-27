@@ -30,5 +30,4 @@ function initLoginForm() {
 function setLoadingState(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
-    button.innerHTML = isLoading ? 'Signing in...' : 'Login';
 }

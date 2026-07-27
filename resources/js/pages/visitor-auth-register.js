@@ -30,5 +30,4 @@ function initRegisterForm() {
 function setLoadingState(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
-    button.innerHTML = isLoading ? 'Creating account...' : 'Register';
 }
