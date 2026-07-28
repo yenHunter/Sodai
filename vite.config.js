@@ -13,6 +13,9 @@ export default defineConfig({
                 'resources/js/pages/visitor-auth-register.js',
                 'resources/js/pages/visitor-auth-forgot-password.js',
                 'resources/js/pages/visitor-auth-reset-password.js',
+
+                // ──────────── E-commerce Pages ─────────────
+                'resources/js/pages/visitor-products.js',
                 
                 // =============== Visitor Pages Ends =================
 

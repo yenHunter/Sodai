@@ -26,17 +26,17 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
-Route::get('products', function () {
-    return view('visitor.pages.products');
-})->name('visitor.products');
+// Route::get('products', function () {
+//     return view('visitor.pages.products');
+// })->name('visitor.products');
 
-Route::get('product-details', function () {
-    return view('visitor.pages.product-details');
-})->name('visitor.product-details');
+// Route::get('product-details', function () {
+//     return view('visitor.pages.product-details');
+// })->name('visitor.product-details');
 
-Route::get('products-by-category', function () {
-    return view('visitor.pages.products-by-category');
-})->name('visitor.products-by-category');
+// Route::get('products-by-category', function () {
+//     return view('visitor.pages.products-by-category');
+// })->name('visitor.products-by-category');
 
 Route::get('/widgets', function () {
     return view('admin.widgets');

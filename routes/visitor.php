@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Visitor\AuthController;
+use App\Http\Controllers\Visitor\ProductController;
+
+// ── Product Catalog (public) ──
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/category/{category:slug}', [ProductController::class, 'byCategory'])->name('products.category');
 
 // ── Guest Only ──
 Route::middleware('guest:customer')->group(function () {

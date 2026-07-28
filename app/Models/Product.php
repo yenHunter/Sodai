@@ -296,6 +296,16 @@ class Product extends Model
         return $query->whereBetween('price', [$min, $max]);
     }
 
+    public function scopeOfColor($query, $colors)
+    {
+        return $query->whereIn('color', (array) $colors);
+    }
+
+    public function scopeOfSize($query, $sizes)
+    {
+        return $query->whereIn('size', (array) $sizes);
+    }
+
     public function scopeNewest($query)
     {
         return $query->orderBy('created_at', 'desc');
