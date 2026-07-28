@@ -234,5 +234,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/visitor-products.js'])
+    {{-- @vite(['resources/js/pages/visitor-products.js']) --}}
 @endsection

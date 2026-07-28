@@ -16,6 +16,8 @@
     <script src="{{ asset('visitor/js/plugins/infiniteslidev2.js') }}"></script>
     <script src="{{ asset('visitor/js/vendor/jquery.magnific-popup.min.js') }}"></script>
     <script src="{{ asset('visitor/js/plugins/jquery.sticky-sidebar.js') }}"></script>
+    <script src="{{ asset('visitor/js/plugins/nouislider.js') }}"></script>
+
 
     <!-- Main Js -->
     @yield('scripts')

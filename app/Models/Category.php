@@ -68,6 +68,15 @@ class Category extends Model
         return $this->name;
     }
 
+    public function getImageUrlAttribute(): ?string
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->thumbnail);
+        }
+
+        return asset('visitor/images/banner/5.png');
+    }
+
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────

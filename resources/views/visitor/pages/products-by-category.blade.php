@@ -16,7 +16,7 @@
                         <div class="col-md-6 col-sm-12">
                             <ul class="ec-breadcrumb-list">
                                 <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
-                                <li class="ec-breadcrumb-item"><a href="{{ route('products.index') }}">Shop</a></li>
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.products.index') }}">Shop</a></li>
                                 <li class="ec-breadcrumb-item active">{{ $category->name }}</li>
                             </ul>
                         </div>
@@ -27,23 +27,35 @@
     </div>
     <!-- Ec breadcrumb end -->
 
-    @if ($category->description)
-        <section class="ec-bnr-detail margin-bottom-30 section-space-pt">
-            <div class="ec-page-detail">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="ec-page-description">
-                                <p class="m-0">{{ $category->description }}</p>
-                            </div>
+    <!-- Page detail section -->
+    <section class="ec-bnr-detail margin-bottom-30 section-space-pt">
+        <div class="ec-page-detail">
+            <div class="container">
+                <div class="ec-main-heading d-none">
+                    <h2>Shop <span>Detail</span></h2>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-md-12">
+                        <div class="ec-cat-bnr">
+                            <img style="background-size: cover; background-position: left center; background-repeat: no-repeat;"
+                                    height="250px" width="100%" src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-12">
+                        <div class="ec-page-description">
+                            <h6>{{ $category->name }}</h6>
+                            <p class="m-0">
+                                {{ $category->description }}
+                            <p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-    @endif
+        </div>
+    </section>
+    <!-- End detail section -->
 
-    <form method="GET" action="{{ route('products.category', $category) }}" id="filterForm">
+    <form method="GET" action="{{ route('visitor.products.category', $category) }}" id="filterForm">
         <section class="ec-page-content-bnr section-space-pb">
             <div class="container">
                 <div class="row">
@@ -57,7 +69,7 @@
                                     <button type="button" class="btn btn-list-50"><i class="fi-rr-list"></i></button>
                                 </div>
                                 @if (!empty($filters['color']) || !empty($filters['size']) || $filters['price_min'] || $filters['price_max'])
-                                    <a href="{{ route('products.category', $category) }}" class="btn btn-sm btn-light ms-2">Clear Filters</a>
+                                    <a href="{{ route('visitor.products.category', $category) }}" class="btn btn-sm btn-light ms-2">Clear Filters</a>
                                 @endif
                             </div>
                             <div class="col-md-6 ec-sort-select">
@@ -207,5 +219,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/visitor-products.js'])
+    {{-- @vite(['resources/js/pages/visitor-products.js']) --}}
 @endsection

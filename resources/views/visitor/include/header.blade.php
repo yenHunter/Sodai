@@ -85,10 +85,11 @@
                 <!-- Ec Header Logo Start -->
                 <div class="col">
                     <div class="header-logo">
-                        <a href="index.html"><img src="{{ asset('visitor/images/logo/logo.png') }}"
-                                alt="Site Logo" /><img class="dark-logo"
-                                src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
-                                style="display: none;" /></a>
+                        <a href="index.html">
+                            <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" />
+                            <img class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}"
+                                alt="Site Logo" style="display: none;" />
+                        </a>
                     </div>
                 </div>
                 <!-- Ec Header Logo End -->
@@ -641,7 +642,7 @@
             <ul class="eccart-pro-items">
                 <li>
                     <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="visitor/images/product-image/35_1.jpg" alt="product"></a>
+                            src="{{ asset('visitor/images/product-image/35_1.jpg') }}" alt="product"></a>
                     <div class="ec-pro-content">
                         <a href="single-product-left-sidebar.html" class="cart_pro_title">Hooded Neck full slive
                             T-Shirt</a>
@@ -654,7 +655,7 @@
                 </li>
                 <li>
                     <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="visitor/images/product-image/36_1.jpg" alt="product"></a>
+                            src="{{ asset('visitor/images/product-image/36_1.jpg') }}" alt="product"></a>
                     <div class="ec-pro-content">
                         <a href="product-left-sidebar.html" class="cart_pro_title">Perfume royal msz</a>
                         <span class="cart-price"><span>$125.00</span> x 1</span>
@@ -666,7 +667,7 @@
                 </li>
                 <li>
                     <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="visitor/images/product-image/37_1.jpg" alt="product"></a>
+                            src="{{ asset('visitor/images/product-image/37_1.jpg') }}" alt="product"></a>
                     <div class="ec-pro-content">
                         <a href="product-left-sidebar.html" class="cart_pro_title">Lime Crime Velvetines Liquid
                             Matte
