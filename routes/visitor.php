@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\ProductController;
+use App\Http\Controllers\Visitor\AccountController;
+use App\Http\Controllers\Visitor\AddressController;
+use App\Http\Controllers\Visitor\OrderController;
+use App\Http\Controllers\Visitor\WishlistController;
+use App\Http\Controllers\Visitor\ReviewController;
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -26,6 +31,38 @@ Route::middleware('guest:customer')->group(function () {
 // ── Authenticated Customer ──
 Route::middleware('auth.customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::prefix('account')->name('account.')->group(function () {
+        Route::get('/', [AccountController::class, 'show'])->name('show');
+        Route::post('/update', [AccountController::class, 'update'])->name('update');
+        Route::post('/password', [AccountController::class, 'updatePassword'])->name('password');
+
+        Route::prefix('addresses')->name('addresses.')->group(function () {
+            Route::get('/', [AddressController::class, 'index'])->name('index');
+            Route::post('/store', [AddressController::class, 'store'])->name('store');
+            Route::post('/{address}/update', [AddressController::class, 'update'])->name('update');
+            Route::delete('/{address}', [AddressController::class, 'destroy'])->name('destroy');
+            Route::patch('/{address}/set-default', [AddressController::class, 'setDefault'])->name('set-default');
+        });
+
+        Route::prefix('orders')->name('orders.')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+            Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('wishlist')->name('wishlist.')->group(function () {
+            Route::get('/', [WishlistController::class, 'index'])->name('index');
+            Route::post('/{product}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
+            Route::delete('/{product}', [WishlistController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::post('/store', [ReviewController::class, 'store'])->name('store');
+            Route::post('/{review}/update', [ReviewController::class, 'update'])->name('update');
+            Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+        });
+    });
 });
 
 // ── Set Password (admin-created account bootstrap; token itself is the auth, no guest gate needed) ──

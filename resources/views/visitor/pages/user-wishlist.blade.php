@@ -1,62 +1,40 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - About Us', 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'Sodai - Wishlist', 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
 
 @section('content')
-<!-- Ec breadcrumb start -->
     <div class="sticky-header-next-sec  ec-breadcrumb section-space-mb">
         <div class="container">
             <div class="row">
                 <div class="col-12">
                     <div class="row ec_breadcrumb_inner">
+                        <div class="col-md-6 col-sm-12"><h2 class="ec-breadcrumb-title">Wishlist</h2></div>
                         <div class="col-md-6 col-sm-12">
-                            <h2 class="ec-breadcrumb-title">Wishlist</h2>
-                        </div>
-                        <div class="col-md-6 col-sm-12">
-                            <!-- ec-breadcrumb-list start -->
                             <ul class="ec-breadcrumb-list">
-                                <li class="ec-breadcrumb-item"><a href="index.html">Home</a></li>
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
                                 <li class="ec-breadcrumb-item active">Wishlist</li>
                             </ul>
-                            <!-- ec-breadcrumb-list end -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Ec breadcrumb end -->
 
-    <!-- User history section -->
     <section class="ec-page-content ec-vendor-uploads ec-user-account wishlist-2 section-space-p">
         <div class="container">
             <div class="row">
-                <!-- Sidebar Area Start -->
-                <div class="ec-shop-leftside ec-vendor-sidebar col-lg-3 col-md-12">
-                    <div class="ec-sidebar-wrap">
-                        <!-- Sidebar Category Block -->
-                        <div class="ec-sidebar-block">
-                            <div class="ec-vendor-block">
-                                <div class="ec-vendor-block-items">
-                                    <ul>
-                                        <li><a href="#">Profile</a></li>
-                                        <li><a href="#">Address</a></li>
-                                        <li><a href="#">Order</a></li>
-                                        <li><a href="#">Wishlist</a></li>
-                                        <li><a href="#">Reviews</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @include('visitor.partials.account-sidebar')
+
                 <div class="ec-shop-rightside col-lg-9 col-md-12">
+                    @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+
                     <div class="ec-vendor-dashboard-card">
                         <div class="ec-vendor-card-header">
                             <h5>Wishlist</h5>
                             <div class="ec-header-btn">
-                                <a class="btn btn-lg btn-primary" href="#">Shop Now</a>
+                                <a class="btn btn-lg btn-primary" href="{{ route('products.index') }}">Shop Now</a>
                             </div>
                         </div>
                         <div class="ec-vendor-card-body">
@@ -64,133 +42,62 @@
                                 <table class="table ec-table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">ID</th>
                                             <th scope="col">Image</th>
                                             <th scope="col">Name</th>
-                                            <th scope="col">Date</th>
+                                            <th scope="col">Added On</th>
                                             <th scope="col">Price</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="wish-empt">
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>225</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/1.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Stylish baby shoes</span></td>
-                                            <td><span>16 Jul 2021</span></td>
-                                            <td><span>$65</span></td>
-                                            <td><span class="avl">Available</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>548</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/2.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Sweat Pullover Hoodie</span></td>
-                                            <td><span>13 Aug 2016</span></td>
-                                            <td><span>$68</span></td>
-                                            <td><span class="out">Out Of Stock</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>684</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/3.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>T-shirt for girl</span></td>
-                                            <td><span>20 Jul 2015</span></td>
-                                            <td><span>$360</span></td>
-                                            <td><span class="avl">Available</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>987</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/4.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Wool hat for men</span></td>
-                                            <td><span>05 Feb 2014</span></td>
-                                            <td><span>$584</span></td>
-                                            <td><span class="out">Out Of Stock</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>225</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/5.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Women leather purse</span></td>
-                                            <td><span>23 Jul 2013</span></td>
-                                            <td><span>$65</span></td>
-                                            <td><span class="out">Out Of Stock</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>548</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/6.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Doctor kit toy</span></td>
-                                            <td><span>28 Mar 2011</span></td>
-                                            <td><span>$68</span></td>
-                                            <td><span class="dis">Disabled</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
-                                        <tr class="pro-gl-content">
-                                            <th scope="row"><span>684</span></th>
-                                            <td><img class="prod-img" src="{{ asset('visitor/images/product-image/7.jpg') }}"
-                                                    alt="product image"></td>
-                                            <td><span>Teddy bear for baby</span></td>
-                                            <td><span>16 Apr 2010</span></td>
-                                            <td><span>$360</span></td>
-                                            <td><span class="avl">Available</span></td>
-                                            <td><span class="tbl-btn">
-                                                <a class="btn btn-lg btn-primary" href="javascript:void(0)" title="Add To Cart">
-                                                    <i class="fi-rr-shopping-basket"></i>
-                                                </a>
-                                                <a class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" href="javascript:void(0)" title="Remove From List">×</a></span>
-                                            </td>
-                                        </tr>
+                                        @forelse ($wishlist as $item)
+                                            @php $product = $item->product; @endphp
+                                            <tr class="pro-gl-content">
+                                                <td>
+                                                    @if ($product?->thumbnail)
+                                                        <img class="prod-img" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}">
+                                                    @endif
+                                                </td>
+                                                <td><span>{{ $product?->name ?? 'Product removed' }}</span></td>
+                                                <td><span>{{ $item->created_at->format('d M Y') }}</span></td>
+                                                <td><span>${{ number_format((float) ($product?->final_price ?? 0), 2) }}</span></td>
+                                                <td>
+                                                    @if (!$product)
+                                                        <span class="dis">Unavailable</span>
+                                                    @elseif ($product->stock_quantity > 0)
+                                                        <span class="avl">Available</span>
+                                                    @else
+                                                        <span class="out">Out Of Stock</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="tbl-btn">
+                                                        <form action="{{ route('account.wishlist.destroy', $product?->id ?? 0) }}" method="POST" class="d-inline">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" title="Remove From List">×</button>
+                                                        </form>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center">Your wishlist is empty.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
+                            @if ($wishlist->hasPages())
+                                <div class="mt-3">{{ $wishlist->links() }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- End User history section -->
-    @endsection
+@endsection
 
 @section('scripts')
-    <script src="{{ asset('visitor/js/plugins/nouislider.js') }}"></script>
 @endsection

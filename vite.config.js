@@ -16,6 +16,10 @@ export default defineConfig({
 
                 // ──────────── E-commerce Pages ─────────────
                 'resources/js/pages/visitor-products.js',
+
+                // ───────────── Account Pages ─────────────
+                'resources/js/pages/visitor-account-address.js',
+                'resources/js/pages/visitor-account-reviews.js',
                 
                 // =============== Visitor Pages Ends =================
 
