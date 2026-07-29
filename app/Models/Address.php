@@ -45,6 +45,11 @@ class Address extends Model
         return $query->where('is_default', true);
     }
 
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
