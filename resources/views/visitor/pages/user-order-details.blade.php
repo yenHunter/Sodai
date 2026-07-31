@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - Order #' . $order->order_number, 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'Order #' . $order->order_number, 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -15,7 +15,7 @@
                         <div class="col-md-6 col-sm-12">
                             <ul class="ec-breadcrumb-list">
                                 <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
-                                <li class="ec-breadcrumb-item"><a href="{{ route('account.orders.index') }}">Order
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.account.orders.index') }}">Order
                                         History</a></li>
                                 <li class="ec-breadcrumb-item active">#{{ $order->order_number }}</li>
                             </ul>

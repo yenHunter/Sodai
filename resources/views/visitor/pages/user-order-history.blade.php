@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - Order History', 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'Order History', 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -32,7 +32,7 @@
                         <div class="ec-vendor-card-header">
                             <h5>Order History</h5>
                             <div class="ec-header-btn">
-                                <a class="btn btn-lg btn-primary" href="{{ route('products.index') }}">Shop Now</a>
+                                <a class="btn btn-lg btn-primary" href="{{ route('visitor.products.index') }}">Shop Now</a>
                             </div>
                         </div>
                         <div class="ec-vendor-card-body">
@@ -58,7 +58,7 @@
                                                 <td><span>{{ ucfirst($order->status) }}</span></td>
                                                 <td>
                                                     <span class="tbl-btn">
-                                                        <a class="btn btn-lg btn-primary" href="{{ route('account.orders.show', $order) }}">View</a>
+                                                        <a class="btn btn-lg btn-primary" href="{{ route('visitor.account.orders.show', $order) }}">View</a>
                                                     </span>
                                                 </td>
                                             </tr>

@@ -21,7 +21,7 @@
 
     <!-- Main Js -->
     @yield('scripts')
-    <script src="{{ asset('visitor/js/vendor/index.js') }}"></script>
+    {{-- <script src="{{ asset('visitor/js/vendor/index.js') }}"></script> --}}
     <script src="{{ asset('visitor/js/main.js') }}"></script>
 
 <!-- -----Script Section End----- -->

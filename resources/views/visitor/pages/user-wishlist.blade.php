@@ -34,7 +34,7 @@
                         <div class="ec-vendor-card-header">
                             <h5>Wishlist</h5>
                             <div class="ec-header-btn">
-                                <a class="btn btn-lg btn-primary" href="{{ route('products.index') }}">Shop Now</a>
+                                <a class="btn btn-lg btn-primary" href="{{ route('visitor.products.index') }}">Shop Now</a>
                             </div>
                         </div>
                         <div class="ec-vendor-card-body">
@@ -73,7 +73,7 @@
                                                 </td>
                                                 <td>
                                                     <span class="tbl-btn">
-                                                        <form action="{{ route('account.wishlist.destroy', $product?->id ?? 0) }}" method="POST" class="d-inline">
+                                                        <form action="{{ route('visitor.account.wishlist.destroy', $product?->id ?? 0) }}" method="POST" class="d-inline">
                                                             @csrf @method('DELETE')
                                                             <button type="submit" class="btn btn-lg btn-primary ec-com-remove ec-remove-wish" title="Remove From List">×</button>
                                                         </form>

@@ -74,11 +74,11 @@
                                         @if ($review->status === 'pending')
                                             <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#editReviewModal"
                                                 data-id="{{ $review->id }}" data-rating="{{ $review->rating }}" data-comment="{{ $review->comment }}"
-                                                data-update-url="{{ route('account.reviews.update', $review) }}">
+                                                data-update-url="{{ route('visitor.account.reviews.update', $review) }}">
                                                 Edit
                                             </button>
                                         @endif
-                                        <form action="{{ route('account.reviews.destroy', $review) }}" method="POST" class="d-inline"
+                                        <form action="{{ route('visitor.account.reviews.destroy', $review) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Delete this review?');">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-light text-danger">Delete</button>
@@ -106,7 +106,7 @@
                     <h5 class="modal-title">Write a Review — <span id="reviewProductName"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('account.reviews.store') }}" method="POST">
+                <form action="{{ route('visitor.account.reviews.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="order_id" id="reviewOrderId">
                     <input type="hidden" name="product_id" id="reviewProductId">

@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - My Addresses', 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'My Addresses', 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -60,7 +60,7 @@
                                     </div>
                                     <div class="col-md-4 text-md-end mt-2 mt-md-0">
                                         @unless ($address->is_default)
-                                            <form action="{{ route('account.addresses.set-default', $address) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('visitor.account.addresses.set-default', $address) }}" method="POST" class="d-inline">
                                                 @csrf @method('PATCH')
                                                 <button type="submit" class="btn btn-sm btn-light">Set Default</button>
                                             </form>
@@ -77,10 +77,10 @@
                                             data-state="{{ $address->state }}"
                                             data-zip-code="{{ $address->zip_code }}"
                                             data-country="{{ $address->country }}"
-                                            data-update-url="{{ route('account.addresses.update', $address) }}">
+                                            data-update-url="{{ route('visitor.account.addresses.update', $address) }}">
                                             Edit
                                         </button>
-                                        <form action="{{ route('account.addresses.destroy', $address) }}" method="POST" class="d-inline"
+                                        <form action="{{ route('visitor.account.addresses.destroy', $address) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Delete this address?');">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-light text-danger">Delete</button>
@@ -105,7 +105,7 @@
                     <h5 class="modal-title" id="addressModalLabel">Add New Address</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="addressForm" action="{{ route('account.addresses.store') }}" method="POST">
+                <form id="addressForm" action="{{ route('visitor.account.addresses.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="row g-3">
@@ -145,9 +145,9 @@
                                 <label class="form-label">ZIP Code</label>
                                 <input type="text" name="zip_code" id="addr_zip_code" class="form-control" required>
                             </div>
-                            <div class="col-12">
+                            <div class="col-12 mt-3">
                                 <div class="form-check">
-                                    <input type="checkbox" name="is_default" value="1" id="addr_is_default" class="form-check-input">
+                                    <input type="checkbox" name="is_default" value="1" id="addr_is_default" class="form-check-input mt-1 me-2">
                                     <label class="form-check-label" for="addr_is_default">Set as default address</label>
                                 </div>
                             </div>

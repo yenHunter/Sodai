@@ -158,7 +158,7 @@
                             @foreach ($order->statusHistories as $history)
                                 <div class="timeline-item d-flex align-items-stretch">
                                     <div class="timeline-time pe-3 text-muted">
-                                        {{ $history->created_at->format('d M, h:i A') }}
+                                        {{ $history->created_at->format('d M Y h:i A') }}
                                     </div>
                                     <div class="timeline-dot {{ $history->status_badge_class }}"></div>
                                     <div class="timeline-content ps-3 {{ !$loop->last ? 'pb-4' : '' }}">
@@ -173,7 +173,7 @@
                                             <p class="mb-1 text-muted">{{ $history->note }}</p>
                                         @endif
                                         <span class="fw-semibold fs-xxs text-muted">
-                                            By {{ $history->admin?->name ?? 'System' }}
+                                            by {{ $history->admin?->name ?? 'System' }}
                                         </span>
                                     </div>
                                 </div>

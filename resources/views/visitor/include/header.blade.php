@@ -40,8 +40,7 @@
                                 <ul class="dropdown-menu dropdown-menu-right">
                                     @auth('customer')
                                         <li>
-                                            <span class="dropdown-item-text text-muted">
-                                                Welcome back</span>
+                                            <a class="dropdown-item" href="{{ route('visitor.account.show') }}">Account</a>
                                         </li>
                                         <li><a class="dropdown-item" href="#">Checkout</a></li>
                                         <li>

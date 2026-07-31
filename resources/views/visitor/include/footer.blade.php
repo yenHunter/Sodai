@@ -18,7 +18,7 @@
                         <div class="ec-footer-widget">
                             <div class="ec-footer-logo">
                                 <a href="#">
-                                    <img src="{{ asset('visitor/images/logo/footer-logo.png') }}" alt="">
+                                    <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo">
                                     <img class="dark-footer-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
                                         style="display: none;" />
                                 </a>

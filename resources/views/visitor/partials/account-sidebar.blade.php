@@ -4,17 +4,11 @@
             <div class="ec-vendor-block">
                 <div class="ec-vendor-block-items">
                     <ul>
-                        <li><a href="{{ route('account.show') }}" class="{{ request()->routeIs('account.show') ? 'active' : '' }}">Profile</a></li>
-                        <li><a href="{{ route('account.addresses.index') }}" class="{{ request()->routeIs('account.addresses.*') ? 'active' : '' }}">Address</a></li>
-                        <li><a href="{{ route('account.orders.index') }}" class="{{ request()->routeIs('account.orders.*') ? 'active' : '' }}">Order</a></li>
-                        <li><a href="{{ route('account.wishlist.index') }}" class="{{ request()->routeIs('account.wishlist.*') ? 'active' : '' }}">Wishlist</a></li>
-                        <li><a href="{{ route('account.reviews.index') }}" class="{{ request()->routeIs('account.reviews.*') ? 'active' : '' }}">Reviews</a></li>
-                        <li>
-                            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                                @csrf
-                                <button type="submit" class="border-0 bg-transparent p-0 text-start w-100">Logout</button>
-                            </form>
-                        </li>
+                        <li><a href="{{ route('visitor.account.show') }}" class="{{ request()->routeIs('visitor.account.show') ? 'active' : '' }}">Profile</a></li>
+                        <li><a href="{{ route('visitor.account.addresses.index') }}" class="{{ request()->routeIs('visitor.account.addresses.*') ? 'active' : '' }}">Address</a></li>
+                        <li><a href="{{ route('visitor.account.orders.index') }}" class="{{ request()->routeIs('visitor.account.orders.*') ? 'active' : '' }}">Order</a></li>
+                        <li><a href="{{ route('visitor.account.wishlist.index') }}" class="{{ request()->routeIs('visitor.account.wishlist.*') ? 'active' : '' }}">Wishlist</a></li>
+                        <li><a href="{{ route('visitor.account.reviews.index') }}" class="{{ request()->routeIs('visitor.account.reviews.*') ? 'active' : '' }}">Reviews</a></li>
                     </ul>
                 </div>
             </div>

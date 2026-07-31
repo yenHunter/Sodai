@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - My Profile', 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'My Profile', 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -49,10 +49,6 @@
                                 <div class="col-md-12">
                                     <div class="ec-vendor-block-profile">
                                         <div class="ec-vendor-block-img space-bottom-30">
-                                            <div class="ec-vendor-block-bg">
-                                                <a href="#" class="btn btn-lg btn-primary"
-                                                    data-bs-toggle="modal" data-bs-target="#edit_modal">Edit Detail</a>
-                                            </div>
                                             <div class="ec-vendor-block-detail">
                                                 @if ($customer->avatar)
                                                     <img class="v-img" src="{{ Storage::url($customer->avatar) }}" alt="{{ $customer->name }}">
@@ -90,22 +86,22 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12">
                                                 <div class="ec-vendor-detail-block ec-vendor-block-address mar-b-30">
-                                                    <h6>Default Address <a href="{{ route('account.addresses.index') }}"><i class="fi-rr-edit"></i></a></h6>
+                                                    <h6>Default Address <a href="{{ route('visitor.account.addresses.index') }}"><i class="fi-rr-edit"></i></a></h6>
                                                     <ul>
                                                         @php $default = $addresses->firstWhere('is_default', true); @endphp
                                                         @if ($default)
                                                             <li><strong>{{ $default->label }}: </strong>{{ $default->address_line_1 }}, {{ $default->city }}, {{ $default->state }} - {{ $default->zip_code }}, {{ $default->country }}</li>
                                                         @else
-                                                            <li>No address added yet. <a href="{{ route('account.addresses.index') }}">Add one</a>.</li>
+                                                            <li>No address added yet. <a href="{{ route('visitor.account.addresses.index') }}">Add one</a>.</li>
                                                         @endif
                                                     </ul>
                                                 </div>
                                             </div>
                                             <div class="col-md-6 col-sm-12">
                                                 <div class="ec-vendor-detail-block ec-vendor-block-address">
-                                                    <h6>Saved Addresses <a href="{{ route('account.addresses.index') }}"><i class="fi-rr-edit"></i></a></h6>
+                                                    <h6>Saved Addresses <a href="{{ route('visitor.account.addresses.index') }}"><i class="fi-rr-edit"></i></a></h6>
                                                     <ul>
-                                                        <li>{{ $addresses->count() }} address(es) on file. <a href="{{ route('account.addresses.index') }}">Manage</a>.</li>
+                                                        <li>{{ $addresses->count() }} address(es) on file. <a href="{{ route('visitor.account.addresses.index') }}">Manage</a>.</li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -121,7 +117,7 @@
                             <h5>Change Password</h5>
                         </div>
                         <div class="ec-vendor-card-body">
-                            <form action="{{ route('account.password') }}" method="POST">
+                            <form action="{{ route('visitor.account.password') }}" method="POST">
                                 @csrf
                                 <div class="row g-3">
                                     <div class="col-md-4">
@@ -133,7 +129,7 @@
                                     <div class="col-md-4">
                                         <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm New Password" required>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12 mt-3">
                                         <button type="submit" class="btn btn-primary">Update Password</button>
                                     </div>
                                 </div>
@@ -154,7 +150,7 @@
                     <h5 class="modal-title">Edit Profile</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('account.update') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('visitor.account.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
