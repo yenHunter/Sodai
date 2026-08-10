@@ -76,7 +76,8 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::patch('/{product}/images/{image}/primary',  [ProductController::class, 'setPrimaryImage'])->name('images.set-primary')->middleware('permission:product.edit');
             Route::post('/{product}/images/reorder',           [ProductController::class, 'reorderImages'])->name('images.reorder')->middleware('permission:product.edit');
             // Stock quick update
-            Route::patch('/{product}/stock', [ProductController::class, 'updateStock'])->name('stock.update')->middleware('permission:product.edit');
+            Route::patch('/{product}/variants/{variant}/stock', [ProductController::class, 'updateStock'])->name('stock.update')->middleware('permission:product.edit');
+            Route::get('/options/search', [ProductController::class, 'searchOptions'])->name('options.search');
         });
 
         // ── Orders ──

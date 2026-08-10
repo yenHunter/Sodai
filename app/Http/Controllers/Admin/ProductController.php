@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Product;
-use App\Models\ProductImage;
 use Illuminate\Http\Request;
+use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Services\ProductService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -24,28 +25,29 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'brand'])
+        $query = Product::with(['category', 'brand', 'defaultVariant'])
             ->select(
                 'id',
                 'name',
-                'sku',
+                'slug',
                 'thumbnail',
                 'short_description',
                 'category_id',
                 'brand_id',
-                'price',
-                'stock_quantity',
                 'is_active',
                 'is_featured',
                 'average_rating',
                 'review_count',
-                'total_sales'
+                'total_sales',
+                'min_price',
+                'max_price',
+                'total_stock'
             );
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', "%{$search}%"));
             });
         }
 
@@ -56,18 +58,18 @@ class ProductController extends Controller
         if ($status = $request->input('status')) {
             switch ($status) {
                 case 'active':
-                    $query->where('is_active', true)->where('stock_quantity', '>', 0);
+                    $query->where('is_active', true)->where('total_stock', '>', 0);
                     break;
                 case 'inactive':
                     $query->where('is_active', false);
                     break;
                 case 'out_of_stock':
-                    $query->where('is_active', true)->where('stock_quantity', '<=', 0);
+                    $query->where('is_active', true)->where('total_stock', '<=', 0);
                     break;
             }
         }
 
-        $products = $query->latest()->paginate(15)->withQueryString();
+        $products   = $query->latest()->paginate(15)->withQueryString();
         $categories = $this->productService->getAssignableCategories();
 
         return view('admin.ecommerce.product.index', compact('products', 'categories'));
@@ -79,8 +81,8 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product        = $this->productService->getProductForDetails($product);
-        $activeAttrs    = $this->productService->getActiveAttributeKeys();
+        $product     = $this->productService->getProductForDetails($product);
+        $activeAttrs = $this->productService->getActiveAttributeKeys();
 
         return view('admin.ecommerce.product.details', compact('product', 'activeAttrs'));
     }
@@ -95,10 +97,11 @@ class ProductController extends Controller
         $brands         = $this->productService->getActiveBrands();
         $products       = $this->productService->getProductsForRelation();
         $activeAttrs    = $this->productService->getActiveAttributeKeys();
+        $productOptions = $this->productService->getProductOptions();
 
         return view(
             'admin.ecommerce.product.create',
-            compact('categories', 'brands', 'products', 'activeAttrs')
+            compact('categories', 'brands', 'products', 'activeAttrs', 'productOptions')
         );
     }
 
@@ -113,7 +116,7 @@ class ProductController extends Controller
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
-                ->with('success', "Product \"{$product->name}\" created successfully. SKU: {$product->sku}");
+                ->with('success', "Product \"{$product->name}\" created successfully with {$product->variants()->count()} variant(s).");
         } catch (\Exception $e) {
             Log::error('Admin failed to create product.', [
                 'exception' => $e,
@@ -121,7 +124,7 @@ class ProductController extends Controller
             ]);
 
             return redirect()
-                ->route('admin.ecommerce.product.index')
+                ->route('admin.ecommerce.product.create')
                 ->with('error', 'Failed to create product: ' . $e->getMessage())
                 ->withInput();
         }
@@ -135,13 +138,14 @@ class ProductController extends Controller
     {
         $product = $this->productService->getProductWithRelations($product);
 
-        $categories = $this->productService->getAssignableCategories();
-        $brands     = $this->productService->getActiveBrands();
-        $products   = $this->productService->getProductsForRelation($product->id);
+        $categories     = $this->productService->getAssignableCategories();
+        $brands         = $this->productService->getActiveBrands();
+        $products       = $this->productService->getProductsForRelation($product->id);
+        $productOptions = $this->productService->getProductOptions();
 
         return view(
             'admin.ecommerce.product.edit',
-            compact('product', 'categories', 'brands', 'products')
+            compact('product', 'categories', 'brands', 'products', 'productOptions')
         );
     }
 
@@ -198,9 +202,7 @@ class ProductController extends Controller
 
     public function bulkDestroy(Request $request)
     {
-        $request->validate([
-            'ids' => ['required', 'string'],
-        ]);
+        $request->validate(['ids' => ['required', 'string']]);
 
         $ids = array_filter(explode(',', $request->input('ids')));
 
@@ -232,24 +234,18 @@ class ProductController extends Controller
             }
         }
 
-        $message = "{$successCount} product" .
-            ($successCount === 1 ? '' : 's') .
-            " deleted successfully.";
+        $message = "{$successCount} product" . ($successCount === 1 ? '' : 's') . " deleted successfully.";
 
         if (!empty($failedNames)) {
             $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
-            return redirect()
-                ->route('admin.ecommerce.product.index')
-                ->with('error', $message);
+            return redirect()->route('admin.ecommerce.product.index')->with('error', $message);
         }
 
-        return redirect()
-            ->route('admin.ecommerce.product.index')
-            ->with('success', $message);
+        return redirect()->route('admin.ecommerce.product.index')->with('success', $message);
     }
 
     // ─────────────────────────────────────────────
-    // TOGGLE STATUS
+    // TOGGLE STATUS / FEATURED — unchanged (product-level)
     // ─────────────────────────────────────────────
 
     public function toggleStatus(Product $product)
@@ -274,10 +270,6 @@ class ProductController extends Controller
         }
     }
 
-    // ─────────────────────────────────────────────
-    // TOGGLE FEATURED
-    // ─────────────────────────────────────────────
-
     public function toggleFeatured(Product $product)
     {
         try {
@@ -301,43 +293,27 @@ class ProductController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // IMAGE MANAGEMENT (AJAX endpoints)
+    // IMAGE MANAGEMENT (AJAX endpoints) — unchanged, ProductImage
+    // is variant-aware already via ProductService
     // ─────────────────────────────────────────────
 
     public function deleteImage(Product $product, ProductImage $image)
     {
         try {
             if ($image->product_id !== $product->id) {
-                Log::warning('Attempted to delete image not belonging to product.', [
-                    'admin_id'   => Auth::guard('admin')->id(),
-                    'product_id' => $product->id,
-                    'image_id'   => $image->id,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Image does not belong to this product.',
-                ], 403);
+                return response()->json(['success' => false, 'message' => 'Image does not belong to this product.'], 403);
             }
 
             $this->productService->deleteSingleImage($product, $image);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Image deleted successfully.',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
         } catch (\Exception $e) {
             Log::error('Failed to delete product image via AJAX.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
-                'product_id' => $product->id,
-                'image_id'   => $image->id,
+                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id, 'image_id' => $image->id,
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -345,36 +321,19 @@ class ProductController extends Controller
     {
         try {
             if ($image->product_id !== $product->id) {
-                Log::warning('Attempted to set primary image not belonging to product.', [
-                    'admin_id'   => Auth::guard('admin')->id(),
-                    'product_id' => $product->id,
-                    'image_id'   => $image->id,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Image does not belong to this product.',
-                ], 403);
+                return response()->json(['success' => false, 'message' => 'Image does not belong to this product.'], 403);
             }
 
             $this->productService->setPrimaryImage($product, $image->id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Primary image updated.',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Primary image updated.']);
         } catch (\Exception $e) {
             Log::error('Failed to set primary product image via AJAX.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
-                'product_id' => $product->id,
-                'image_id'   => $image->id,
+                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id, 'image_id' => $image->id,
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -388,35 +347,25 @@ class ProductController extends Controller
         try {
             $this->productService->reorderImages($product, $request->input('ordered_ids'));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Image order updated.',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Image order updated.']);
         } catch (\Exception $e) {
             Log::error('Failed to reorder product images via AJAX.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
-                'product_id' => $product->id,
+                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(), 'product_id' => $product->id,
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
     // ─────────────────────────────────────────────
-    // TAG AUTOCOMPLETE (AJAX)
+    // TAG AUTOCOMPLETE (AJAX) — unchanged
     // ─────────────────────────────────────────────
 
     public function searchTags(Request $request)
     {
         $search = $request->input('q', '');
 
-        $tags = \App\Models\Tag::where('name', 'like', "%{$search}%")
-            ->limit(10)
-            ->pluck('name');
+        $tags = \App\Models\Tag::where('name', 'like', "%{$search}%")->limit(10)->pluck('name');
 
         return response()->json($tags);
     }
@@ -431,14 +380,10 @@ class ProductController extends Controller
         $exclude = $request->input('exclude');
 
         $products = Product::active()
-            ->select('id', 'name', 'sku')
-            ->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            })
-            ->when($exclude, function ($query) use ($exclude) {
-                $query->where('id', '!=', $exclude);
-            })
+            ->select('id', 'name', 'min_price')
+            ->with(['defaultVariant:id,product_id,sku'])
+            ->where('name', 'like', "%{$search}%")
+            ->when($exclude, fn ($query) => $query->where('id', '!=', $exclude))
             ->limit(20)
             ->get();
 
@@ -446,39 +391,54 @@ class ProductController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // STOCK QUICK UPDATE (AJAX)
+    // VARIANT OPTIONS AUTOCOMPLETE (AJAX — used by the matrix builder)
     // ─────────────────────────────────────────────
 
-    public function updateStock(Request $request, Product $product)
+    public function searchOptions(Request $request)
+    {
+        $search = $request->input('q', '');
+
+        $options = \App\Models\ProductOption::with('values')
+            ->where('name', 'like', "%{$search}%")
+            ->limit(10)
+            ->get();
+
+        return response()->json($options);
+    }
+
+    // ─────────────────────────────────────────────
+    // STOCK QUICK UPDATE (AJAX) — now targets a specific VARIANT
+    // Route param changed: /products/{product}/variants/{variant}/stock
+    // ─────────────────────────────────────────────
+
+    public function updateStock(Request $request, Product $product, ProductVariant $variant)
     {
         $request->validate([
             'stock_quantity' => ['required', 'integer', 'min:0'],
         ]);
 
+        if ($variant->product_id !== $product->id) {
+            return response()->json(['success' => false, 'message' => 'Variant does not belong to this product.'], 403);
+        }
+
         try {
-            $updated = $this->productService->updateStock(
-                $product,
-                $request->input('stock_quantity')
-            );
+            $updated = $this->productService->updateVariantStock($variant, $request->input('stock_quantity'));
 
             return response()->json([
                 'success'         => true,
                 'message'         => 'Stock updated successfully.',
-                'stock_status'    => $updated->stock_status,
+                'stock_status'    => $updated->is_out_of_stock ? 'Out of Stock' : ($updated->is_low_stock ? 'Low Stock' : 'In Stock'),
                 'is_low_stock'    => $updated->is_low_stock,
                 'is_out_of_stock' => $updated->is_out_of_stock,
+                'product_total_stock' => $product->fresh()->total_stock,
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to update product stock via AJAX.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
-                'product_id' => $product->id,
+            Log::error('Failed to update variant stock via AJAX.', [
+                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id, 'variant_id' => $variant->id,
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

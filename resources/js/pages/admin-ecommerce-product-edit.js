@@ -1,6 +1,7 @@
 /**
  * Admin Product Edit Page
- * Handles Quill editors, Dropzone file uploads, Select2, existing image management, and form submission
+ * Handles Quill editors, Dropzone file uploads, Select2, Variant Builder,
+ * existing image management (product-level and variant-level), and form submission
  */
 
 // ═══════════════════════════════════════════════
@@ -26,7 +27,7 @@ select2(window, $)
 Dropzone.autoDiscover = false
 
 // ═══════════════════════════════════════════════
-// QUILL EDITORS (Both with same full toolbar)
+// QUILL EDITORS
 // ═══════════════════════════════════════════════
 
 let shortDescriptionQuill = null
@@ -35,7 +36,6 @@ let descriptionQuill = null
 function initQuillEditors() {
     const icons = Quill.import('ui/icons')
 
-    // Replace Quill's built-in toolbar icons with Tabler icons (same as create)
     icons['bold'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z" /><path d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7" /></svg>'
     icons['italic'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11 5l6 0" /><path d="M7 19l6 0" /><path d="M14 5l-4 14" /></svg>'
     icons['underline'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 5v5a5 5 0 0 0 10 0v-5" /><path d="M5 19h14" /></svg>'
@@ -46,7 +46,6 @@ function initQuillEditors() {
     icons['image'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></svg>'
     icons['clean'] = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>'
 
-    // ✅ SHARED TOOLBAR CONFIG (same for both editors)
     const toolbarConfig = [
         [{ font: [] }],
         ['bold', 'italic', 'underline', 'strike'],
@@ -58,33 +57,27 @@ function initQuillEditors() {
         ['clean']
     ]
 
-    // Short Description Editor
     const shortDescEditor = document.getElementById('shortDescriptionEditor')
     if (shortDescEditor) {
         shortDescriptionQuill = new Quill(shortDescEditor, {
             theme: 'snow',
             placeholder: 'Enter a brief product description...',
-            modules: {
-                toolbar: toolbarConfig
-            }
+            modules: { toolbar: toolbarConfig }
         })
     }
 
-    // Full Description Editor (identical toolbar)
     const descEditor = document.getElementById('descriptionEditor')
     if (descEditor) {
         descriptionQuill = new Quill(descEditor, {
             theme: 'snow',
             placeholder: 'Enter detailed product description...',
-            modules: {
-                toolbar: toolbarConfig
-            }
+            modules: { toolbar: toolbarConfig }
         })
     }
 }
 
 // ═══════════════════════════════════════════════
-// DROPZONE INSTANCES
+// DROPZONE INSTANCES (product-level thumbnail + gallery)
 // ═══════════════════════════════════════════════
 
 let thumbnailDropzone = null
@@ -94,7 +87,6 @@ function initDropzones() {
     const thumbnailEl = document.getElementById('thumbnailDropzone')
     const galleryEl = document.getElementById('galleryDropzone')
 
-    // Thumbnail Dropzone
     if (thumbnailEl) {
         const thumbnailPreviewContainer = thumbnailEl.dataset.previewsContainer
         const thumbnailPreviewTemplate = thumbnailEl.dataset.uploadPreviewTemplate
@@ -109,31 +101,22 @@ function initDropzones() {
             addRemoveLinks: false,
         }
 
-        if (thumbnailPreviewContainer) {
-            thumbnailOptions.previewsContainer = thumbnailPreviewContainer
-        }
-
+        if (thumbnailPreviewContainer) thumbnailOptions.previewsContainer = thumbnailPreviewContainer
         if (thumbnailPreviewTemplate) {
             const template = document.querySelector(thumbnailPreviewTemplate)
-            if (template) {
-                thumbnailOptions.previewTemplate = template.innerHTML
-            }
+            if (template) thumbnailOptions.previewTemplate = template.innerHTML
         }
 
         try {
             thumbnailDropzone = new Dropzone(thumbnailEl, thumbnailOptions)
-
             thumbnailDropzone.on('addedfile', function (file) {
-                if (this.files.length > 1) {
-                    this.removeFile(this.files[0])
-                }
+                if (this.files.length > 1) this.removeFile(this.files[0])
             })
         } catch (e) {
             console.error('Thumbnail Dropzone initialization failed:', e)
         }
     }
 
-    // Gallery Dropzone
     if (galleryEl) {
         const galleryPreviewContainer = galleryEl.dataset.previewsContainer
         const galleryPreviewTemplate = galleryEl.dataset.uploadPreviewTemplate
@@ -149,20 +132,14 @@ function initDropzones() {
             addRemoveLinks: false,
         }
 
-        if (galleryPreviewContainer) {
-            galleryOptions.previewsContainer = galleryPreviewContainer
-        }
-
+        if (galleryPreviewContainer) galleryOptions.previewsContainer = galleryPreviewContainer
         if (galleryPreviewTemplate) {
             const template = document.querySelector(galleryPreviewTemplate)
-            if (template) {
-                galleryOptions.previewTemplate = template.innerHTML
-            }
+            if (template) galleryOptions.previewTemplate = template.innerHTML
         }
 
         try {
             galleryDropzone = new Dropzone(galleryEl, galleryOptions)
-
             galleryDropzone.on('maxfilesexceeded', function (file) {
                 alert('Maximum 10 images allowed')
                 this.removeFile(file)
@@ -174,23 +151,23 @@ function initDropzones() {
 }
 
 // ═══════════════════════════════════════════════
-// EXISTING GALLERY IMAGE MANAGEMENT (AJAX DELETE)
+// EXISTING IMAGE MANAGEMENT (AJAX DELETE / SET PRIMARY)
+// Covers BOTH product-level shared gallery AND images nested inside
+// variant rows — the endpoint is variant-agnostic (works on any
+// ProductImage belonging to this product), and .delete-image-btn /
+// .set-primary-btn selectors match both locations in the DOM.
 // ═══════════════════════════════════════════════
 
 function initExistingImageManagement() {
     const productId = getProductIdFromUrl()
 
-    // Delete Image buttons
     document.querySelectorAll('.delete-image-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const imageId = this.dataset.imageId
             const imageContainer = this.closest('[data-image-id]')
 
-            if (!confirm('Are you sure you want to delete this image?')) {
-                return
-            }
+            if (!confirm('Are you sure you want to delete this image?')) return
 
-            // AJAX delete
             fetch(`/admin/ecommerce/products/${productId}/images/${imageId}`, {
                 method: 'DELETE',
                 headers: {
@@ -214,12 +191,10 @@ function initExistingImageManagement() {
         })
     })
 
-    // Set Primary Image buttons
     document.querySelectorAll('.set-primary-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const imageId = this.dataset.imageId
 
-            // AJAX set primary
             fetch(`/admin/ecommerce/products/${productId}/images/${imageId}/primary`, {
                 method: 'PATCH',
                 headers: {
@@ -230,26 +205,22 @@ function initExistingImageManagement() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Remove all "Primary" badges
                         document.querySelectorAll('.badge.bg-success').forEach(badge => {
-                            const btn = document.createElement('button')
-                            btn.type = 'button'
-                            btn.className = 'btn btn-sm btn-primary position-absolute top-0 start-0 m-1 set-primary-btn'
-                            btn.dataset.imageId = badge.closest('[data-image-id]').dataset.imageId
-                            btn.title = 'Set as Primary'
-                            btn.innerHTML = '<i data-lucide="star" style="width:12px;height:12px;"></i>'
-                            badge.replaceWith(btn)
+                            const newBtn = document.createElement('button')
+                            newBtn.type = 'button'
+                            newBtn.className = 'btn btn-sm btn-primary position-absolute top-0 start-0 m-1 set-primary-btn'
+                            newBtn.dataset.imageId = badge.closest('[data-image-id]').dataset.imageId
+                            newBtn.title = 'Set as Primary'
+                            newBtn.innerHTML = '<i data-lucide="star" style="width:12px;height:12px;"></i>'
+                            badge.replaceWith(newBtn)
                         })
 
-                        // Add "Primary" badge to clicked image
                         const newBadge = document.createElement('span')
                         newBadge.className = 'badge bg-success position-absolute top-0 start-0 m-1'
                         newBadge.textContent = 'Primary'
                         this.replaceWith(newBadge)
 
                         refreshLucideIcons()
-
-                        // Re-init event listeners for newly created buttons
                         initExistingImageManagement()
                     } else {
                         alert(data.message || 'Failed to set primary image')
@@ -264,8 +235,8 @@ function initExistingImageManagement() {
 }
 
 function getProductIdFromUrl() {
-    const pathSegments = window.location.pathname.split('/')
-    return pathSegments[pathSegments.length - 2] // Assumes /admin/ecommerce/products/{id}/edit
+    const match = window.location.pathname.match(/\/products\/(\d+)\/edit/)
+    return match ? match[1] : null
 }
 
 // ═══════════════════════════════════════════════
@@ -275,7 +246,7 @@ function getProductIdFromUrl() {
 function initSelect2() {
     const select = document.getElementById('related_products')
     const searchUrl = select?.dataset.searchUrl
-    
+
     $('#related_products').select2({
         placeholder: 'Search and select related products',
         allowClear: true,
@@ -283,25 +254,229 @@ function initSelect2() {
             url: searchUrl,
             dataType: 'json',
             delay: 250,
-            data: function (params) {
-                return {
-                    q: params.term,
-                    exclude: getProductIdFromUrl(),
-                    page: params.page || 1
-                }
-            },
-            processResults: function (data) {
-                return {
-                    results: data.map(product => ({
-                        id: product.id,
-                        text: `${product.name} (${product.sku})`
-                    }))
-                }
-            },
+            data: params => ({
+                q: params.term,
+                exclude: getProductIdFromUrl(),
+                page: params.page || 1
+            }),
+            processResults: data => ({
+                results: data.map(product => ({ id: product.id, text: product.name }))
+            }),
             cache: true
         },
         minimumInputLength: 2
     })
+}
+
+// ═══════════════════════════════════════════════
+// VARIANT BUILDER
+// ═══════════════════════════════════════════════
+
+function initVariantBuilder() {
+    const container = document.getElementById('variantsContainer')
+    const addVariantBtn = document.getElementById('addVariantBtn')
+    const generateBtn = document.getElementById('generateVariantsBtn')
+    const optionNameInput = document.getElementById('optionBuilderName')
+    const optionValuesInput = document.getElementById('optionBuilderValues')
+    const template = document.getElementById('variantRowTemplate')
+    const form = document.getElementById('productForm')
+
+    if (!container || !template) return
+
+    let variantIndex = container.querySelectorAll('.variant-row').length
+    let pendingOptions = []
+
+    function nextIndex() {
+        return variantIndex++
+    }
+
+    function getTemplateHtml(index) {
+        return template.innerHTML.replaceAll('__INDEX__', index)
+    }
+
+    function updateVariantLabel(row) {
+        const label = row.querySelector('.variant-label')
+        const valueInputs = row.querySelectorAll('.option-value-pair input[type="text"]')
+        const values = Array.from(valueInputs).map(i => i.value.trim()).filter(Boolean)
+        if (label) label.textContent = values.length ? values.join(' / ') : 'Default (no options)'
+    }
+
+    function markVariantForDeletion(variantId) {
+        let hiddenContainer = document.getElementById('deleteVariantIdsContainer')
+        if (!hiddenContainer) {
+            hiddenContainer = document.createElement('div')
+            hiddenContainer.id = 'deleteVariantIdsContainer'
+            hiddenContainer.style.display = 'none'
+            form?.appendChild(hiddenContainer)
+        }
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = 'delete_variant_ids[]'
+        input.value = variantId
+        hiddenContainer.appendChild(input)
+    }
+
+    function attachRowEvents(row) {
+        const removeBtn = row.querySelector('.remove-variant-btn')
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                if (container.querySelectorAll('.variant-row').length <= 1) {
+                    alert('A product must have at least one variant.')
+                    return
+                }
+                if (!confirm('Remove this variant? Its stock/price will be permanently deleted on save.')) return
+
+                const variantId = row.dataset.variantId
+                if (variantId) markVariantForDeletion(variantId)
+
+                row.remove()
+            })
+        }
+
+        row.querySelectorAll('.option-value-pair input[type="text"]').forEach(input => {
+            input.addEventListener('input', () => updateVariantLabel(row))
+        })
+
+        const defaultCheckbox = row.querySelector('.variant-default-checkbox')
+        if (defaultCheckbox) {
+            defaultCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    container.querySelectorAll('.variant-default-checkbox').forEach(cb => {
+                        if (cb !== this) cb.checked = false
+                    })
+                }
+            })
+        }
+    }
+
+    function isRowBlank(row) {
+        const hasOptionValues = row.querySelectorAll('.option-value-pair').length > 0
+        const priceInput = row.querySelector('input[name$="[price]"]')
+        const priceEmpty = !priceInput || priceInput.value.trim() === ''
+        const isPersisted = !!row.dataset.variantId
+        return !hasOptionValues && priceEmpty && !isPersisted
+    }
+
+    function addBlankVariantRow(optionPairs = []) {
+        const index = nextIndex()
+        const wrapper = document.createElement('div')
+        wrapper.innerHTML = getTemplateHtml(index)
+        const row = wrapper.firstElementChild
+
+        if (optionPairs.length > 0) {
+            const optionContainer = row.querySelector('.variant-option-values')
+            optionContainer.innerHTML = ''
+            optionPairs.forEach((pair, i) => {
+                const col = document.createElement('div')
+                col.className = 'col-md-4 option-value-pair'
+                col.innerHTML = `
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">${escapeHtml(pair.option)}</span>
+                        <input type="hidden" name="variants[${index}][option_values][${i}][option]" value="${escapeHtml(pair.option)}">
+                        <input type="text" class="form-control" name="variants[${index}][option_values][${i}][value]" value="${escapeHtml(pair.value)}">
+                    </div>
+                `
+                optionContainer.appendChild(col)
+            })
+        }
+
+        container.appendChild(row)
+        attachRowEvents(row)
+        updateVariantLabel(row)
+        refreshLucideIcons()
+        return row
+    }
+
+    if (addVariantBtn) {
+        addVariantBtn.addEventListener('click', () => addBlankVariantRow())
+    }
+
+    function renderDefinedOptionsList() {
+        let listEl = document.getElementById('definedOptionsList')
+        if (!listEl) {
+            listEl = document.createElement('div')
+            listEl.id = 'definedOptionsList'
+            listEl.className = 'mt-2 d-flex flex-wrap gap-1'
+            document.getElementById('optionBuilderRow')?.insertAdjacentElement('afterend', listEl)
+        }
+
+        listEl.innerHTML = pendingOptions.map((opt, i) => `
+            <span class="badge bg-secondary-subtle text-secondary d-inline-flex align-items-center gap-1">
+                ${escapeHtml(opt.name)}: ${opt.values.map(escapeHtml).join(', ')}
+                <button type="button" class="btn-close btn-close-sm remove-pending-option" data-index="${i}" style="font-size:0.6rem;"></button>
+            </span>
+        `).join('')
+
+        listEl.querySelectorAll('.remove-pending-option').forEach(btn => {
+            btn.addEventListener('click', function () {
+                pendingOptions.splice(parseInt(this.dataset.index, 10), 1)
+                renderDefinedOptionsList()
+            })
+        })
+    }
+
+    function cartesianProduct(arrays) {
+        return arrays.reduce((acc, curr) => {
+            const result = []
+            acc.forEach(a => curr.forEach(c => result.push([...a, c])))
+            return result
+        }, [[]])
+    }
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function () {
+            const name = optionNameInput.value.trim()
+            const valuesRaw = optionValuesInput.value.trim()
+
+            if (name && valuesRaw) {
+                const values = valuesRaw.split(',').map(v => v.trim()).filter(Boolean)
+                if (values.length === 0) {
+                    alert('Enter at least one value for this option.')
+                    return
+                }
+                const existingIdx = pendingOptions.findIndex(o => o.name.toLowerCase() === name.toLowerCase())
+                if (existingIdx >= 0) {
+                    pendingOptions[existingIdx].values = values
+                } else {
+                    pendingOptions.push({ name, values })
+                }
+                optionNameInput.value = ''
+                optionValuesInput.value = ''
+                renderDefinedOptionsList()
+            }
+
+            if (pendingOptions.length === 0) {
+                alert('Define at least one option (name + values) before generating.')
+                return
+            }
+
+            if (!confirm('Add new variant rows for every combination of the defined options? Existing saved variants are left untouched — remove them manually if they overlap.')) {
+                return
+            }
+
+            const rows = Array.from(container.querySelectorAll('.variant-row'))
+            const onlyBlankUnsaved = rows.length === 1 && isRowBlank(rows[0])
+            if (onlyBlankUnsaved) rows[0].remove()
+
+            const valueArrays = pendingOptions.map(opt => opt.values.map(v => ({ option: opt.name, value: v })))
+            const combinations = cartesianProduct(valueArrays)
+
+            combinations.forEach(combo => addBlankVariantRow(combo))
+            refreshLucideIcons()
+        })
+    }
+
+    // Wire up server-rendered rows (existing persisted variants on edit)
+    container.querySelectorAll('.variant-row').forEach(row => {
+        attachRowEvents(row)
+        updateVariantLabel(row)
+    })
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.appendChild(document.createTextNode(text ?? ''))
+    return div.innerHTML
 }
 
 // ═══════════════════════════════════════════════
@@ -317,7 +492,6 @@ function initFormSubmission() {
     form.addEventListener('submit', function (e) {
         e.preventDefault()
 
-        // Sync Quill content
         if (shortDescriptionQuill) {
             document.getElementById('shortDescriptionInput').value = shortDescriptionQuill.root.innerHTML
         }
@@ -325,13 +499,10 @@ function initFormSubmission() {
             document.getElementById('descriptionInput').value = descriptionQuill.root.innerHTML
         }
 
-        // Convert comma-separated tags to array
         const tagsInput = document.querySelector('input[name="tags_input"]')
         if (tagsInput && tagsInput.value.trim()) {
             const tagsArray = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-
             form.querySelectorAll('input[name="tags[]"]').forEach(el => el.remove())
-
             tagsArray.forEach(tag => {
                 const hiddenInput = document.createElement('input')
                 hiddenInput.type = 'hidden'
@@ -341,59 +512,46 @@ function initFormSubmission() {
             })
         }
 
-        // Build FormData
         const formData = new FormData(form)
 
-        // ✅ Remove empty fallback file inputs before appending real files
         formData.delete('thumbnail')
         formData.delete('images[]')
 
-        // Thumbnail (new upload)
         if (thumbnailDropzone && thumbnailDropzone.files.length > 0) {
             formData.append('thumbnail', thumbnailDropzone.files[0])
         }
 
-        // Gallery images (new uploads)
         if (galleryDropzone && galleryDropzone.files.length > 0) {
             galleryDropzone.files.forEach((file, index) => {
                 formData.append(`images[${index}]`, file)
             })
         }
 
-        // Disable submit button
         submitBtn.disabled = true
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Updating...'
 
-        // Submit
         fetch(form.action, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                'Accept': 'application/json',           // ✅ Ensure Laravel returns JSON on validation errors
-                'X-Requested-With': 'XMLHttpRequest'    // ✅ Helps Laravel detect AJAX requests
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
             .then(async response => {
-                console.log('Response status:', response.status)
-                console.log('Response redirected:', response.redirected)
-                console.log('Response URL:', response.url)
-
                 if (response.redirected) {
                     window.location.href = response.url
                     return
                 }
 
-                // ✅ Read as text first so we can see raw response if it's not JSON
                 const text = await response.text()
-                console.log('Raw response body:', text)
-
                 let data
                 try {
                     data = JSON.parse(text)
                 } catch (parseError) {
                     console.error('Response was not valid JSON:', parseError)
-                    throw new Error(`Server returned status ${response.status} with non-JSON response. Check console for raw body.`)
+                    throw new Error(`Server returned status ${response.status} with non-JSON response.`)
                 }
 
                 if (!response.ok) {
@@ -407,7 +565,7 @@ function initFormSubmission() {
                 console.error('Full error details:', error)
                 submitBtn.disabled = false
                 submitBtn.innerHTML = '<i data-lucide="save" class="me-1" style="width:16px;height:16px;"></i> Update Product'
-                alert('Error: ' + error.message) // ✅ Now shows the REAL reason
+                alert('Error: ' + error.message)
             })
     })
 }
@@ -419,9 +577,7 @@ function initFormSubmission() {
 function refreshLucideIcons() {
     if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
         const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
-        if (iconSet) {
-            lucide.createIcons({ icons: iconSet })
-        }
+        if (iconSet) lucide.createIcons({ icons: iconSet })
     }
 }
 
@@ -434,6 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDropzones()
     initExistingImageManagement()
     initSelect2()
+    initVariantBuilder()
     initFormSubmission()
     refreshLucideIcons()
 })

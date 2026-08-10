@@ -132,9 +132,13 @@
                                         <td>{{ $product->sku }}</td>
                                         <td>{{ $product->category?->name ?? '—' }}</td>
                                         <td>
-                                            <h5 class="fs-base mb-0 fw-medium">{{ $product->stock_quantity }}</h5>
+                                            <h5 class="fs-base mb-0 fw-medium">{{ $product->total_stock }}</h5>
+                                            @if ($product->has_variants)
+                                                <small class="text-muted">{{ $product->variants_count }}
+                                                    variant{{ $product->variants_count === 1 ? '' : 's' }}</small>
+                                            @endif
                                         </td>
-                                        <td>${{ number_format($product->price, 2) }}</td>
+                                        <td>{{ $product->price_range_label }}</td>
                                         <td>{{ $product->total_sales }}</td>
                                         <td>
                                             @if ($product->review_count > 0)
@@ -166,7 +170,7 @@
                                         <td>
                                             @if (!$product->is_active)
                                                 <span class="badge badge-soft-danger fs-xxs">Inactive</span>
-                                            @elseif($product->stock_quantity <= 0)
+                                            @elseif ($product->total_stock <= 0)
                                                 <span class="badge badge-soft-warning fs-xxs">Out of Stock</span>
                                             @else
                                                 <span class="badge badge-soft-success fs-xxs">Active</span>

@@ -199,7 +199,7 @@ class Product extends Model
 
         if (
             Schema::hasTable('cart_items') &&
-            DB::table('cart_items')->where('product_id', $this->id)->exists()
+            DB::table('cart_items')->where('product_variant_id', $this->id)->exists()
         ) {
             return 'This product is currently in customer carts and cannot be deleted.';
         }

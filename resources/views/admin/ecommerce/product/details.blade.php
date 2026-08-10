@@ -119,23 +119,6 @@
                                         @endadmincan
                                     </div>
 
-                                    @admincan('product.edit')
-                                        <div class="border-top pt-3 mt-1 d-flex align-items-center gap-2 flex-wrap"
-                                            id="quickStockUpdate"
-                                            data-update-url="{{ route('admin.ecommerce.product.stock.update', $product) }}">
-                                            @csrf
-                                            <label class="form-label mb-0 fw-semibold small" for="quickStockInput">
-                                                Quick Stock Update:
-                                            </label>
-                                            <input class="form-control form-control-sm" id="quickStockInput" min="0"
-                                                style="width: 90px" type="number" value="{{ $product->stock_quantity }}">
-                                            <button class="btn btn-sm btn-primary" id="quickStockUpdateBtn" type="button">
-                                                <i class="fs-xs me-1" data-lucide="refresh-cw"></i>Update
-                                            </button>
-                                            <span class="small" id="quickStockUpdateStatus"></span>
-                                        </div>
-                                    @endadmincan
-
                                 </div>
                             </div>
                         </div>
@@ -185,15 +168,17 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-3 mb-4">
+                                <div class="mt-3">
                                     <h4 class="fs-xl">{{ $product->name }}</h4>
                                 </div>
 
-                                <div class="row mb-4">
-                                    <div class="col-md-4 col-xl-3">
-                                        <h6 class="mb-1 text-muted text-uppercase">SKU:</h6>
-                                        <p class="fw-medium mb-0">{{ $product->sku }}</p>
+                                @if ($product->short_description)
+                                    <div class="text-muted product-description-content">
+                                        {!! $product->short_description !!}
                                     </div>
+                                @endif
+
+                                <div class="row mt-4 mb-4">
                                     <div class="col-md-4 col-xl-3">
                                         <h6 class="mb-1 text-muted text-uppercase">Category:</h6>
                                         <p class="fw-medium mb-0">{{ $product->category?->full_name ?? '—' }}</p>
@@ -201,6 +186,10 @@
                                     <div class="col-md-4 col-xl-3">
                                         <h6 class="mb-1 text-muted text-uppercase">Brand:</h6>
                                         <p class="fw-medium mb-0">{{ $product->brand?->name ?? '—' }}</p>
+                                    </div>
+                                    <div class="col-md-4 col-xl-3">
+                                        <h6 class="mb-1 text-muted text-uppercase">Total Stock:</h6>
+                                        <p class="fw-medium mb-0">{{ $product->total_stock }}</p>
                                     </div>
                                     <div class="col-md-4 col-xl-3">
                                         <h6 class="mb-1 text-muted text-uppercase">Added On:</h6>
@@ -211,81 +200,9 @@
                                     </div>
                                 </div>
 
-                                <div class="row mb-4">
-                                    <div class="col-md-4 col-xl-3">
-                                        <h6 class="mb-1 text-muted text-uppercase">Stock Quantity:</h6>
-                                        <p class="fw-medium mb-0" id="stockQuantityDisplay">
-                                            {{ $product->stock_quantity }}</p>
-                                    </div>
-                                    <div class="col-md-4 col-xl-3">
-                                        <h6 class="mb-1 text-muted text-uppercase">Low Stock Alert:</h6>
-                                        <p class="fw-medium mb-0">{{ $product->low_stock_threshold }}</p>
-                                    </div>
-                                    <div class="col-md-4 col-xl-3">
-                                        <h6 class="mb-1 text-muted text-uppercase">Total Sales:</h6>
-                                        <p class="fw-medium mb-0">{{ $product->total_sales }}</p>
-                                    </div>
-                                </div>
-
-                                @if (
-                                    ($product->weight && in_array('weight', $activeAttrs ?? [])) ||
-                                        ($product->color && in_array('color', $activeAttrs ?? [])) ||
-                                        ($product->size && in_array('size', $activeAttrs ?? [])))
-                                    <div class="row mb-4">
-                                        @if ($product->weight)
-                                            <div class="col-md-4 col-xl-3">
-                                                <h6 class="mb-1 text-muted text-uppercase">Weight:</h6>
-                                                <p class="fw-medium mb-0">{{ $product->weight }}
-                                                    {{ $product->weight_unit }}</p>
-                                            </div>
-                                        @endif
-                                        @if ($product->color)
-                                            <div class="col-md-4 col-xl-3">
-                                                <h6 class="mb-1 text-muted text-uppercase">Color:</h6>
-                                                <p class="fw-medium mb-0">{{ $product->color }}</p>
-                                            </div>
-                                        @endif
-                                        @if ($product->size)
-                                            <div class="col-md-4 col-xl-3">
-                                                <h6 class="mb-1 text-muted text-uppercase">Size:</h6>
-                                                <p class="fw-medium mb-0">{{ $product->size }}</p>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-
                                 <div class="mb-4">
-                                    @if ($product->has_discount)
-                                        <h3 class="text-muted d-flex align-items-center gap-2 mb-1">
-                                            <small
-                                                class="text-decoration-line-through">${{ number_format((float) $product->price, 2) }}</small>
-                                            <span
-                                                class="fw-bold text-danger">${{ number_format($product->final_price, 2) }}</span>
-                                            <small>
-                                                ({{ $product->discount_type === 'percentage'
-                                                    ? number_format((float) $product->discount_value, 0) . '%'
-                                                    : '$' . number_format((float) $product->discount_value, 2) }})
-                                            </small>
-                                        </h3>
-                                        <p class="text-muted mb-0">
-                                            Customer saves ${{ number_format($product->discount_amount, 2) }}
-                                            ({{ number_format($product->discount_percentage, 1) }}%)
-                                        </p>
-                                    @else
-                                        <h3 class="fw-bold mb-0">${{ number_format((float) $product->price, 2) }}</h3>
-                                    @endif
-                                    @if ($product->purchase_price)
-                                        <p class="text-muted small mb-0">
-                                            Purchase Price: ${{ number_format((float) $product->purchase_price, 2) }}
-                                        </p>
-                                    @endif
+                                    <h3 class="fw-bold mb-0">{{ $product->price_range_label }}</h3>
                                 </div>
-
-                                @if ($product->short_description)
-                                    <div class="text-muted product-description-content">
-                                        {!! $product->short_description !!}
-                                    </div>
-                                @endif
 
                                 @if ($product->description)
                                     <h6 class="mt-3 fs-base">Description:</h6>
@@ -335,6 +252,72 @@
                             </div>
                         </div>
 
+                    </div>
+                    <div class="row">
+                        @admincan('product.edit')
+                            <h6 class="mt-3 fs-base">Variants:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-custom align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr class="text-uppercase fs-xxs">
+                                            <th>Options</th>
+                                            <th>SKU</th>
+                                            <th>Price</th>
+                                            <th>Stock</th>
+                                            <th>Status</th>
+                                            @admincan('product.edit')
+                                                <th class="text-center">Quick Update</th>
+                                            @endadmincan
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($product->variants as $variant)
+                                            @php
+                                                $vStockClass = match (true) {
+                                                    $variant->is_out_of_stock => 'bg-danger-subtle text-danger',
+                                                    $variant->is_low_stock => 'bg-warning-subtle text-warning',
+                                                    default => 'bg-success-subtle text-success',
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    @if ($variant->optionValues->isNotEmpty())
+                                                        {{ $variant->optionValues->load('option')->map(fn($ov) => "{$ov->option->name}: {$ov->value}")->implode(', ') }}
+                                                    @else
+                                                        <span class="text-muted">Default</span>
+                                                    @endif
+                                                    @if ($variant->is_default)
+                                                        <span class="badge bg-primary-subtle text-primary ms-1">Default</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $variant->sku }}</td>
+                                                <td>${{ number_format((float) $variant->final_price, 2) }}</td>
+                                                <td>{{ $variant->stock_quantity }} <small class="text-muted">(alert
+                                                        &lt;= {{ $variant->low_stock_threshold }})</small></td>
+                                                <td><span
+                                                        class="badge {{ $vStockClass }}">{{ $variant->is_out_of_stock ? 'Out of Stock' : ($variant->is_low_stock ? 'Low Stock' : 'In Stock') }}</span>
+                                                </td>
+                                                @admincan('product.edit')
+                                                    <td class="text-center">
+                                                        <div class="d-flex align-items-center gap-1 justify-content-center variant-stock-update"
+                                                            data-update-url="{{ route('admin.ecommerce.product.stock.update', [$product, $variant]) }}">
+                                                            <input type="number"
+                                                                class="form-control form-control-sm variant-stock-input"
+                                                                style="width:80px" min="0"
+                                                                value="{{ $variant->stock_quantity }}">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-primary variant-stock-btn">
+                                                                <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                @endadmincan
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endadmincan
                     </div>
                 </div>
             </div>
