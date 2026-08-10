@@ -2,8 +2,10 @@
 
 namespace App\Services\Visitor;
 
-use App\Models\Category;
 use App\Models\Product;
+use App\Models\Category;
+use Illuminate\Support\Str;
+use App\Models\ProductOptionValue;
 use App\Services\AttributeService;
 
 class ProductCatalogService
@@ -21,21 +23,23 @@ class ProductCatalogService
 
     /**
      * @param array         $filters       ['category' => [], 'color' => [], 'size' => [], 'price_min' => ?, 'price_max' => ?, 'sort' => ?]
-     * @param Category|null $scopeCategory When set, restricts results to this category (and its children, if it's a parent).
+     * @param Category|null $scopeCategory
      */
     public function getFilteredProducts(array $filters, ?Category $scopeCategory = null)
     {
         $query = Product::query()
             ->active()
-            ->inStock()
-            ->with(['category', 'brand', 'primaryImage']);
+            ->inStock() // uses the total_stock cache — see Product::scopeInStock
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+            ]);
 
         if ($scopeCategory) {
-            $categoryIds = $scopeCategory->isParent()
-                ? $scopeCategory->children()->pluck('id')
-                : collect([$scopeCategory->id]);
-
-            $query->whereIn('category_id', $categoryIds);
+            $query->whereIn('category_id', $this->scopedCategoryIds($scopeCategory));
         }
 
         if (!empty($filters['category'])) {
@@ -43,11 +47,11 @@ class ProductCatalogService
         }
 
         if (!empty($filters['color'])) {
-            $query->ofColor($filters['color']);
+            $this->filterByOptionValue($query, 'color', (array) $filters['color']);
         }
 
         if (!empty($filters['size'])) {
-            $query->ofSize($filters['size']);
+            $this->filterByOptionValue($query, 'size', (array) $filters['size']);
         }
 
         if (!empty($filters['price_min']) || !empty($filters['price_max'])) {
@@ -62,14 +66,26 @@ class ProductCatalogService
         return $query->paginate(self::PER_PAGE)->withQueryString();
     }
 
+    private function filterByOptionValue($query, string $optionSlug, array $values): void
+    {
+        $slugs = array_map(fn ($v) => Str::slug($v), $values);
+
+        $query->whereHas('variants', function ($v) use ($optionSlug, $slugs) {
+            $v->active()->whereHas('optionValues', function ($ov) use ($optionSlug, $slugs) {
+                $ov->whereIn('slug', $slugs)
+                   ->whereHas('option', fn ($o) => $o->where('slug', $optionSlug));
+            });
+        });
+    }
+
     private function applySort($query, string $sort): void
     {
         match ($sort) {
             'name_asc'   => $query->orderBy('name', 'asc'),
             'name_desc'  => $query->orderBy('name', 'desc'),
-            'price_asc'  => $query->orderBy('price', 'asc'),
-            'price_desc' => $query->orderBy('price', 'desc'),
-            default      => $query->latest(), // relevance / position placeholder
+            'price_asc'  => $query->orderBy('min_price', 'asc'),
+            'price_desc' => $query->orderBy('max_price', 'desc'),
+            default      => $query->latest(),
         };
     }
 
@@ -89,21 +105,28 @@ class ProductCatalogService
 
     public function getAvailableColors(?Category $scopeCategory = null): array
     {
-        return $this->baseAttributeQuery($scopeCategory)
-            ->whereNotNull('color')
-            ->distinct()
-            ->orderBy('color')
-            ->pluck('color')
-            ->toArray();
+        return $this->availableOptionValues('color', $scopeCategory);
     }
 
     public function getAvailableSizes(?Category $scopeCategory = null): array
     {
-        return $this->baseAttributeQuery($scopeCategory)
-            ->whereNotNull('size')
-            ->distinct()
-            ->orderBy('size')
-            ->pluck('size')
+        return $this->availableOptionValues('size', $scopeCategory);
+    }
+
+    /**
+     * Returns distinct option values (e.g. distinct colors) actually in use
+     * by active, in-stock variants within the given scope.
+     */
+    private function availableOptionValues(string $optionSlug, ?Category $scopeCategory = null): array
+    {
+        $productIds = $this->baseAttributeQuery($scopeCategory)->pluck('id');
+
+        return ProductOptionValue::whereHas('option', fn ($o) => $o->where('slug', $optionSlug))
+            ->whereHas('variants', fn ($v) => $v->active()->inStock()->whereIn('product_id', $productIds))
+            ->orderBy('sort_order')
+            ->pluck('value')
+            ->unique()
+            ->values()
             ->toArray();
     }
 
@@ -112,8 +135,8 @@ class ProductCatalogService
         $query = $this->baseAttributeQuery($scopeCategory);
 
         return [
-            'min' => (float) ($query->clone()->min('price') ?? 0),
-            'max' => (float) ($query->clone()->max('price') ?? 1000),
+            'min' => (float) ($query->clone()->min('min_price') ?? 0),
+            'max' => (float) ($query->clone()->max('max_price') ?? 1000),
         ];
     }
 
@@ -122,13 +145,16 @@ class ProductCatalogService
         $query = Product::query()->active()->inStock();
 
         if ($scopeCategory) {
-            $categoryIds = $scopeCategory->isParent()
-                ? $scopeCategory->children()->pluck('id')
-                : collect([$scopeCategory->id]);
-
-            $query->whereIn('category_id', $categoryIds);
+            $query->whereIn('category_id', $this->scopedCategoryIds($scopeCategory));
         }
 
         return $query;
+    }
+
+    private function scopedCategoryIds(Category $scopeCategory)
+    {
+        return $scopeCategory->isParent()
+            ? $scopeCategory->children()->pluck('id')
+            : collect([$scopeCategory->id]);
     }
 }
