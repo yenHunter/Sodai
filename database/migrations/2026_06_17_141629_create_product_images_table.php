@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('product_images', function (Blueprint $table) {
@@ -16,16 +13,21 @@ return new class extends Migration
             $table->foreignId('product_id')
                 ->constrained()
                 ->onDelete('cascade');
+            // Null = shared across all variants. Set = only shown when
+            // that specific variant (e.g. "Red") is selected.
+            $table->foreignId('product_variant_id')
+                ->nullable()
+                ->constrained()
+                ->onDelete('cascade');
             $table->string('image_path');
             $table->boolean('is_primary')->default(false);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
+
+            $table->index(['product_id', 'product_variant_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('product_images');

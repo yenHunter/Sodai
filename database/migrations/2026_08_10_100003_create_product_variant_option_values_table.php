@@ -8,27 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('wishlists', function (Blueprint $table) {
+        Schema::create('product_variant_option_values', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onDelete('cascade');
-            $table->foreignId('product_id')
-                ->constrained()
-                ->onDelete('cascade');
             $table->foreignId('product_variant_id')
-                ->nullable()
+                ->constrained()
+                ->onDelete('cascade');
+            $table->foreignId('product_option_value_id')
                 ->constrained()
                 ->onDelete('cascade');
             $table->timestamps();
 
-            $table->unique(['user_id', 'product_id']);
-            $table->index('user_id');
+            $table->unique(
+                ['product_variant_id', 'product_option_value_id'],
+                'variant_option_value_unique'
+            );
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('wishlists');
+        Schema::dropIfExists('product_variant_option_values');
     }
 };

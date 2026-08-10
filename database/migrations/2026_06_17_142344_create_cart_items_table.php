@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('cart_items', function (Blueprint $table) {
@@ -16,18 +13,17 @@ return new class extends Migration
             $table->foreignId('cart_id')
                 ->constrained()
                 ->onDelete('cascade');
-            $table->foreignId('product_id')
+            $table->foreignId('product_variant_id')
                 ->constrained()
                 ->onDelete('cascade');
             $table->integer('quantity');
             $table->timestamps();
-            $table->unique(['cart_id', 'product_id']);
+
+            // Same variant can only appear once per cart (qty bumps instead)
+            $table->unique(['cart_id', 'product_variant_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('cart_items');

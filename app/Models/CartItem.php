@@ -6,11 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CartItem extends Model
 {
-    protected $fillable = [
-        'cart_id',
-        'product_id',
-        'quantity',
-    ];
+    protected $fillable = ['cart_id', 'product_variant_id', 'quantity'];
 
     protected function casts(): array
     {
@@ -29,9 +25,14 @@ class CartItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
     public function getUnitPriceAttribute(): float
     {
-        return (float) ($this->product?->final_price ?? 0);
+        return (float) ($this->variant?->final_price ?? 0);
     }
 
     public function getSubtotalAttribute(): float

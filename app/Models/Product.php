@@ -21,19 +21,12 @@ class Product extends Model
         'description',
         'category_id',
         'brand_id',
-        'price',
-        'purchase_price',
-        'discount_type',
-        'discount_value',
-        'stock_quantity',
-        'low_stock_threshold',
         'thumbnail',
-        'weight',
-        'weight_unit',
-        'color',
-        'size',
         'is_active',
         'is_featured',
+        'min_price',
+        'max_price',
+        'total_stock',
         'average_rating',
         'review_count',
         'total_sales',
@@ -43,12 +36,9 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price'                => 'decimal:2',
-            'purchase_price'       => 'decimal:2',
-            'discount_value'       => 'decimal:2',
-            'stock_quantity'       => 'integer',
-            'low_stock_threshold'  => 'integer',
-            'weight'               => 'decimal:2',
+            'min_price'            => 'decimal:2',
+            'max_price'            => 'decimal:2',
+            'total_stock'          => 'integer',
             'is_active'            => 'boolean',
             'is_featured'          => 'boolean',
             'average_rating'       => 'decimal:2',
@@ -75,19 +65,19 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class)
-                    ->orderBy('sort_order');
+            ->orderBy('sort_order');
     }
 
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)
-                    ->where('is_primary', true);
+            ->where('is_primary', true);
     }
 
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'product_tag')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     public function relatedProducts()
@@ -105,21 +95,23 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function defaultVariant()
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
 
     public function getFinalPriceAttribute(): float
     {
-        if (!$this->discount_type || !$this->discount_value) {
-            return (float) $this->price;
-        }
-
-        if ($this->discount_type === 'percentage') {
-            return (float) ($this->price - ($this->price * $this->discount_value / 100));
-        }
-
-        return (float) max(0, $this->price - $this->discount_value);
+        return (float) ($this->defaultVariant?->final_price ?? $this->min_price);
     }
 
     public function getDiscountAmountAttribute(): float
@@ -135,7 +127,7 @@ class Product extends Model
 
     public function getIsInStockAttribute(): bool
     {
-        return $this->stock_quantity > 0;
+        return $this->total_stock > 0;
     }
 
     public function getIsLowStockAttribute(): bool
@@ -146,7 +138,7 @@ class Product extends Model
 
     public function getIsOutOfStockAttribute(): bool
     {
-        return $this->stock_quantity <= 0;
+        return $this->total_stock <= 0;
     }
 
     public function getHasDiscountAttribute(): bool
@@ -174,6 +166,23 @@ class Product extends Model
         return 'In Stock';
     }
 
+    public function getHasVariantsAttribute(): bool
+    {
+        // "Real" variants = more than just the auto-created default one,
+        // i.e. the product actually has option values attached.
+        return $this->variants()->whereHas('optionValues')->exists();
+    }
+
+    public function getPriceRangeLabelAttribute(): string
+    {
+        if ((float) $this->min_price === (float) $this->max_price) {
+            return '$' . number_format((float) $this->min_price, 2);
+        }
+
+        return '$' . number_format((float) $this->min_price, 2)
+            . ' – $' . number_format((float) $this->max_price, 2);
+    }
+
     /**
      * Human-readable reason why this product cannot be deleted.
      * Returns null if the product is safe to delete.
@@ -181,17 +190,36 @@ class Product extends Model
      */
     public function getDeletionBlockReasonAttribute(): ?string
     {
-        if (Schema::hasTable('order_items') &&
-            DB::table('order_items')->where('product_id', $this->id)->exists()) {
+        if (
+            Schema::hasTable('order_items') &&
+            DB::table('order_items')->where('product_id', $this->id)->exists()
+        ) {
             return 'This product has existing order history and cannot be deleted.';
         }
 
-        if (Schema::hasTable('cart_items') &&
-            DB::table('cart_items')->where('product_id', $this->id)->exists()) {
+        if (
+            Schema::hasTable('cart_items') &&
+            DB::table('cart_items')->where('product_id', $this->id)->exists()
+        ) {
             return 'This product is currently in customer carts and cannot be deleted.';
         }
 
         return null;
+    }
+
+    /**
+     * Recalculates min_price/max_price/total_stock from active variants.
+     * Call this after any variant create/update/delete.
+     */
+    public function refreshPriceAndStockCache(): void
+    {
+        $variants = $this->variants()->active()->get();
+
+        $this->update([
+            'min_price'   => $variants->min('price') ?? 0,
+            'max_price'   => $variants->max('price') ?? 0,
+            'total_stock' => $variants->sum('stock_quantity'),
+        ]);
     }
 
     // ─────────────────────────────────────────────
@@ -246,30 +274,30 @@ class Product extends Model
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true)
-                    ->where('is_active', true);
+            ->where('is_active', true);
     }
 
     public function scopeInStock($query)
     {
-        return $query->where('stock_quantity', '>', 0);
+        return $query->where('total_stock', '>', 0);
     }
 
     public function scopeOutOfStock($query)
     {
-        return $query->where('stock_quantity', '<=', 0);
+        return $query->where('total_stock', '<=', 0);
     }
 
     public function scopeLowStock($query)
     {
         return $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
-                    ->where('stock_quantity', '>', 0);
+            ->where('stock_quantity', '>', 0);
     }
 
     public function scopeWithDiscount($query)
     {
         return $query->whereNotNull('discount_type')
-                    ->whereNotNull('discount_value')
-                    ->where('discount_value', '>', 0);
+            ->whereNotNull('discount_value')
+            ->where('discount_value', '>', 0);
     }
 
     public function scopeByCategory($query, $categoryId)
@@ -286,14 +314,20 @@ class Product extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('sku', 'like', "%{$search}%")
-              ->orWhere('short_description', 'like', "%{$search}%");
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhere('short_description', 'like', "%{$search}%");
         });
     }
 
     public function scopePriceRange($query, $min, $max)
     {
-        return $query->whereBetween('price', [$min, $max]);
+        return $query->where(function ($q) use ($min, $max) {
+            $q->whereBetween('min_price', [$min, $max])
+                ->orWhereBetween('max_price', [$min, $max])
+                ->orWhere(function ($q2) use ($min, $max) {
+                    $q2->where('min_price', '<=', $min)->where('max_price', '>=', $max);
+                });
+        });
     }
 
     public function scopeOfColor($query, $colors)
@@ -319,6 +353,6 @@ class Product extends Model
     public function scopeTopRated($query)
     {
         return $query->where('review_count', '>', 0)
-                    ->orderBy('average_rating', 'desc');
+            ->orderBy('average_rating', 'desc');
     }
 }
