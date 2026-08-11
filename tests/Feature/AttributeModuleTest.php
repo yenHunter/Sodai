@@ -44,7 +44,7 @@ class AttributeModuleTest extends TestCase
         $admin     = $this->createAdminWithPermissions(['attribute.view', 'attribute.edit']);
         $attribute = Attribute::factory()->create(['key' => 'size', 'status' => 'active']);
 
-        $service = app(\App\Services\AttributeService::class);
+        $service = app(\App\Services\Admin\AttributeService::class);
         $this->assertContains('size', $service->getActiveKeys());
 
         $this->actingAsAdmin($admin)->patch(route('admin.ecommerce.attribute.toggle-status', $attribute));

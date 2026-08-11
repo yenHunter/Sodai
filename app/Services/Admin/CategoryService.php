@@ -1,34 +1,34 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Admin;
 
-use App\Models\Brand;
+use App\Models\Category;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class BrandService
+class CategoryService
 {
     // ─────────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────────
 
-    public function store(array $data): Brand
+    public function store(array $data): Category
     {
         return DB::transaction(function () use ($data) {
 
-            $logoPath = null;
-            if (!empty($data['logo'])) {
-                $logoPath = $this->uploadImage($data['logo']);
+            $imagePath = null;
+            if (!empty($data['image'])) {
+                $imagePath = $this->uploadImage($data['image']);
             }
 
-            return Brand::create([
+            return Category::create([
                 'name'        => $data['name'],
                 'slug'        => $this->generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
-                'website'     => $data['website'] ?? null,
-                'logo'        => $logoPath,
+                'parent_id'   => $data['parent_id'] ?? null,
+                'image'       => $imagePath,
                 // ✅ Convert any format to boolean
                 'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
@@ -40,34 +40,34 @@ class BrandService
     // UPDATE
     // ─────────────────────────────────────────────
 
-    public function update(Brand $brand, array $data): Brand
+    public function update(Category $category, array $data): Category
     {
-        return DB::transaction(function () use ($brand, $data) {
+        return DB::transaction(function () use ($category, $data) {
 
-            $logoPath = $brand->logo;
+            $imagePath = $category->image;
 
-            if (!empty($data['logo'])) {
-                $this->deleteImage($brand->logo);
-                $logoPath = $this->uploadImage($data['logo']);
+            if (!empty($data['image'])) {
+                $this->deleteImage($category->image);
+                $imagePath = $this->uploadImage($data['image']);
             }
 
-            $slug = $brand->slug;
-            if ($brand->name !== $data['name']) {
-                $slug = $this->generateUniqueSlug($data['name'], $brand->id);
+            $slug = $category->slug;
+            if ($category->name !== $data['name']) {
+                $slug = $this->generateUniqueSlug($data['name'], $category->id);
             }
 
-            $brand->update([
+            $category->update([
                 'name'        => $data['name'],
                 'slug'        => $slug,
                 'description' => $data['description'] ?? null,
-                'website'     => $data['website'] ?? null,
-                'logo'        => $logoPath,
+                'parent_id'   => $data['parent_id'] ?? null,
+                'image'       => $imagePath,
                 // ✅ Convert any format to boolean
                 'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
             ]);
 
-            return $brand->fresh();
+            return $category->fresh();
         });
     }
 
@@ -75,18 +75,30 @@ class BrandService
     // DELETE
     // ─────────────────────────────────────────────
 
-    public function delete(Brand $brand): bool
+    public function delete(Category $category): bool
     {
-        return DB::transaction(function () use ($brand) {
+        return DB::transaction(function () use ($category) {
 
-            if ($brand->products()->exists()) {
+            if ($category->products()->exists()) {
                 throw new \Exception(
-                    'Cannot delete a brand that has products assigned to it.'
+                    'Cannot delete a category that has products assigned to it.'
                 );
             }
 
-            $this->deleteImage($brand->logo);
-            return $brand->delete();
+            if ($category->hasChildren()) {
+                foreach ($category->children as $child) {
+                    if ($child->products()->exists()) {
+                        throw new \Exception(
+                            "Cannot delete: sub-category \"{$child->name}\" has products."
+                        );
+                    }
+                    $this->deleteImage($child->image);
+                    $child->delete();
+                }
+            }
+
+            $this->deleteImage($category->image);
+            return $category->delete();
         });
     }
 
@@ -94,11 +106,16 @@ class BrandService
     // TOGGLE STATUS
     // ─────────────────────────────────────────────
 
-    public function toggleStatus(Brand $brand): Brand
+    public function toggleStatus(Category $category): Category
     {
-        $brand->update(['is_active' => !$brand->is_active]);
+        $newStatus = !$category->is_active;
+        $category->update(['is_active' => $newStatus]);
 
-        return $brand->fresh();
+        if (!$newStatus && $category->hasChildren()) {
+            $category->children()->update(['is_active' => false]);
+        }
+
+        return $category->fresh();
     }
 
     // ─────────────────────────────────────────────
@@ -109,15 +126,15 @@ class BrandService
     {
         try {
             $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('brands', $filename, 'public');
+            $path     = $image->storeAs('categories', $filename, 'public');
 
             if (!$path) {
-                throw new \Exception('Failed to upload logo.');
+                throw new \Exception('Failed to upload image.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Logo upload failed: ' . $e->getMessage());
+            throw new \Exception('Image upload failed: ' . $e->getMessage());
         }
     }
 
@@ -163,7 +180,7 @@ class BrandService
         $count    = 1;
 
         while (true) {
-            $query = Brand::where('slug', $slug);
+            $query = Category::where('slug', $slug);
             if ($ignoreId) {
                 $query->where('id', '!=', $ignoreId);
             }
@@ -178,9 +195,21 @@ class BrandService
     // QUERY HELPERS
     // ─────────────────────────────────────────────
 
-    public function getBrandsList()
+    public function getParentCategories()
     {
-        return Brand::withCount('products')
+        return Category::parentOnly()
+            ->active()
+            ->ordered()
+            ->get();
+    }
+
+    public function getCategoriesWithChildren()
+    {
+        return Category::with(['children' => function ($query) {
+            $query->withCount('products')->ordered();
+        }])
+            ->parentOnly()
+            ->withCount('products')
             ->ordered()
             ->get();
     }

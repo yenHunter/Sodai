@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Admin;
 
 use App\Models\Admin;
+use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 class AdminService
 {

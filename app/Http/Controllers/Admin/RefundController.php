@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Refund;
 use Illuminate\Http\Request;
-use App\Services\RefundService;
+use App\Services\Admin\RefundService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Refund\StoreRefundRequest;
 use App\Http\Requests\Admin\Refund\UpdateRefundRequest;

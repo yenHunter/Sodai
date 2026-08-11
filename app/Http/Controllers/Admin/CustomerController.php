@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Services\CustomerService;
+use App\Services\Admin\CustomerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Customer\StoreCustomerRequest;
 use App\Http\Requests\Admin\Customer\UpdateCustomerRequest;

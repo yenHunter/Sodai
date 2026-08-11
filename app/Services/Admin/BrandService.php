@@ -1,34 +1,34 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Admin;
 
-use App\Models\Category;
+use App\Models\Brand;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class CategoryService
+class BrandService
 {
     // ─────────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────────
 
-    public function store(array $data): Category
+    public function store(array $data): Brand
     {
         return DB::transaction(function () use ($data) {
 
-            $imagePath = null;
-            if (!empty($data['image'])) {
-                $imagePath = $this->uploadImage($data['image']);
+            $logoPath = null;
+            if (!empty($data['logo'])) {
+                $logoPath = $this->uploadImage($data['logo']);
             }
 
-            return Category::create([
+            return Brand::create([
                 'name'        => $data['name'],
                 'slug'        => $this->generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
-                'parent_id'   => $data['parent_id'] ?? null,
-                'image'       => $imagePath,
+                'website'     => $data['website'] ?? null,
+                'logo'        => $logoPath,
                 // ✅ Convert any format to boolean
                 'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
@@ -40,34 +40,34 @@ class CategoryService
     // UPDATE
     // ─────────────────────────────────────────────
 
-    public function update(Category $category, array $data): Category
+    public function update(Brand $brand, array $data): Brand
     {
-        return DB::transaction(function () use ($category, $data) {
+        return DB::transaction(function () use ($brand, $data) {
 
-            $imagePath = $category->image;
+            $logoPath = $brand->logo;
 
-            if (!empty($data['image'])) {
-                $this->deleteImage($category->image);
-                $imagePath = $this->uploadImage($data['image']);
+            if (!empty($data['logo'])) {
+                $this->deleteImage($brand->logo);
+                $logoPath = $this->uploadImage($data['logo']);
             }
 
-            $slug = $category->slug;
-            if ($category->name !== $data['name']) {
-                $slug = $this->generateUniqueSlug($data['name'], $category->id);
+            $slug = $brand->slug;
+            if ($brand->name !== $data['name']) {
+                $slug = $this->generateUniqueSlug($data['name'], $brand->id);
             }
 
-            $category->update([
+            $brand->update([
                 'name'        => $data['name'],
                 'slug'        => $slug,
                 'description' => $data['description'] ?? null,
-                'parent_id'   => $data['parent_id'] ?? null,
-                'image'       => $imagePath,
+                'website'     => $data['website'] ?? null,
+                'logo'        => $logoPath,
                 // ✅ Convert any format to boolean
                 'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
                 'sort_order'  => $data['sort_order'] ?? 0,
             ]);
 
-            return $category->fresh();
+            return $brand->fresh();
         });
     }
 
@@ -75,30 +75,18 @@ class CategoryService
     // DELETE
     // ─────────────────────────────────────────────
 
-    public function delete(Category $category): bool
+    public function delete(Brand $brand): bool
     {
-        return DB::transaction(function () use ($category) {
+        return DB::transaction(function () use ($brand) {
 
-            if ($category->products()->exists()) {
+            if ($brand->products()->exists()) {
                 throw new \Exception(
-                    'Cannot delete a category that has products assigned to it.'
+                    'Cannot delete a brand that has products assigned to it.'
                 );
             }
 
-            if ($category->hasChildren()) {
-                foreach ($category->children as $child) {
-                    if ($child->products()->exists()) {
-                        throw new \Exception(
-                            "Cannot delete: sub-category \"{$child->name}\" has products."
-                        );
-                    }
-                    $this->deleteImage($child->image);
-                    $child->delete();
-                }
-            }
-
-            $this->deleteImage($category->image);
-            return $category->delete();
+            $this->deleteImage($brand->logo);
+            return $brand->delete();
         });
     }
 
@@ -106,16 +94,11 @@ class CategoryService
     // TOGGLE STATUS
     // ─────────────────────────────────────────────
 
-    public function toggleStatus(Category $category): Category
+    public function toggleStatus(Brand $brand): Brand
     {
-        $newStatus = !$category->is_active;
-        $category->update(['is_active' => $newStatus]);
+        $brand->update(['is_active' => !$brand->is_active]);
 
-        if (!$newStatus && $category->hasChildren()) {
-            $category->children()->update(['is_active' => false]);
-        }
-
-        return $category->fresh();
+        return $brand->fresh();
     }
 
     // ─────────────────────────────────────────────
@@ -126,15 +109,15 @@ class CategoryService
     {
         try {
             $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('categories', $filename, 'public');
+            $path     = $image->storeAs('brands', $filename, 'public');
 
             if (!$path) {
-                throw new \Exception('Failed to upload image.');
+                throw new \Exception('Failed to upload logo.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Image upload failed: ' . $e->getMessage());
+            throw new \Exception('Logo upload failed: ' . $e->getMessage());
         }
     }
 
@@ -180,7 +163,7 @@ class CategoryService
         $count    = 1;
 
         while (true) {
-            $query = Category::where('slug', $slug);
+            $query = Brand::where('slug', $slug);
             if ($ignoreId) {
                 $query->where('id', '!=', $ignoreId);
             }
@@ -195,21 +178,9 @@ class CategoryService
     // QUERY HELPERS
     // ─────────────────────────────────────────────
 
-    public function getParentCategories()
+    public function getBrandsList()
     {
-        return Category::parentOnly()
-            ->active()
-            ->ordered()
-            ->get();
-    }
-
-    public function getCategoriesWithChildren()
-    {
-        return Category::with(['children' => function ($query) {
-            $query->withCount('products')->ordered();
-        }])
-            ->parentOnly()
-            ->withCount('products')
+        return Brand::withCount('products')
             ->ordered()
             ->get();
     }

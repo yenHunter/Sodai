@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Visitor;
 
+use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -61,5 +62,20 @@ class ProductController extends Controller
             'price_max' => $request->input('price_max'),
             'sort'      => $request->input('sort', 'relevance'),
         ];
+    }
+
+    public function show(Product $product)
+    {
+        abort_unless($product->is_active, 404);
+
+        $product      = $this->catalogService->getProductForDetail($product);
+        $variantMatrix = $this->catalogService->buildVariantMatrix($product);
+        $activeAttrs  = $this->catalogService->getActiveAttributeKeys();
+
+        return view('visitor.pages.product-details', [
+            'product'       => $product,
+            'variantMatrix' => $variantMatrix,
+            'activeAttrs'   => $activeAttrs,
+        ]);
     }
 }

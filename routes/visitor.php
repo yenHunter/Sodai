@@ -8,10 +8,20 @@ use App\Http\Controllers\Visitor\AddressController;
 use App\Http\Controllers\Visitor\OrderController;
 use App\Http\Controllers\Visitor\WishlistController;
 use App\Http\Controllers\Visitor\ReviewController;
+use App\Http\Controllers\Visitor\CartController;
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/category/{category:slug}', [ProductController::class, 'byCategory'])->name('products.category');
+
+// ── Cart (guest or authenticated — uses session_id for guests) ──
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+    Route::patch('/{cartItem}', [CartController::class, 'update'])->name('update');
+    Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
+});
 
 // ── Guest Only ──
 Route::middleware('guest:customer')->group(function () {
@@ -54,6 +64,13 @@ Route::middleware('auth.customer')->group(function () {
             Route::get('/', [WishlistController::class, 'index'])->name('index');
             Route::post('/{product}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
             Route::delete('/{product}', [WishlistController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', [CartController::class, 'index'])->name('index');
+            Route::post('/add', [CartController::class, 'add'])->name('add');
+            Route::patch('/{cartItem}', [CartController::class, 'update'])->name('update');
+            Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('reviews')->name('reviews.')->group(function () {

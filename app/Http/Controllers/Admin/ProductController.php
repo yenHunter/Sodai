@@ -6,7 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
-use App\Services\ProductService;
+use App\Services\Admin\ProductService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;

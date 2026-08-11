@@ -6,7 +6,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use App\Models\ProductOptionValue;
-use App\Services\AttributeService;
+use App\Services\Admin\AttributeService;
 
 class ProductCatalogService
 {
@@ -35,7 +35,7 @@ class ProductCatalogService
                 'brand',
                 'primaryImage',
                 'defaultVariant',
-                'variants' => fn ($v) => $v->active(),
+                'variants' => fn($v) => $v->active(),
             ]);
 
         if ($scopeCategory) {
@@ -68,12 +68,12 @@ class ProductCatalogService
 
     private function filterByOptionValue($query, string $optionSlug, array $values): void
     {
-        $slugs = array_map(fn ($v) => Str::slug($v), $values);
+        $slugs = array_map(fn($v) => Str::slug($v), $values);
 
         $query->whereHas('variants', function ($v) use ($optionSlug, $slugs) {
             $v->active()->whereHas('optionValues', function ($ov) use ($optionSlug, $slugs) {
                 $ov->whereIn('slug', $slugs)
-                   ->whereHas('option', fn ($o) => $o->where('slug', $optionSlug));
+                    ->whereHas('option', fn($o) => $o->where('slug', $optionSlug));
             });
         });
     }
@@ -97,9 +97,9 @@ class ProductCatalogService
         return Category::active()
             ->childOnly()
             ->ordered()
-            ->withCount(['products' => fn ($q) => $q->active()->inStock()])
+            ->withCount(['products' => fn($q) => $q->active()->inStock()])
             ->get()
-            ->filter(fn ($category) => $category->products_count > 0)
+            ->filter(fn($category) => $category->products_count > 0)
             ->values();
     }
 
@@ -121,8 +121,8 @@ class ProductCatalogService
     {
         $productIds = $this->baseAttributeQuery($scopeCategory)->pluck('id');
 
-        return ProductOptionValue::whereHas('option', fn ($o) => $o->where('slug', $optionSlug))
-            ->whereHas('variants', fn ($v) => $v->active()->inStock()->whereIn('product_id', $productIds))
+        return ProductOptionValue::whereHas('option', fn($o) => $o->where('slug', $optionSlug))
+            ->whereHas('variants', fn($v) => $v->active()->inStock()->whereIn('product_id', $productIds))
             ->orderBy('sort_order')
             ->pluck('value')
             ->unique()
@@ -156,5 +156,72 @@ class ProductCatalogService
         return $scopeCategory->isParent()
             ? $scopeCategory->children()->pluck('id')
             : collect([$scopeCategory->id]);
+    }
+
+    /**
+     * Single product for the PDP, with everything the variant selector needs.
+     */
+    public function getProductForDetail(Product $product): Product
+    {
+        return $product->load([
+            'category.parent',
+            'brand',
+            'variants' => fn($v) => $v->active()->with('optionValues.option'),
+            'variants.images' => fn($q) => $q->orderBy('sort_order'),
+            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'tags',
+            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'reviews' => fn($q) => $q->approved()->latest()->with('user:id,name,avatar'),
+        ]);
+    }
+
+    /**
+     * Builds the JSON payload the frontend variant-picker JS consumes:
+     * distinct option groups (Color, Size...) + a flat map of
+     * "value_id|value_id" combo -> variant data (price/stock/sku/image).
+     * This lets the PDP resolve a selection to one variant client-side
+     * without extra requests.
+     */
+    public function buildVariantMatrix(Product $product): array
+    {
+        $variants = $product->variants;
+
+        $optionGroups = $variants
+            ->flatMap(fn($v) => $v->optionValues)
+            ->groupBy(fn($ov) => $ov->option->name)
+            ->map(function ($values, $optionName) {
+                return [
+                    'name'   => $optionName,
+                    'values' => $values->unique('id')->values()->map(fn($ov) => [
+                        'id'     => $ov->id,
+                        'value'  => $ov->value,
+                        'swatch' => $ov->swatch,
+                    ]),
+                ];
+            })
+            ->values();
+
+        $combinations = $variants->mapWithKeys(function ($variant) {
+            $key = $variant->optionValues->pluck('id')->sort()->implode('-');
+
+            return [$key => [
+                'variant_id'      => $variant->id,
+                'sku'             => $variant->sku,
+                'price'           => (float) $variant->price,
+                'final_price'     => (float) $variant->final_price,
+                'stock_quantity'  => $variant->stock_quantity,
+                'is_in_stock'     => $variant->is_in_stock,
+                'is_low_stock'    => $variant->is_low_stock,
+                'thumbnail_url'   => $variant->thumbnail ? asset('storage/' . $variant->thumbnail) : null,
+                'is_default'      => $variant->is_default,
+            ]];
+        });
+
+        return [
+            'option_groups' => $optionGroups,
+            'combinations'  => $combinations,
+            'default_key'   => optional($variants->firstWhere('is_default', true))
+                ?->optionValues->pluck('id')->sort()->implode('-') ?? '',
+        ];
     }
 }

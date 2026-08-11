@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Review;
 use Illuminate\Http\Request;
-use App\Services\ReviewService;
+use App\Services\Admin\ReviewService;
 use App\Http\Controllers\Controller;
 
 class ReviewController extends Controller

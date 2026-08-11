@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Admin;
 use Illuminate\Http\Request;
-use App\Services\AdminService;
+use App\Services\Admin\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\StoreAdminRequest;
 use App\Http\Requests\Admin\User\UpdateAdminRequest;

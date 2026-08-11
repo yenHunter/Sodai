@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Attribute;
-use App\Services\AttributeService;
+use App\Services\Admin\AttributeService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Attribute\UpdateAttributeRequest;
 
