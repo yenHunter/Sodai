@@ -222,7 +222,6 @@ class OrderService
     {
         $items = [];
 
-        // Merge duplicate product_id entries (same product added twice).
         $merged = [];
         foreach ($submittedItems as $row) {
             $pid = (int) $row['product_id'];
@@ -236,21 +235,31 @@ class OrderService
                 throw new \Exception("Product #{$productId} no longer exists.");
             }
 
-            if ($product->stock_quantity < $quantity) {
-                throw new \Exception("Insufficient stock for \"{$product->name}\" (available: {$product->stock_quantity}, requested: {$quantity}).");
+            $variant = $product->variants()->where('is_default', true)->lockForUpdate()->first()
+                ?? $product->variants()->lockForUpdate()->first();
+
+            if (!$variant) {
+                throw new \Exception("\"{$product->name}\" has no purchasable variant.");
             }
 
-            $unitPrice = $product->final_price;
+            if ($variant->stock_quantity < $quantity) {
+                throw new \Exception("Insufficient stock for \"{$product->name}\" (available: {$variant->stock_quantity}, requested: {$quantity}).");
+            }
+
+            $unitPrice = $variant->final_price;
 
             $items[] = [
-                'product'       => $product,
-                'product_id'    => $product->id,
-                'product_name'  => $product->name,
-                'product_sku'   => $product->sku,
-                'product_image' => $product->thumbnail,
-                'unit_price'    => $unitPrice,
-                'quantity'      => $quantity,
-                'total_price'   => round($unitPrice * $quantity, 2),
+                'product'             => $product,
+                'variant'             => $variant,
+                'product_id'          => $product->id,
+                'product_variant_id'  => $variant->id,
+                'product_name'        => $product->name,
+                'product_sku'         => $variant->sku,
+                'product_image'       => $variant->thumbnail ?? $product->thumbnail,
+                'variant_options'     => $variant->options_label,
+                'unit_price'          => $unitPrice,
+                'quantity'            => $quantity,
+                'total_price'         => round($unitPrice * $quantity, 2),
             ];
         }
 
@@ -261,21 +270,27 @@ class OrderService
     {
         foreach ($items as $item) {
             OrderItem::create([
-                'order_id'      => $order->id,
-                'product_id'    => $item['product_id'],
-                'product_name'  => $item['product_name'],
-                'product_sku'   => $item['product_sku'],
-                'product_image' => $item['product_image'],
-                'unit_price'    => $item['unit_price'],
-                'quantity'      => $item['quantity'],
-                'total_price'   => $item['total_price'],
+                'order_id'           => $order->id,
+                'product_id'         => $item['product_id'],
+                'product_variant_id' => $item['product_variant_id'],
+                'product_name'       => $item['product_name'],
+                'product_sku'        => $item['product_sku'],
+                'product_image'      => $item['product_image'],
+                'variant_options'    => $item['variant_options'],
+                'unit_price'         => $item['unit_price'],
+                'quantity'           => $item['quantity'],
+                'total_price'        => $item['total_price'],
             ]);
 
             if ($decrement) {
+                /** @var \App\Models\ProductVariant $variant */
+                $variant = $item['variant'];
+                $variant->decrementStock($item['quantity']);
+
                 /** @var Product $product */
                 $product = $item['product'];
-                $product->decrementStock($item['quantity']);
                 $product->increment('total_sales', $item['quantity']);
+                $product->refreshPriceAndStockCache();
             }
         }
     }
@@ -283,11 +298,15 @@ class OrderService
     private function restoreStockForItems($items): void
     {
         foreach ($items as $item) {
-            $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
-            if ($product) {
-                $product->incrementStock($item->quantity);
-                $product->decrement('total_sales', min($item->quantity, $product->total_sales));
+            $variant = \App\Models\ProductVariant::where('id', $item->product_variant_id)->lockForUpdate()->first();
+
+            if ($variant) {
+                $variant->incrementStock($item->quantity);
+                $variant->product?->refreshPriceAndStockCache();
             }
+
+            $product = Product::where('id', $item->product_id)->first();
+            $product?->decrement('total_sales', min($item->quantity, $product->total_sales));
         }
     }
 

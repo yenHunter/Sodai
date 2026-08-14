@@ -28,7 +28,9 @@ class OrderModuleTest extends TestCase
     {
         $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create(['price' => 20, 'stock_quantity' => 10]);
+        $product  = Product::factory()->create();
+        $product->defaultVariant->update(['price' => 20, 'stock_quantity' => 10]);
+        $product->refreshPriceAndStockCache();
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.order.store'), [
@@ -47,7 +49,10 @@ class OrderModuleTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_quantity' => 7]);
+        $this->assertDatabaseHas('product_variants', [
+            'id'             => $product->defaultVariant->id,
+            'stock_quantity' => 7,
+        ]);
         $this->assertDatabaseCount('orders', 1);
         $this->assertDatabaseCount('order_items', 1);
     }
@@ -56,7 +61,9 @@ class OrderModuleTest extends TestCase
     {
         $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create(['stock_quantity' => 2]);
+        $product  = Product::factory()->create();
+        $product->defaultVariant->update(['stock_quantity' => 2]);
+        $product->refreshPriceAndStockCache();
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.order.store'), [
@@ -76,19 +83,25 @@ class OrderModuleTest extends TestCase
             ->assertRedirect(route('admin.ecommerce.order.create'));
 
         $this->assertDatabaseCount('orders', 0);
-        $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_quantity' => 2]);
+        $this->assertDatabaseHas('product_variants', ['id' => $product->defaultVariant->id, 'stock_quantity' => 2]);
     }
 
     public function test_creating_order_logs_initial_status_history(): void
     {
         $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create(['stock_quantity' => 10]);
+        $product  = Product::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.order.store'), [
-            'user_id' => $customer->id, 'shipping_name' => 'A', 'shipping_email' => 'a@a.com',
-            'shipping_phone' => '01700000000', 'shipping_address' => 'x', 'shipping_city' => 'x',
-            'shipping_state' => 'x', 'shipping_zip' => '1200', 'shipping_country' => 'BD',
+            'user_id' => $customer->id,
+            'shipping_name' => 'A',
+            'shipping_email' => 'a@a.com',
+            'shipping_phone' => '01700000000',
+            'shipping_address' => 'x',
+            'shipping_city' => 'x',
+            'shipping_state' => 'x',
+            'shipping_zip' => '1200',
+            'shipping_country' => 'BD',
             'items' => [['product_id' => $product->id, 'quantity' => 1]],
         ]);
 
@@ -124,19 +137,27 @@ class OrderModuleTest extends TestCase
     public function test_cancelling_order_restores_stock(): void
     {
         $admin   = $this->createAdminWithPermissions(['order.view', 'order.cancel']);
-        $product = Product::factory()->create(['stock_quantity' => 5]);
-        $order   = Order::factory()->withStatus('pending')->create();
+        $product = Product::factory()->create();
+        $variant = $product->defaultVariant;
+        $variant->update(['stock_quantity' => 5]);
+        $product->refreshPriceAndStockCache();
+
+        $order = Order::factory()->withStatus('pending')->create();
         \App\Models\OrderItem::factory()->create([
-            'order_id' => $order->id, 'product_id' => $product->id, 'quantity' => 3,
+            'order_id'           => $order->id,
+            'product_id'         => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity'           => 3,
         ]);
-        $product->decrement('stock_quantity', 3); // simulate the original decrement
+        $variant->decrement('stock_quantity', 3); // simulate the original decrement
+        $product->refreshPriceAndStockCache();
 
         $this->actingAsAdmin($admin)
             ->patch(route('admin.ecommerce.order.cancel', $order), ['cancel_reason' => 'Customer request'])
             ->assertRedirect();
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
-        $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_quantity' => 5]);
+        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'stock_quantity' => 5]);
     }
 
     public function test_delivered_order_cannot_be_edited(): void
@@ -164,8 +185,12 @@ class OrderModuleTest extends TestCase
     public function test_product_search_endpoint_excludes_out_of_stock(): void
     {
         $admin = $this->createAdminWithPermissions(['order.view']);
-        Product::factory()->create(['name' => 'Available Item', 'stock_quantity' => 5]);
-        Product::factory()->create(['name' => 'Sold Out Item', 'stock_quantity' => 0]);
+
+        $available = Product::factory()->create(['name' => 'Available Item']);
+        $available->defaultVariant->update(['stock_quantity' => 5]);
+        $available->refreshPriceAndStockCache();
+
+        $soldOut = Product::factory()->outOfStock()->create(['name' => 'Sold Out Item']);
 
         $response = $this->actingAsAdmin($admin)
             ->getJson(route('admin.ecommerce.order.products.search', ['q' => 'Item']));

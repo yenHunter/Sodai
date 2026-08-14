@@ -188,8 +188,8 @@ class OrderController extends Controller
         $customers = User::select('id', 'name', 'email', 'phone')
             ->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             })
             ->where('status', 'active')
             ->limit(20)
@@ -243,20 +243,21 @@ class OrderController extends Controller
 
         $products = Product::active()
             ->inStock()
-            ->select('id', 'name', 'sku', 'thumbnail', 'price', 'discount_type', 'discount_value', 'stock_quantity')
+            ->with('defaultVariant')
+            ->select('id', 'name', 'thumbnail', 'min_price', 'max_price', 'total_stock')
             ->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', "%{$search}%"));
             })
             ->limit(20)
             ->get()
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id'             => $p->id,
                 'name'           => $p->name,
-                'sku'            => $p->sku,
+                'sku'            => $p->defaultVariant?->sku,
                 'thumbnail_url'  => $p->thumbnail_url,
                 'price'          => (float) $p->final_price,
-                'stock_quantity' => $p->stock_quantity,
+                'stock_quantity' => $p->total_stock,
             ]);
 
         return response()->json($products);

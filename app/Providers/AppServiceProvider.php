@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\View;
+use App\View\Composers\CartComposer;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -47,5 +49,7 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('endadminrole', function () {
             return "<?php endif; ?>";
         });
+
+        View::composer(['visitor.include.header', 'visitor.pages.cart'], CartComposer::class);
     }
 }

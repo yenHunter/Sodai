@@ -17,13 +17,15 @@ class OrderItemFactory extends Factory
         $quantity  = $this->faker->numberBetween(1, 3);
 
         return [
-            'order_id'      => Order::factory(),
-            'product_id'    => Product::factory(),
-            'product_name'  => $this->faker->words(2, true),
-            'product_sku'   => strtoupper($this->faker->bothify('SKU-####')),
-            'unit_price'    => $unitPrice,
-            'quantity'      => $quantity,
-            'total_price'   => round($unitPrice * $quantity, 2),
+            'order_id'           => Order::factory(),
+            'product_id'         => Product::factory(),
+            'product_variant_id' => null,
+            'product_name'       => $this->faker->words(2, true),
+            'product_sku'        => strtoupper($this->faker->bothify('SKU-####')),
+            'variant_options'    => null,
+            'unit_price'         => $unitPrice,
+            'quantity'           => $quantity,
+            'total_price'        => round($unitPrice * $quantity, 2),
         ];
     }
 }

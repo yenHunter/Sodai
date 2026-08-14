@@ -53,13 +53,19 @@ class ProductModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.product.store'), [
-                'category_id'         => $category->id,
-                'name'                => 'Test Product',
-                'price'               => 99.99,
-                'stock_quantity'      => 10,
-                'low_stock_threshold' => 5,
-                'is_active'           => 'active',
-                'thumbnail'           => UploadedFile::fake()->image('thumb.png'),
+                'category_id' => $category->id,
+                'name'        => 'Test Product',
+                'is_active'   => 'active',
+                'thumbnail'   => UploadedFile::fake()->image('thumb.png'),
+                'variants'    => [
+                    [
+                        'price'               => 99.99,
+                        'stock_quantity'      => 10,
+                        'low_stock_threshold' => 5,
+                        'is_active'           => 'active',
+                        'is_default'          => 'true',
+                    ],
+                ],
             ])
             ->assertRedirect();
 
@@ -88,16 +94,16 @@ class ProductModuleTest extends TestCase
         $category = Category::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.product.store'), [
-            'category_id'         => $category->id,
-            'name'                => 'SKU Test Product',
-            'price'               => 10,
-            'stock_quantity'      => 5,
-            'low_stock_threshold' => 1,
-            'is_active'           => 'active',
+            'category_id' => $category->id,
+            'name'        => 'SKU Test Product',
+            'is_active'   => 'active',
+            'variants'    => [
+                ['price' => 10, 'stock_quantity' => 5, 'low_stock_threshold' => 1, 'is_active' => 'active'],
+            ],
         ]);
 
         $product = Product::where('name', 'SKU Test Product')->first();
-        $this->assertNotEmpty($product->sku);
+        $this->assertNotEmpty($product->defaultVariant->sku);
     }
 
     public function test_admin_can_view_product_details_page(): void
@@ -117,15 +123,23 @@ class ProductModuleTest extends TestCase
         $admin    = $this->createAdminWithPermissions(['product.view', 'product.edit']);
         $category = Category::factory()->create();
         $product  = Product::factory()->create(['category_id' => $category->id, 'name' => 'Old Name']);
+        $variant  = $product->defaultVariant;
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.product.update', $product), [
-                'category_id'         => $category->id,
-                'name'                => 'Updated Name',
-                'price'               => 150,
-                'stock_quantity'      => 20,
-                'low_stock_threshold' => 5,
-                'is_active'           => 'active',
+                'category_id' => $category->id,
+                'name'        => 'Updated Name',
+                'is_active'   => 'active',
+                'variants'    => [
+                    [
+                        'id'                  => $variant->id,
+                        'price'               => 150,
+                        'stock_quantity'      => 20,
+                        'low_stock_threshold' => 5,
+                        'is_active'           => 'active',
+                        'is_default'          => 'true',
+                    ],
+                ],
             ])
             ->assertRedirect();
 
@@ -135,16 +149,18 @@ class ProductModuleTest extends TestCase
     public function test_admin_can_quick_update_stock(): void
     {
         $admin   = $this->createAdminWithPermissions(['product.view', 'product.edit']);
-        $product = Product::factory()->create(['stock_quantity' => 10]);
+        $product = Product::factory()->create();
+        $variant = $product->defaultVariant;
+        $variant->update(['stock_quantity' => 10]);
 
         $this->actingAsAdmin($admin)
-            ->patchJson(route('admin.ecommerce.product.stock.update', $product), [
+            ->patchJson(route('admin.ecommerce.product.stock.update', [$product, $variant]), [
                 'stock_quantity' => 25,
             ])
             ->assertOk()
             ->assertJson(['success' => true]);
 
-        $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_quantity' => 25]);
+        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'stock_quantity' => 25]);
     }
 
     public function test_product_with_orders_cannot_be_deleted(): void
@@ -165,9 +181,9 @@ class ProductModuleTest extends TestCase
 
     public function test_out_of_stock_scope_excludes_products_with_stock(): void
     {
-        Product::factory()->create(['stock_quantity' => 0]);
-        Product::factory()->create(['stock_quantity' => 10]);
+        Product::factory()->outOfStock()->create();
+        Product::factory()->create(); // default variant has stock
 
-        $this->assertEquals(1, Product::where('stock_quantity', '<=', 0)->count());
+        $this->assertEquals(1, Product::where('total_stock', '<=', 0)->count());
     }
 }

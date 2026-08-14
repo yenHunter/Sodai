@@ -66,7 +66,7 @@
                             <!-- Header Cart Start -->
                             <a href="#ec-side-cart" class="ec-header-btn ec-side-toggle">
                                 <div class="header-icon"><i class="fi-rr-shopping-bag"></i></div>
-                                <span class="ec-header-count cart-count-lable">3</span>
+                                <span class="ec-header-count cart-count-lable">{{ $miniCartCount ?? 0 }}</span>
                             </a>
                             <!-- Header Cart End -->
                         </div>
@@ -639,45 +639,42 @@
                 <button class="ec-close">×</button>
             </div>
             <ul class="eccart-pro-items">
-                <li>
-                    <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="{{ asset('visitor/images/product-image/35_1.jpg') }}" alt="product"></a>
-                    <div class="ec-pro-content">
-                        <a href="single-product-left-sidebar.html" class="cart_pro_title">Hooded Neck full slive
-                            T-Shirt</a>
-                        <span class="cart-price"><span>$84.00</span> x 1</span>
-                        <div class="qty-plus-minus">
-                            <input class="qty-input" type="text" name="ec_qtybtn" value="1" />
+                @forelse (($miniCart->items ?? collect()) as $item)
+                    <li>
+                        <a href="{{ route('visitor.products.show', $item->variant->product->slug) }}"
+                            class="sidecart_pro_img">
+                            <img src="{{ $item->variant->thumbnail
+                                ? asset('storage/' . $item->variant->thumbnail)
+                                : $item->variant->product->thumbnail_url ?? asset('visitor/images/product-image/1.jpg') }}"
+                                alt="product">
+                        </a>
+                        <div class="ec-pro-content">
+                            <a href="{{ route('visitor.products.show', $item->variant->product->slug) }}"
+                                class="cart_pro_title">
+                                {{ $item->variant->product->name }}
+                            </a>
+                            @if ($item->variant->options_label)
+                                <span class="d-block small text-muted">{{ $item->variant->options_label }}</span>
+                            @endif
+                            <span class="cart-price"><span>${{ number_format($item->unit_price, 2) }}</span> x
+                                {{ $item->quantity }}</span>
+                            <form action="{{ route('visitor.cart.update', $item->id) }}" method="POST">
+                                @csrf @method('PATCH')
+                                <div class="qty-plus-minus">
+                                    <input class="qty-input" type="number" name="quantity" min="1"
+                                        value="{{ $item->quantity }}" onchange="this.form.submit()" />
+                                </div>
+                            </form>
+                            <form action="{{ route('visitor.cart.destroy', $item->id) }}" method="POST"
+                                class="d-inline">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="remove border-0 bg-transparent p-0">×</button>
+                            </form>
                         </div>
-                        <a href="#" class="remove">×</a>
-                    </div>
-                </li>
-                <li>
-                    <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="{{ asset('visitor/images/product-image/36_1.jpg') }}" alt="product"></a>
-                    <div class="ec-pro-content">
-                        <a href="product-left-sidebar.html" class="cart_pro_title">Perfume royal msz</a>
-                        <span class="cart-price"><span>$125.00</span> x 1</span>
-                        <div class="qty-plus-minus">
-                            <input class="qty-input" type="text" name="ec_qtybtn" value="1" />
-                        </div>
-                        <a href="#" class="remove">×</a>
-                    </div>
-                </li>
-                <li>
-                    <a href="product-left-sidebar.html" class="sidecart_pro_img"><img
-                            src="{{ asset('visitor/images/product-image/37_1.jpg') }}" alt="product"></a>
-                    <div class="ec-pro-content">
-                        <a href="product-left-sidebar.html" class="cart_pro_title">Lime Crime Velvetines Liquid
-                            Matte
-                            Lipstick</a>
-                        <span class="cart-price"><span>$48.00</span> x 1</span>
-                        <div class="qty-plus-minus">
-                            <input class="qty-input" type="text" name="ec_qtybtn" value="1" />
-                        </div>
-                        <a href="#" class="remove">×</a>
-                    </div>
-                </li>
+                    </li>
+                @empty
+                    <li class="text-center py-4">Your cart is empty.</li>
+                @endforelse
             </ul>
         </div>
         <div class="ec-cart-bottom">
@@ -686,22 +683,18 @@
                     <tbody>
                         <tr>
                             <td class="text-left">Sub-Total :</td>
-                            <td class="text-right">$300.00</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left">VAT (20%) :</td>
-                            <td class="text-right">$60.00</td>
+                            <td class="text-right">${{ number_format($miniCartTotal ?? 0, 2) }}</td>
                         </tr>
                         <tr>
                             <td class="text-left">Total :</td>
-                            <td class="text-right primary-color">$360.00</td>
+                            <td class="text-right primary-color">${{ number_format($miniCartTotal ?? 0, 2) }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div class="cart_btn">
-                <a href="cart.html" class="btn btn-primary">View Cart</a>
-                <a href="checkout.html" class="btn btn-secondary">Checkout</a>
+                <a href="{{ route('visitor.cart.index') }}" class="btn btn-primary">View Cart</a>
+                <a href="{{ route('visitor.cart.index') }}" class="btn btn-secondary">Checkout</a>
             </div>
         </div>
     </div>

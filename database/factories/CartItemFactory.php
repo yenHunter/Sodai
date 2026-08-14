@@ -3,24 +3,20 @@
 namespace Database\Factories;
 
 use App\Models\CartItem;
+use App\Models\Cart;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<CartItem>
- */
 class CartItemFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = CartItem::class;
+
     public function definition(): array
     {
         return [
-            'cart_id'    => \App\Models\Cart::factory(),
-            'product_id' => \App\Models\Product::factory(),
-            'quantity'   => $this->faker->numberBetween(1, 5),
+            'cart_id'            => Cart::factory(),
+            'product_variant_id' => ProductVariant::factory(),
+            'quantity'           => $this->faker->numberBetween(1, 5),
         ];
     }
 }
