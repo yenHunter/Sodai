@@ -68,14 +68,10 @@ class ProductController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        $product      = $this->catalogService->getProductForDetail($product);
+        $product       = $this->catalogService->getProductForDetail($product);
         $variantMatrix = $this->catalogService->buildVariantMatrix($product);
-        $activeAttrs  = $this->catalogService->getActiveAttributeKeys();
+        $activeAttrs   = $this->catalogService->getActiveAttributeKeys();
 
-        return view('visitor.pages.product-details', [
-            'product'       => $product,
-            'variantMatrix' => $variantMatrix,
-            'activeAttrs'   => $activeAttrs,
-        ]);
+        return view('visitor.pages.product-details', compact('product', 'variantMatrix', 'activeAttrs'));
     }
 }

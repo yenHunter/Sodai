@@ -19,6 +19,15 @@ class CartService
         return Cart::firstOrCreate(['session_id' => $sessionId]);
     }
 
+    public function getExistingCart(?User $customer, ?string $sessionId): ?Cart
+    {
+        if ($customer) {
+            return Cart::where('user_id', $customer->id)->first();
+        }
+
+        return Cart::where('session_id', $sessionId)->first();
+    }
+
     public function getCartWithItems(Cart $cart): Cart
     {
         return $cart->load(['items.variant.product', 'items.variant.optionValues.option']);
