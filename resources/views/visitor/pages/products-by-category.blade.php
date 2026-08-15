@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - ' . $category->name, 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => $category->name, 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -35,18 +35,19 @@
                     <h2>Shop <span>Detail</span></h2>
                 </div>
                 <div class="row">
-                    <div class="col-lg-6 col-md-12">
-                        <div class="ec-cat-bnr">
-                            <img style="background-size: cover; background-position: left center; background-repeat: no-repeat;"
-                                    height="250px" width="100%" src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}">
+                    @if ($category->image)
+                        <div class="col-lg-6 col-md-12">
+                            <div class="ec-cat-bnr">
+                                <img style="background-size: cover; background-position: left center; background-repeat: no-repeat;"
+                                    height="250px" width="100%" src="{{ Storage::url($category->image) }}"
+                                    alt="{{ $category->name }}">
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-lg-6 col-md-12">
+                    @endif
+                    <div class="col-lg-{{ $category->image ? '6' : '12' }} col-md-12">
                         <div class="ec-page-description">
                             <h6>{{ $category->name }}</h6>
-                            <p class="m-0">
-                                {{ $category->description }}
-                            <p>
+                            <p class="m-0">{{ $category->description }}</p>
                         </div>
                     </div>
                 </div>
@@ -95,26 +96,52 @@
                                             <div class="ec-product-inner">
                                                 <div class="ec-pro-image-outer">
                                                     <div class="ec-pro-image">
-                                                        <a href="#" class="image">
+                                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
                                                             <img class="main-image" src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}" alt="{{ $product->name }}" />
                                                         </a>
                                                         @if ($product->has_discount)
                                                             <span class="percentage">{{ round($product->discount_percentage) }}%</span>
                                                         @endif
+                                                        @if ($product->is_out_of_stock)
+                                                            <span class="flags">
+                                                                <span class="sale">Sold Out</span>
+                                                            </span>
+                                                        @endif
+                                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="quickview" title="View Product">
+                                                            <i class="fi-rr-eye"></i>
+                                                        </a>
                                                         <div class="ec-pro-actions">
-                                                            <button title="Add To Cart" class="add-to-cart" type="button"><i class="fi-rr-shopping-basket"></i> Add To Cart</button>
-                                                            <a class="ec-btn-group wishlist" title="Wishlist"><i class="fi-rr-heart"></i></a>
+                                                            <a href="{{ route('visitor.products.show', $product->slug) }}" class="ec-btn-group compare" title="Choose Options">
+                                                                <i class="fi-rr-shopping-basket"></i>
+                                                            </a>
+                                                            @auth('customer')
+                                                                <a href="#" class="ec-btn-group wishlist toggle-wishlist"
+                                                                    data-product-id="{{ $product->id }}" title="Wishlist">
+                                                                    <i class="fi-rr-heart"></i>
+                                                                </a>
+                                                            @else
+                                                                <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist" title="Login to add to wishlist">
+                                                                    <i class="fi-rr-heart"></i>
+                                                                </a>
+                                                            @endauth
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="ec-pro-content">
-                                                    <h5 class="ec-pro-title"><a href="#">{{ $product->name }}</a></h5>
+                                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                                    <div class="ec-pro-rating">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                                        @endfor
+                                                    </div>
                                                     <span class="ec-price">
-                                                        @if ($product->has_discount)
-                                                            <span class="old-price">${{ number_format($product->price, 2) }}</span>
+                                                        @if ($product->has_variants)
+                                                            <span class="new-price">{{ $product->price_range_label }}</span>
+                                                        @elseif ($product->has_discount)
+                                                            <span class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
                                                             <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
                                                         @else
-                                                            <span class="new-price">${{ number_format($product->price, 2) }}</span>
+                                                            <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
                                                         @endif
                                                     </span>
                                                 </div>
@@ -219,5 +246,5 @@
 @endsection
 
 @section('scripts')
-    {{-- @vite(['resources/js/pages/visitor-products.js']) --}}
+    @vite(['resources/js/pages/visitor-products.js'])
 @endsection

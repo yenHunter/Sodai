@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - Products', 'bodyClass' => 'shop_page'])
+@extends('visitor.layout.app', ['title' => 'Products', 'bodyClass' => 'shop_page'])
 
 @section('styles')
 @endsection
@@ -81,7 +81,7 @@
                                             <div class="ec-product-inner">
                                                 <div class="ec-pro-image-outer">
                                                     <div class="ec-pro-image">
-                                                        <a href="#" class="image">
+                                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
                                                             <img class="main-image"
                                                                 src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}"
                                                                 alt="{{ $product->name }}" />
@@ -90,81 +90,56 @@
                                                             <span
                                                                 class="percentage">{{ round($product->discount_percentage, 2) }}%</span>
                                                         @endif
-                                                        <span class="flags">
-                                                            <span class="sale">Sale</span>
-                                                        </span>
+                                                        @if ($product->is_out_of_stock)
+                                                            <span class="flags">
+                                                                <span class="sale">Sold Out</span>
+                                                            </span>
+                                                        @endif
+                                                        <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                            class="quickview" title="View Product">
+                                                            <i class="fi-rr-eye"></i>
+                                                        </a>
                                                         <div class="ec-pro-actions">
-                                                            <a href="#" class="ec-btn-group compare"
-                                                                title="Quick view" data-bs-toggle="modal"
-                                                                data-link-action="quickview"
-                                                                data-bs-target="#ec_quickview_modal">
-                                                                <i class="fi-rr-eye"></i>
+                                                            <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                                class="ec-btn-group compare" title="View Details">
+                                                                <i class="fi-rr-shopping-basket"></i>
                                                             </a>
-                                                            <button title="Add To Cart" class="add-to-cart" type="button">
-                                                                <i class="fi-rr-shopping-basket"></i> Add To Cart
-                                                            </button>
-                                                            <a class="ec-btn-group wishlist" title="Wishlist"><i
-                                                                    class="fi-rr-heart"></i></a>
+                                                            @auth('customer')
+                                                                <a href="#" class="ec-btn-group wishlist toggle-wishlist"
+                                                                    data-product-id="{{ $product->id }}" title="Wishlist">
+                                                                    <i class="fi-rr-heart"></i>
+                                                                </a>
+                                                            @else
+                                                                <a href="{{ route('visitor.login') }}"
+                                                                    class="ec-btn-group wishlist" title="Login to add to wishlist">
+                                                                    <i class="fi-rr-heart"></i>
+                                                                </a>
+                                                            @endauth
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="ec-pro-content">
                                                     <h5 class="ec-pro-title">
-                                                        <a href="#">{{ $product->name }}</a>
+                                                        <a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
                                                     </h5>
                                                     <div class="ec-pro-rating">
-                                                        <i class="ecicon eci-star fill"></i>
-                                                        <i class="ecicon eci-star fill"></i>
-                                                        <i class="ecicon eci-star fill"></i>
-                                                        <i class="ecicon eci-star fill"></i>
-                                                        <i class="ecicon eci-star"></i>
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                                        @endfor
                                                     </div>
                                                     <div class="ec-pro-list-desc">
                                                         <p>{{ $product->short_description }}</p>
                                                     </div>
                                                     <span class="ec-price">
-                                                        @if ($product->has_discount)
-                                                            <span
-                                                                class="old-price">${{ number_format($product->price, 2) }}</span>
-                                                            <span
-                                                                class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                                        @if ($product->has_variants)
+                                                            <span class="new-price">{{ $product->price_range_label }}</span>
+                                                        @elseif ($product->has_discount)
+                                                            <span class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                                            <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
                                                         @else
-                                                            <span
-                                                                class="new-price">${{ number_format($product->price, 2) }}</span>
+                                                            <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
                                                         @endif
                                                     </span>
-                                                    <div class="ec-pro-option">
-                                                        <div class="ec-pro-color">
-                                                            <span class="ec-pro-opt-label">Color</span>
-                                                            <ul class="ec-opt-swatch ec-change-img">
-                                                                <li class="active"><a href="#" class="ec-opt-clr-img"
-                                                                        data-src="assets/images/product-image/6_1.jpg"
-                                                                        data-src-hover="assets/images/product-image/6_1.jpg"
-                                                                        data-tooltip="Gray"><span
-                                                                            style="background-color:#e8c2ff;"></span></a>
-                                                                </li>
-                                                                <li><a href="#" class="ec-opt-clr-img"
-                                                                        data-src="assets/images/product-image/6_2.jpg"
-                                                                        data-src-hover="assets/images/product-image/6_2.jpg"
-                                                                        data-tooltip="Orange"><span
-                                                                            style="background-color:#9cfdd5;"></span></a>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                        <div class="ec-pro-size">
-                                                            <span class="ec-pro-opt-label">Size</span>
-                                                            <ul class="ec-opt-size">
-                                                                <li class="active"><a href="#" class="ec-opt-sz"
-                                                                        data-old="$25.00" data-new="$20.00"
-                                                                        data-tooltip="Small">S</a></li>
-                                                                <li><a href="#" class="ec-opt-sz" data-old="$27.00"
-                                                                        data-new="$22.00" data-tooltip="Medium">M</a></li>
-                                                                <li><a href="#" class="ec-opt-sz" data-old="$35.00"
-                                                                        data-new="$30.00"
-                                                                        data-tooltip="Extra Large">XL</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -326,130 +301,8 @@
             </div>
         </section>
     </form>
-
-    <!-- Modal -->
-    <div class="modal fade" id="ec_quickview_modal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <button type="button" class="btn-close qty_close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-5 col-sm-12 col-xs-12">
-                            <!-- Swiper -->
-                            <div class="qty-product-cover">
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_1.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_2.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_3.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_4.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_5.jpg') }}"
-                                        alt="">
-                                </div>
-                            </div>
-                            <div class="qty-nav-thumb">
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_1.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_2.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_3.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_4.jpg') }}"
-                                        alt="">
-                                </div>
-                                <div class="qty-slide">
-                                    <img class="img-responsive" src="{{ asset('visitor/images/product-image/3_5.jpg') }}"
-                                        alt="">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-7 col-sm-12 col-xs-12">
-                            <div class="quickview-pro-content">
-                                <h5 class="ec-quick-title"><a href="product-left-sidebar.html">Handbag leather purse
-                                        for
-                                        women</a>
-                                </h5>
-                                <div class="ec-quickview-rating">
-                                    <i class="ecicon eci-star fill"></i>
-                                    <i class="ecicon eci-star fill"></i>
-                                    <i class="ecicon eci-star fill"></i>
-                                    <i class="ecicon eci-star fill"></i>
-                                    <i class="ecicon eci-star"></i>
-                                </div>
-
-                                <div class="ec-quickview-desc">Lorem Ipsum is simply dummy text of the printing and
-                                    typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever
-                                    since the 1500s,</div>
-                                <div class="ec-quickview-price">
-                                    <span class="old-price">$100.00</span>
-                                    <span class="new-price">$80.00</span>
-                                </div>
-
-                                <div class="ec-pro-variation">
-                                    <div class="ec-pro-variation-inner ec-pro-variation-color">
-                                        <span>Color</span>
-                                        <div class="ec-pro-color">
-                                            <ul class="ec-opt-swatch">
-                                                <li><span style="background-color:#ebbf60;"></span></li>
-                                                <li><span style="background-color:#75e3ff;"></span></li>
-                                                <li><span style="background-color:#11f7d8;"></span></li>
-                                                <li><span style="background-color:#acff7c;"></span></li>
-                                                <li><span style="background-color:#e996fa;"></span></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="ec-pro-variation-inner ec-pro-variation-size ec-pro-size">
-                                        <span>Size</span>
-                                        <div class="ec-pro-variation-content">
-                                            <ul class="ec-opt-size">
-                                                <li class="active"><a href="#" class="ec-opt-sz"
-                                                        data-tooltip="Small">S</a></li>
-                                                <li><a href="#" class="ec-opt-sz" data-tooltip="Medium">M</a>
-                                                </li>
-                                                <li><a href="#" class="ec-opt-sz" data-tooltip="Large">X</a></li>
-                                                <li><a href="#" class="ec-opt-sz" data-tooltip="Extra Large">XL</a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ec-quickview-qty">
-                                    <div class="qty-plus-minus">
-                                        <input class="qty-input" type="text" name="ec_qtybtn" value="1" />
-                                    </div>
-                                    <div class="ec-quickview-cart ">
-                                        <button class="btn btn-primary"><i class="fi-rr-shopping-basket"></i> Add To
-                                            Cart</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal end -->
 @endsection
 
 @section('scripts')
-    {{-- @vite(['resources/js/pages/visitor-products.js']) --}}
+    @vite(['resources/js/pages/visitor-products.js'])
 @endsection

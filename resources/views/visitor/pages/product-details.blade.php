@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - ' . $product->name, 'bodyClass' => 'product_page'])
+@extends('visitor.layout.app', ['title' => $product->name, 'bodyClass' => 'product_page'])
 
 @section('content')
     <div class="sticky-header-next-sec ec-breadcrumb section-space-mb">
@@ -34,22 +34,30 @@
                                         <div class="single-product-cover">
                                             @forelse ($product->images as $image)
                                                 <div class="single-slide zoom-image-hover">
-                                                    <img class="img-responsive" src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}">
+                                                    <img class="img-responsive"
+                                                        src="{{ asset('storage/' . $image->image_path) }}"
+                                                        alt="{{ $product->name }}">
                                                 </div>
                                             @empty
                                                 <div class="single-slide zoom-image-hover">
-                                                    <img class="img-responsive" src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}" alt="{{ $product->name }}">
+                                                    <img class="img-responsive"
+                                                        src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}"
+                                                        alt="{{ $product->name }}">
                                                 </div>
                                             @endforelse
                                         </div>
                                         <div class="single-nav-thumb">
                                             @forelse ($product->images as $image)
                                                 <div class="single-slide">
-                                                    <img class="img-responsive" src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}">
+                                                    <img class="img-responsive"
+                                                        src="{{ asset('storage/' . $image->image_path) }}"
+                                                        alt="{{ $product->name }}">
                                                 </div>
                                             @empty
                                                 <div class="single-slide">
-                                                    <img class="img-responsive" src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}" alt="{{ $product->name }}">
+                                                    <img class="img-responsive"
+                                                        src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}"
+                                                        alt="{{ $product->name }}">
                                                 </div>
                                             @endforelse
                                         </div>
@@ -63,7 +71,8 @@
                                         <div class="ec-single-rating-wrap">
                                             <div class="ec-single-rating">
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '-o' }}"></i>
+                                                    <i
+                                                        class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '-o' }}"></i>
                                                 @endfor
                                             </div>
                                             <span class="ec-read-review">
@@ -78,16 +87,20 @@
                                         <div class="ec-single-price-stoke">
                                             <div class="ec-single-price">
                                                 <span class="ec-single-ps-title">Price</span>
-                                                <span class="new-price" id="variant-price">${{ number_format($product->final_price, 2) }}</span>
+                                                <span class="new-price"
+                                                    id="variant-price">${{ number_format($product->final_price, 2) }}</span>
                                             </div>
                                             <div class="ec-single-stoke">
-                                                <span class="ec-single-ps-title" id="variant-stock-status">{{ $product->stock_status }}</span>
-                                                <span class="ec-single-sku" id="variant-sku">SKU#: {{ $product->defaultVariant->sku ?? '—' }}</span>
+                                                <span class="ec-single-ps-title"
+                                                    id="variant-stock-status">{{ $product->stock_status }}</span>
+                                                <span class="ec-single-sku" id="variant-sku">SKU#:
+                                                    {{ $product->defaultVariant->sku ?? '—' }}</span>
                                             </div>
                                         </div>
 
                                         @if (!empty($variantMatrix['option_groups']) && count($variantMatrix['option_groups']))
-                                            <div class="ec-pro-variation" id="variant-options" data-default-key="{{ $variantMatrix['default_key'] }}">
+                                            <div class="ec-pro-variation" id="variant-options"
+                                                data-default-key="{{ $variantMatrix['default_key'] }}">
                                                 @foreach ($variantMatrix['option_groups'] as $group)
                                                     <div class="ec-pro-variation-inner ec-pro-variation-{{ \Illuminate\Support\Str::slug($group['name']) }}"
                                                         data-option-name="{{ $group['name'] }}">
@@ -95,9 +108,12 @@
                                                         <div class="ec-pro-variation-content">
                                                             <ul>
                                                                 @foreach ($group['values'] as $value)
-                                                                    <li class="variant-value-option" data-value-id="{{ $value['id'] }}" title="{{ $value['value'] }}">
+                                                                    <li class="variant-value-option"
+                                                                        data-value-id="{{ $value['id'] }}"
+                                                                        title="{{ $value['value'] }}">
                                                                         @if ($value['swatch'])
-                                                                            <span style="background-color:{{ $value['swatch'] }};"></span>
+                                                                            <span
+                                                                                style="background-color:{{ $value['swatch'] }};"></span>
                                                                         @else
                                                                             <span>{{ $value['value'] }}</span>
                                                                         @endif
@@ -120,7 +136,8 @@
                                                 value="{{ optional($product->defaultVariant)->id }}">
                                             <div class="ec-single-qty">
                                                 <div class="qty-plus-minus">
-                                                    <input class="qty-input" type="number" name="quantity" min="1" value="1" />
+                                                    <input class="qty-input" type="number" name="quantity" min="1"
+                                                        value="1" />
                                                 </div>
                                                 <div class="ec-single-cart">
                                                     <button class="btn btn-primary" type="submit" id="addToCartBtn"
@@ -130,9 +147,12 @@
                                                 </div>
                                                 <div class="ec-single-wishlist">
                                                     @auth('customer')
-                                                        <a href="#" class="ec-btn-group wishlist toggle-wishlist" data-product-id="{{ $product->id }}" title="Wishlist"><i class="fi-rr-heart"></i></a>
+                                                        <a href="#" class="ec-btn-group wishlist toggle-wishlist"
+                                                            data-product-id="{{ $product->id }}" title="Wishlist"><i
+                                                                class="fi-rr-heart"></i></a>
                                                     @else
-                                                        <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist" title="Login to add to wishlist"><i class="fi-rr-heart"></i></a>
+                                                        <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist"
+                                                            title="Login to add to wishlist"><i class="fi-rr-heart"></i></a>
                                                     @endauth
                                                 </div>
                                             </div>
@@ -148,14 +168,16 @@
                         <div class="ec-single-pro-tab-wrapper">
                             <div class="ec-single-pro-tab-nav">
                                 <ul class="nav nav-tabs" role="tablist">
-                                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" data-bs-target="#ec-spt-nav-details" role="tab">Detail</a></li>
-                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-bs-target="#ec-spt-nav-review" role="tab" id="ec-spt-nav-review">Reviews</a></li>
+                                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
+                                            data-bs-target="#ec-spt-nav-details" role="tab">Detail</a></li>
+                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
+                                            data-bs-target="#ec-spt-nav-review" role="tab">Reviews</a></li>
                                 </ul>
                             </div>
                             <div class="tab-content ec-single-pro-tab-content">
                                 <div id="ec-spt-nav-details" class="tab-pane fade show active">
                                     <div class="ec-single-pro-tab-desc">
-                                        {!! nl2br(e($product->description)) !!}
+                                        {!! $product->description !!}
                                     </div>
                                 </div>
                                 <div id="ec-spt-nav-review" class="tab-pane fade">
@@ -164,18 +186,23 @@
                                             @forelse ($product->reviews as $review)
                                                 <div class="ec-t-review-item">
                                                     <div class="ec-t-review-avtar">
-                                                        <img src="{{ $review->user?->avatar_url ?? asset('visitor/images/review-image/1.jpg') }}" alt="">
+                                                        <img src="{{ $review->user?->avatar_url ?? asset('visitor/images/review-image/1.jpg') }}"
+                                                            alt="">
                                                     </div>
                                                     <div class="ec-t-review-content">
                                                         <div class="ec-t-review-top">
-                                                            <div class="ec-t-review-name">{{ $review->user?->name ?? 'Customer' }}</div>
+                                                            <div class="ec-t-review-name">
+                                                                {{ $review->user?->name ?? 'Customer' }}</div>
                                                             <div class="ec-t-review-rating">
                                                                 @for ($i = 1; $i <= 5; $i++)
-                                                                    <i class="ecicon eci-star{{ $i <= $review->rating ? ' fill' : '-o' }}"></i>
+                                                                    <i
+                                                                        class="ecicon eci-star{{ $i <= $review->rating ? ' fill' : '-o' }}"></i>
                                                                 @endfor
                                                             </div>
                                                         </div>
-                                                        <div class="ec-t-review-bottom"><p>{{ $review->comment }}</p></div>
+                                                        <div class="ec-t-review-bottom">
+                                                            <p>{{ $review->comment }}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             @empty
@@ -210,13 +237,18 @@
                                 <div class="ec-pro-image-outer">
                                     <div class="ec-pro-image">
                                         <a href="{{ route('visitor.products.show', $related->slug) }}" class="image">
-                                            <img class="main-image" src="{{ $related->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}" alt="{{ $related->name }}" />
+                                            <img class="main-image"
+                                                src="{{ $related->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}"
+                                                alt="{{ $related->name }}" />
                                         </a>
                                     </div>
                                 </div>
                                 <div class="ec-pro-content">
-                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $related->slug) }}">{{ $related->name }}</a></h5>
-                                    <span class="ec-price"><span class="new-price">{{ $related->price_range_label }}</span></span>
+                                    <h5 class="ec-pro-title"><a
+                                            href="{{ route('visitor.products.show', $related->slug) }}">{{ $related->name }}</a>
+                                    </h5>
+                                    <span class="ec-price"><span
+                                            class="new-price">{{ $related->price_range_label }}</span></span>
                                 </div>
                             </div>
                         </div>

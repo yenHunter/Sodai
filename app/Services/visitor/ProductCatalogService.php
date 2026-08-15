@@ -153,7 +153,7 @@ class ProductCatalogService
 
     private function scopedCategoryIds(Category $scopeCategory)
     {
-        return $scopeCategory->isParent()
+        return $scopeCategory->hasChildren()
             ? $scopeCategory->children()->pluck('id')
             : collect([$scopeCategory->id]);
     }
