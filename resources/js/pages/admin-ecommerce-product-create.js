@@ -175,12 +175,14 @@ function initVariantBuilder() {
     const generateBtn = document.getElementById('generateVariantsBtn')
     const optionNameInput = document.getElementById('optionBuilderName')
     const optionValuesInput = document.getElementById('optionBuilderValues')
+    const optionSwatchesWrapper = document.getElementById('optionBuilderSwatchesWrapper')
+    const optionSwatchesInput = document.getElementById('optionBuilderSwatches')
     const template = document.getElementById('variantRowTemplate')
 
     if (!container || !template) return
 
     let variantIndex = container.querySelectorAll('.variant-row').length
-    let pendingOptions = [] // [{ name, values: [] }]
+    let pendingOptions = [] // [{ name, values: [{value, swatch}] }]
 
     function nextIndex() {
         return variantIndex++
@@ -195,6 +197,17 @@ function initVariantBuilder() {
             const iconSet = lucide.icons || (window.lucide && window.lucide.icons)
             if (iconSet) lucide.createIcons({ icons: iconSet })
         }
+    }
+
+    function isColorOption(name) {
+        return name.trim().toLowerCase() === 'color'
+    }
+
+    // Toggle swatches field visibility as the admin types the option name
+    if (optionNameInput && optionSwatchesWrapper) {
+        optionNameInput.addEventListener('input', function () {
+            optionSwatchesWrapper.classList.toggle('d-none', !isColorOption(this.value))
+        })
     }
 
     function updateVariantLabel(row) {
@@ -250,13 +263,16 @@ function initVariantBuilder() {
             const optionContainer = row.querySelector('.variant-option-values')
             optionContainer.innerHTML = ''
             optionPairs.forEach((pair, i) => {
+                const isColor = isColorOption(pair.option)
                 const col = document.createElement('div')
                 col.className = 'col-md-4 option-value-pair'
+                col.dataset.optionName = pair.option
                 col.innerHTML = `
                     <div class="input-group input-group-sm">
                         <span class="input-group-text">${escapeHtml(pair.option)}</span>
                         <input type="hidden" name="variants[${index}][option_values][${i}][option]" value="${escapeHtml(pair.option)}">
                         <input type="text" class="form-control" name="variants[${index}][option_values][${i}][value]" value="${escapeHtml(pair.value)}">
+                        ${isColor ? `<input type="color" class="form-control form-control-color p-1" style="max-width:44px;" name="variants[${index}][option_values][${i}][swatch]" value="${pair.swatch || '#000000'}" title="Pick color swatch">` : ''}
                     </div>
                 `
                 optionContainer.appendChild(col)
@@ -274,8 +290,6 @@ function initVariantBuilder() {
         addVariantBtn.addEventListener('click', () => addBlankVariantRow())
     }
 
-    // ── Defined-options chip list ──
-
     function renderDefinedOptionsList() {
         let listEl = document.getElementById('definedOptionsList')
         if (!listEl) {
@@ -287,7 +301,7 @@ function initVariantBuilder() {
 
         listEl.innerHTML = pendingOptions.map((opt, i) => `
             <span class="badge bg-secondary-subtle text-secondary d-inline-flex align-items-center gap-1">
-                ${escapeHtml(opt.name)}: ${opt.values.map(escapeHtml).join(', ')}
+                ${escapeHtml(opt.name)}: ${opt.values.map(v => escapeHtml(v.value)).join(', ')}
                 <button type="button" class="btn-close btn-close-sm remove-pending-option" data-index="${i}" style="font-size:0.6rem;"></button>
             </span>
         `).join('')
@@ -312,6 +326,7 @@ function initVariantBuilder() {
         generateBtn.addEventListener('click', function () {
             const name = optionNameInput.value.trim()
             const valuesRaw = optionValuesInput.value.trim()
+            const swatchesRaw = optionSwatchesInput ? optionSwatchesInput.value.trim() : ''
 
             if (name && valuesRaw) {
                 const values = valuesRaw.split(',').map(v => v.trim()).filter(Boolean)
@@ -319,14 +334,27 @@ function initVariantBuilder() {
                     alert('Enter at least one value for this option.')
                     return
                 }
+
+                let swatches = []
+                if (isColorOption(name) && swatchesRaw) {
+                    swatches = swatchesRaw.split(',').map(s => s.trim()).filter(Boolean)
+                }
+
+                const valueObjects = values.map((v, i) => ({
+                    value: v,
+                    swatch: isColorOption(name) ? (swatches[i] || null) : null,
+                }))
+
                 const existingIdx = pendingOptions.findIndex(o => o.name.toLowerCase() === name.toLowerCase())
                 if (existingIdx >= 0) {
-                    pendingOptions[existingIdx].values = values
+                    pendingOptions[existingIdx].values = valueObjects
                 } else {
-                    pendingOptions.push({ name, values })
+                    pendingOptions.push({ name, values: valueObjects })
                 }
                 optionNameInput.value = ''
                 optionValuesInput.value = ''
+                if (optionSwatchesInput) optionSwatchesInput.value = ''
+                optionSwatchesWrapper?.classList.add('d-none')
                 renderDefinedOptionsList()
             }
 
@@ -339,14 +367,14 @@ function initVariantBuilder() {
                 return
             }
 
-            // Drop the single untouched blank starter row so we don't end up
-            // with an orphan "Default (no options)" row alongside the matrix.
             const rows = Array.from(container.querySelectorAll('.variant-row'))
             if (rows.length === 1 && isRowBlank(rows[0])) {
                 rows[0].remove()
             }
 
-            const valueArrays = pendingOptions.map(opt => opt.values.map(v => ({ option: opt.name, value: v })))
+            const valueArrays = pendingOptions.map(opt =>
+                opt.values.map(v => ({ option: opt.name, value: v.value, swatch: v.swatch }))
+            )
             const combinations = cartesianProduct(valueArrays)
 
             combinations.forEach(combo => addBlankVariantRow(combo))
@@ -354,7 +382,6 @@ function initVariantBuilder() {
         })
     }
 
-    // Wire up the one server-rendered blank row present on page load
     container.querySelectorAll('.variant-row').forEach(row => {
         attachRowEvents(row)
         updateVariantLabel(row)
@@ -379,7 +406,7 @@ function initFormSubmission() {
 
     form.addEventListener('submit', function (e) {
         e.preventDefault()
-        
+
         if (descriptionQuill) {
             document.getElementById('descriptionInput').value = descriptionQuill.root.innerHTML
         }

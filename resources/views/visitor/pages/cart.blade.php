@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - Cart', 'bodyClass' => 'cart_page'])
+@extends('visitor.layout.app', ['title' => 'Cart', 'bodyClass' => 'cart_page'])
 
 @section('content')
     <div class="sticky-header-next-sec ec-breadcrumb section-space-mb">
@@ -94,9 +94,9 @@
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <div class="ec-cart-update-bottom">
-                                            <a href="{{ route('visitor.products.index') }}">Continue Shopping</a>
+                                            <a class="continue-shopping" href="{{ route('visitor.products.index') }}">Continue Shopping</a>
                                             @if ($cart->items->isNotEmpty())
-                                                <a href="{{ route('visitor.cart.index') }}" class="btn btn-primary">Check Out</a>
+                                                <a href="{{ route('visitor.checkout') }}" class="btn btn-primary">Check Out</a>
                                             @endif
                                         </div>
                                     </div>

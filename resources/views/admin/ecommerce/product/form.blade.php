@@ -81,19 +81,27 @@
                     <label class="form-label fw-semibold mb-2">Quick Option Builder <span
                             class="text-muted fw-normal">(optional)</span></label>
                     <div class="row g-2 align-items-end" id="optionBuilderRow">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <input type="text" class="form-control form-control-sm" id="optionBuilderName"
                                 placeholder="Option name (e.g. Color)">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <input type="text" class="form-control form-control-sm" id="optionBuilderValues"
-                                placeholder="Values, comma separated (e.g. Red, Blue, Green)">
+                                placeholder="Comma separated (e.g. Red, Blue, Green)">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <button type="button" class="btn btn-sm btn-outline-primary w-100"
                                 id="generateVariantsBtn">
                                 <i data-lucide="grid-3x3" class="fs-sm me-1"></i> Generate Combinations
                             </button>
+                        </div>
+                        <div class="col-12 d-none" id="optionBuilderSwatchesWrapper">
+                            <label class="form-label mb-1 small fw-semibold">
+                                Color Swatches <span class="text-muted fw-normal">(hex codes, comma separated, same
+                                    order as values above)</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm" id="optionBuilderSwatches"
+                                placeholder="#ff0000, #0000ff, #00ff00">
                         </div>
                     </div>
                     <small class="text-muted d-block mt-2">

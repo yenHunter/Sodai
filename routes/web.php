@@ -38,6 +38,10 @@ Route::get('contact', function () {
 //     return view('visitor.pages.products-by-category');
 // })->name('visitor.products-by-category');
 
+Route::get('checkout', function () {
+    return view('visitor.pages.checkout');
+})->name('visitor.checkout');
+
 Route::get('/widgets', function () {
     return view('admin.widgets');
 });

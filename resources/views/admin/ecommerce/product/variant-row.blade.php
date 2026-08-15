@@ -20,7 +20,8 @@
             @else
                 <span class="text-muted small">SKU auto-generated on save</span>
             @endif
-            <button type="button" class="btn btn-sm btn-icon btn-default rounded-circle remove-variant-btn" title="Remove variant">
+            <button type="button" class="btn btn-sm btn-icon btn-default rounded-circle remove-variant-btn"
+                title="Remove variant">
                 <i data-lucide="x" style="width:14px;height:14px;"></i>
             </button>
         </div>
@@ -37,8 +38,16 @@
                 <div class="col-md-4 option-value-pair">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text">{{ $ov->option->name }}</span>
-                        <input type="hidden" name="{{ $prefix }}[option_values][{{ $ovIndex }}][option]" value="{{ $ov->option->name }}">
-                        <input type="text" class="form-control" name="{{ $prefix }}[option_values][{{ $ovIndex }}][value]" value="{{ $ov->value }}">
+                        <input type="hidden" name="{{ $prefix }}[option_values][{{ $ovIndex }}][option]"
+                            value="{{ $ov->option->name }}">
+                        <input type="text" class="form-control"
+                            name="{{ $prefix }}[option_values][{{ $ovIndex }}][value]"
+                            value="{{ $ov->value }}">
+                        @if (strtolower($ov->option->name) === 'color')
+                            <input type="color" class="form-control form-control-color p-1" style="max-width:44px;"
+                                name="{{ $prefix }}[option_values][{{ $ovIndex }}][swatch]"
+                                value="{{ $ov->swatch ?: '#000000' }}" title="Pick color swatch">
+                        @endif
                     </div>
                 </div>
             @empty
@@ -50,48 +59,61 @@
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Price <span class="text-danger">*</span></label>
                 <input type="number" step="0.01" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[price]" value="{{ old("variants.{$index}.price", $v->price ?? '') }}" required>
+                    name="{{ $prefix }}[price]" value="{{ old("variants.{$index}.price", $v->price ?? '') }}"
+                    required>
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Purchase Price</label>
                 <input type="number" step="0.01" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[purchase_price]" value="{{ old("variants.{$index}.purchase_price", $v->purchase_price ?? '') }}">
+                    name="{{ $prefix }}[purchase_price]"
+                    value="{{ old("variants.{$index}.purchase_price", $v->purchase_price ?? '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Discount Type</label>
                 <select class="form-select form-select-sm" name="{{ $prefix }}[discount_type]">
                     <option value="">No Discount</option>
-                    <option value="fixed" {{ old("variants.{$index}.discount_type", $v->discount_type ?? '') == 'fixed' ? 'selected' : '' }}>Fixed</option>
-                    <option value="percentage" {{ old("variants.{$index}.discount_type", $v->discount_type ?? '') == 'percentage' ? 'selected' : '' }}>Percentage</option>
+                    <option value="fixed"
+                        {{ old("variants.{$index}.discount_type", $v->discount_type ?? '') == 'fixed' ? 'selected' : '' }}>
+                        Fixed</option>
+                    <option value="percentage"
+                        {{ old("variants.{$index}.discount_type", $v->discount_type ?? '') == 'percentage' ? 'selected' : '' }}>
+                        Percentage</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Discount Value</label>
                 <input type="number" step="0.01" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[discount_value]" value="{{ old("variants.{$index}.discount_value", $v->discount_value ?? '') }}">
+                    name="{{ $prefix }}[discount_value]"
+                    value="{{ old("variants.{$index}.discount_value", $v->discount_value ?? '') }}">
             </div>
 
             <div class="col-md-3">
-                <label class="form-label mb-1 small fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
+                <label class="form-label mb-1 small fw-semibold">Stock Quantity <span
+                        class="text-danger">*</span></label>
                 <input type="number" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[stock_quantity]" value="{{ old("variants.{$index}.stock_quantity", $v->stock_quantity ?? 0) }}" required>
+                    name="{{ $prefix }}[stock_quantity]"
+                    value="{{ old("variants.{$index}.stock_quantity", $v->stock_quantity ?? 0) }}" required>
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Low Stock Threshold</label>
                 <input type="number" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[low_stock_threshold]" value="{{ old("variants.{$index}.low_stock_threshold", $v->low_stock_threshold ?? 5) }}">
+                    name="{{ $prefix }}[low_stock_threshold]"
+                    value="{{ old("variants.{$index}.low_stock_threshold", $v->low_stock_threshold ?? 5) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Weight</label>
                 <input type="number" step="0.01" min="0" class="form-control form-control-sm"
-                    name="{{ $prefix }}[weight]" value="{{ old("variants.{$index}.weight", $v->weight ?? '') }}">
+                    name="{{ $prefix }}[weight]"
+                    value="{{ old("variants.{$index}.weight", $v->weight ?? '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label mb-1 small fw-semibold">Weight Unit</label>
                 <select class="form-select form-select-sm" name="{{ $prefix }}[weight_unit]">
                     <option value="">—</option>
                     @foreach (['kg', 'g', 'lb', 'oz'] as $unit)
-                        <option value="{{ $unit }}" {{ old("variants.{$index}.weight_unit", $v->weight_unit ?? '') == $unit ? 'selected' : '' }}>{{ $unit }}</option>
+                        <option value="{{ $unit }}"
+                            {{ old("variants.{$index}.weight_unit", $v->weight_unit ?? '') == $unit ? 'selected' : '' }}>
+                            {{ $unit }}</option>
                     @endforeach
                 </select>
             </div>
@@ -99,8 +121,12 @@
             <div class="col-md-4">
                 <label class="form-label mb-1 small fw-semibold">Status</label>
                 <select class="form-select form-select-sm" name="{{ $prefix }}[is_active]">
-                    <option value="1" {{ old("variants.{$index}.is_active", $v->is_active ?? true) ? 'selected' : '' }}>Active</option>
-                    <option value="0" {{ !old("variants.{$index}.is_active", $v->is_active ?? true) ? 'selected' : '' }}>Inactive</option>
+                    <option value="1"
+                        {{ old("variants.{$index}.is_active", $v->is_active ?? true) ? 'selected' : '' }}>Active
+                    </option>
+                    <option value="0"
+                        {{ !old("variants.{$index}.is_active", $v->is_active ?? true) ? 'selected' : '' }}>Inactive
+                    </option>
                 </select>
             </div>
             <div class="col-md-4 d-flex align-items-end">
@@ -113,7 +139,8 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label mb-1 small fw-semibold">Variant Thumbnail</label>
-                <input type="file" class="form-control form-control-sm" name="{{ $prefix }}[thumbnail]" accept="image/*">
+                <input type="file" class="form-control form-control-sm" name="{{ $prefix }}[thumbnail]"
+                    accept="image/*">
                 @if ($v && $v->thumbnail)
                     <img src="{{ Storage::url($v->thumbnail) }}" class="img-thumbnail mt-1" style="max-width:60px;">
                 @endif
@@ -140,7 +167,8 @@
         @endif
         <div class="mt-2">
             <label class="form-label mb-1 small fw-semibold">Add Variant Images</label>
-            <input type="file" class="form-control form-control-sm" name="{{ $prefix }}[images][]" accept="image/*" multiple>
+            <input type="file" class="form-control form-control-sm" name="{{ $prefix }}[images][]"
+                accept="image/*" multiple>
         </div>
     </div>
 </div>

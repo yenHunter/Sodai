@@ -108,12 +108,25 @@
                                                         <div class="ec-pro-variation-content">
                                                             <ul>
                                                                 @foreach ($group['values'] as $value)
+                                                                    @php
+                                                                        $swatch = $value['swatch'];
+                                                                        $isColorSwatch =
+                                                                            $swatch &&
+                                                                            preg_match(
+                                                                                '/^#([A-Fa-f0-9]{3}){1,2}$/',
+                                                                                $swatch,
+                                                                            );
+                                                                        $isImageSwatch = $swatch && !$isColorSwatch;
+                                                                    @endphp
                                                                     <li class="variant-value-option"
                                                                         data-value-id="{{ $value['id'] }}"
                                                                         title="{{ $value['value'] }}">
-                                                                        @if ($value['swatch'])
+                                                                        @if ($isColorSwatch)
                                                                             <span
-                                                                                style="background-color:{{ $value['swatch'] }};"></span>
+                                                                                style="background-color: {{ $swatch }};"></span>
+                                                                        @elseif ($isImageSwatch)
+                                                                            <span
+                                                                                style="background-image: url('{{ asset('storage/' . $swatch) }}'); background-size: cover; background-position: center;"></span>
                                                                         @else
                                                                             <span>{{ $value['value'] }}</span>
                                                                         @endif

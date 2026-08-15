@@ -488,16 +488,25 @@ class ProductService
             ['name' => $optionName]
         );
 
-        return ProductOptionValue::firstOrCreate(
+        $optionValue = ProductOptionValue::firstOrCreate(
             [
                 'product_option_id' => $option->id,
                 'slug'               => Str::slug($value),
             ],
             [
-                'value'   => $value,
-                'swatch'  => $swatch,
+                'value'  => $value,
+                'swatch' => $swatch,
             ]
         );
+
+        // firstOrCreate only sets swatch on initial creation — if the value
+        // already existed (e.g. "Red" reused across products) and a swatch
+        // was submitted this time, make sure it's actually saved.
+        if ($swatch && $optionValue->swatch !== $swatch) {
+            $optionValue->update(['swatch' => $swatch]);
+        }
+
+        return $optionValue;
     }
 
     // ─────────────────────────────────────────────
