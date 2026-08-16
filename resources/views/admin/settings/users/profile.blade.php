@@ -8,11 +8,9 @@
             <div class="card">
                 <div class="card-body text-center">
                     @if ($admin->avatar_url)
-                        <img src="{{ $admin->avatar_url }}" class="rounded-circle avatar-xl mb-3" alt="">
+                        <img src="{{ $admin->avatar_url }}" class="rounded-circle avatar-xxl mb-3" alt="admin-avater">
                     @else
-                        <span class="avatar-xl avatar-title bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fs-xl">
-                            {{ strtoupper(substr($admin->name, 0, 1)) }}
-                        </span>
+                        <img src="{{ asset('images/users/administrator.png') }}" class="rounded-circle avatar-xxl mb-3" alt="admin-avater">
                     @endif
                     <h5 class="mb-1">{{ $admin->name }}</h5>
                     @foreach ($admin->roles as $role)
@@ -26,13 +24,27 @@
         </div>
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">Account Information</h5></div>
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Account Information</h5>
+                </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
-                        <tr><td class="text-muted" width="180">Email</td><td>{{ $admin->email }}</td></tr>
-                        <tr><td class="text-muted">Phone</td><td>{{ $admin->phone ?? '—' }}</td></tr>
-                        <tr><td class="text-muted">Last Login</td><td>{{ $admin->last_login_at?->format('d M Y, h:i A') ?? 'Never' }}</td></tr>
-                        <tr><td class="text-muted">Joined</td><td>{{ $admin->created_at->format('d M Y') }}</td></tr>
+                        <tr>
+                            <td class="text-muted" width="180">Email</td>
+                            <td>{{ $admin->email }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Phone</td>
+                            <td>{{ $admin->phone ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Last Login</td>
+                            <td>{{ $admin->last_login_at?->format('d M Y, h:i A') ?? 'Never' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Joined</td>
+                            <td>{{ $admin->created_at->format('d M Y') }}</td>
+                        </tr>
                     </table>
                 </div>
             </div>

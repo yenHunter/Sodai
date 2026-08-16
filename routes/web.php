@@ -46,6 +46,10 @@ Route::get('/widgets', function () {
     return view('admin.widgets');
 });
 
+Route::get('/configuration', function () {
+    return view('admin.settings.configuration.index');
+});
+
 Route::get('/index', function () {
     return view('admin.index');
 });
