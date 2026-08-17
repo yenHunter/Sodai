@@ -153,6 +153,12 @@
                 </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">CRM</li>
                 <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.banner.index') }}">
+                        <span class="menu-icon"><i data-lucide="image"></i></span>
+                        <span class="menu-text" data-lang="apps-ecommerce-banners">Banners</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a aria-controls="email" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
                         href="#email">
                         <span class="menu-icon"><i data-lucide="mail"></i></span>

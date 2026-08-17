@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -157,6 +158,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{coupon}', [CouponController::class, 'destroy'])->name('destroy')->middleware('permission:coupon.delete');
             Route::delete('/', [CouponController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:coupon.delete');
             Route::patch('/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:coupon.edit');
+        });
+
+        // ── Banners: only roles with banner permissions ──
+        Route::middleware('permission:banner.view')->prefix('banners')->name('banner.')->group(function () {
+            Route::get('/', [BannerController::class, 'index'])->name('index');
+            Route::post('/store', [BannerController::class, 'store'])->name('store')->middleware('permission:banner.create');
+            Route::post('/{banner}/update', [BannerController::class, 'update'])->name('update')->middleware('permission:banner.edit');
+            Route::delete('/{banner}', [BannerController::class, 'destroy'])->name('destroy')->middleware('permission:banner.delete');
+            Route::delete('/', [BannerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:banner.delete');
+            Route::patch('/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:banner.edit');
         });
     });
 
