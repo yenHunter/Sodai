@@ -134,6 +134,12 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.ecommerce.coupon.index') }}">
+                        <span class="menu-icon"><i data-lucide="ticket-percent"></i></span>
+                        <span class="menu-text" data-lang="apps-ecommerce-coupons">Coupons</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a class="side-nav-link" href="{{ route('admin.ecommerce.review.index') }}">
                         <span class="menu-icon"><i data-lucide="star"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-reviews">Reviews</span>

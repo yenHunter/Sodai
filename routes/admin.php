@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -146,6 +147,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::patch('/{review}/reject', [ReviewController::class, 'reject'])->name('reject')->middleware('permission:review.approve');
             Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy')->middleware('permission:review.delete');
             Route::delete('/', [ReviewController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:review.delete');
+        });
+
+        // ── Coupons: only roles with coupon permissions ──
+        Route::middleware('permission:coupon.view')->prefix('coupons')->name('coupon.')->group(function () {
+            Route::get('/', [CouponController::class, 'index'])->name('index');
+            Route::post('/store', [CouponController::class, 'store'])->name('store')->middleware('permission:coupon.create');
+            Route::post('/{coupon}/update', [CouponController::class, 'update'])->name('update')->middleware('permission:coupon.edit');
+            Route::delete('/{coupon}', [CouponController::class, 'destroy'])->name('destroy')->middleware('permission:coupon.delete');
+            Route::delete('/', [CouponController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:coupon.delete');
+            Route::patch('/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:coupon.edit');
         });
     });
 
