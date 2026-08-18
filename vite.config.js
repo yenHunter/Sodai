@@ -51,6 +51,7 @@ export default defineConfig({
                 // ───────────── Settings Pages ─────────────
                 'resources/js/pages/admin-settings-users-index.js',
                 'resources/js/pages/admin-settings-users-role-details.js',
+                'resources/js/pages/admin-settings-configuration.js',
 
                 'resources/js/app.js',
                 'resources/js/maps/leaflet-data.js',

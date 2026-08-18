@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -169,6 +170,41 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/', [BannerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:banner.delete');
             Route::patch('/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:banner.edit');
         });
+    });
+
+    // ── Settings / Configuration ──
+    Route::middleware('permission:setting.view')->prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+
+        Route::get('/company', [SettingController::class, 'company'])->name('company');
+        Route::post('/company', [SettingController::class, 'updateCompany'])->name('company.update')->middleware('permission:setting.edit');
+
+        Route::get('/design', [SettingController::class, 'design'])->name('design');
+        Route::post('/design', [SettingController::class, 'updateDesign'])->name('design.update')->middleware('permission:setting.edit');
+
+        Route::get('/shipping', [SettingController::class, 'shipping'])->name('shipping');
+        Route::post('/shipping', [SettingController::class, 'updateShipping'])->name('shipping.update')->middleware('permission:setting.edit');
+
+        Route::get('/payment', [SettingController::class, 'payment'])->name('payment');
+        Route::post('/payment', [SettingController::class, 'updatePayment'])->name('payment.update')->middleware('permission:setting.edit');
+
+        Route::get('/inventory', [SettingController::class, 'inventory'])->name('inventory');
+        Route::post('/inventory', [SettingController::class, 'updateInventory'])->name('inventory.update')->middleware('permission:setting.edit');
+
+        Route::get('/invoice', [SettingController::class, 'invoice'])->name('invoice');
+        Route::post('/invoice', [SettingController::class, 'updateInvoice'])->name('invoice.update')->middleware('permission:setting.edit');
+
+        Route::get('/order', [SettingController::class, 'orderSettings'])->name('order');
+        Route::post('/order', [SettingController::class, 'updateOrderSettings'])->name('order.update')->middleware('permission:setting.edit');
+
+        Route::get('/tax', [SettingController::class, 'tax'])->name('tax');
+        Route::post('/tax', [SettingController::class, 'updateTax'])->name('tax.update')->middleware('permission:setting.edit');
+
+        Route::get('/notification', [SettingController::class, 'notification'])->name('notification');
+        Route::post('/notification', [SettingController::class, 'updateNotification'])->name('notification.update')->middleware('permission:setting.edit');
+
+        Route::get('/marketing', [SettingController::class, 'marketing'])->name('marketing');
+        Route::post('/marketing', [SettingController::class, 'updateMarketing'])->name('marketing.update')->middleware('permission:setting.edit');
     });
 
     // ── Admin Management: super-admin only ──

@@ -230,6 +230,12 @@
                         </ul>
                     </div>
                 </li>
+                <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.settings.index') }}">
+                        <span class="menu-icon"><i data-lucide="settings"></i></span>
+                        <span class="menu-text" data-lang="apps-social-feed">Configuration</span>
+                    </a>
+                </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">System</li>
                 <li class="side-nav-item">
                     <a class="side-nav-link" href="{{ url('/apps/file-manager') }}">
