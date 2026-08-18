@@ -38,7 +38,6 @@ class SettingService
                     $this->deleteFile(Setting::get($group, $fileKey));
                     $data[$fileKey] = $this->uploadFile($data[$fileKey], $group);
                 } else {
-                    // No new file uploaded — never overwrite the existing path with null.
                     unset($data[$fileKey]);
                 }
             }
@@ -50,8 +49,18 @@ class SettingService
             }
 
             $types = [];
-            foreach ($fileKeys as $fileKey)   $types[$fileKey] = 'image';
+            foreach ($fileKeys as $fileKey)    $types[$fileKey] = 'image';
             foreach ($booleanKeys as $boolKey) $types[$boolKey] = 'boolean';
+
+            // Any array value (e.g. a multi-select like operation_areas) is
+            // stored as JSON automatically — no per-field handling needed
+            // in the controller.
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    $data[$key] = json_encode(array_values(array_filter($value, fn($v) => trim((string) $v) !== '')));
+                    $types[$key] = 'json';
+                }
+            }
 
             Setting::setMany($group, $data, $types);
 
@@ -98,5 +107,66 @@ class SettingService
         if (is_int($value)) return $value === 1;
         if (is_string($value)) return in_array(strtolower($value), ['1', 'true', 'on', 'yes', 'active']);
         return false;
+    }
+
+        // ─────────────────────────────────────────────
+    // SHIPPING CHARGE RESOLUTION
+    // The admin defines which district(s) their business operates in
+    // (`operation_areas`). If the customer's shipping city/district
+    // matches one of those areas, the lower "inside area" charge
+    // applies; otherwise the higher "outside area" charge applies.
+    // Nothing here is hardcoded to any specific city — it's entirely
+    // driven by what the admin configures.
+    // ─────────────────────────────────────────────
+
+    public function getOperationAreas(): array
+    {
+        $raw     = Setting::get('shipping', 'operation_areas', '[]');
+        $decoded = json_decode((string) $raw, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    public function isWithinOperationArea(?string $city): bool
+    {
+        if (!$city) return false;
+
+        $areas = $this->getOperationAreas();
+        if (empty($areas)) return false;
+
+        $city = strtolower(trim($city));
+
+        foreach ($areas as $area) {
+            $area = strtolower(trim((string) $area));
+            if ($area === '') continue;
+
+            // Matches "Dhaka" against "Uttara, Dhaka" as well as an exact match.
+            if (str_contains($city, $area) || str_contains($area, $city)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolves the shipping charge for a given destination city and
+     * order subtotal, applying the free-shipping threshold first.
+     */
+    public function resolveShippingCharge(?string $city, float $subtotal = 0.0): float
+    {
+        $settings = $this->getGroup('shipping');
+
+        $freeShippingEnabled   = ($settings['enable_free_shipping'] ?? '0') === '1';
+        $freeShippingThreshold = (float) ($settings['free_shipping_threshold'] ?? 0);
+
+        if ($freeShippingEnabled && $freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
+            return 0.0;
+        }
+
+        $insideCharge  = (float) ($settings['inside_area_charge'] ?? 0);
+        $outsideCharge = (float) ($settings['outside_area_charge'] ?? 0);
+
+        return $this->isWithinOperationArea($city) ? $insideCharge : $outsideCharge;
     }
 }

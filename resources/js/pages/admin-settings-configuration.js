@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initImagePreviews();
     initRemoveCheckboxes();
     initFormSubmitStates();
+    initOperationAreaControls();
+    initShippingPreview();
 });
 
 // ─────────────────────────────────────────────
@@ -97,5 +99,112 @@ function bindSubmitState(btn) {
     form.addEventListener('submit', function () {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+    });
+}
+
+// ─────────────────────────────────────────────
+// OPERATION AREA CHECKBOX GRID (Shipping page)
+// Select All / Clear All + live search filter
+// ─────────────────────────────────────────────
+
+function initOperationAreaControls() {
+    const grid = document.getElementById('districtGrid');
+    if (!grid) return;
+
+    const selectAllBtn = document.getElementById('selectAllAreas');
+    const clearAllBtn  = document.getElementById('clearAllAreas');
+    const searchInput  = document.getElementById('areaSearchInput');
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+            grid.querySelectorAll('.area-checkbox').forEach(cb => (cb.checked = true));
+            grid.querySelectorAll('.area-checkbox').forEach(cb => cb.dispatchEvent(new Event('change')));
+        });
+    }
+
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+            grid.querySelectorAll('.area-checkbox').forEach(cb => (cb.checked = false));
+            grid.querySelectorAll('.area-checkbox').forEach(cb => cb.dispatchEvent(new Event('change')));
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+
+            grid.querySelectorAll('.district-option').forEach(option => {
+                const label = option.querySelector('label')?.textContent?.toLowerCase() || '';
+                option.classList.toggle('d-none', term !== '' && !label.includes(term));
+            });
+        });
+    }
+}
+
+// ─────────────────────────────────────────────
+// SHIPPING CHARGE LIVE PREVIEW (Shipping page)
+// Mirrors SettingService::resolveShippingCharge() on the client
+// using whatever operation areas are currently checked.
+// ─────────────────────────────────────────────
+
+function initShippingPreview() {
+    const cityInput     = document.getElementById('previewCity');
+    const subtotalInput = document.getElementById('previewSubtotal');
+    const resultBox      = document.getElementById('previewResult');
+
+    if (!cityInput || !resultBox || typeof window.__shippingSettingsInitial === 'undefined') return;
+
+    const getCheckedAreas = () =>
+        Array.from(document.querySelectorAll('.area-checkbox:checked')).map(cb => cb.value.toLowerCase().trim());
+
+    const isWithinArea = (city, areas) => {
+        const c = city.toLowerCase().trim();
+        return areas.some(area => c.includes(area) || area.includes(c));
+    };
+
+    const recalculate = () => {
+        const initial = window.__shippingSettingsInitial;
+
+        const insideCharge  = parseFloat(document.getElementById('inside_area_charge')?.value) || initial.insideCharge;
+        const outsideCharge = parseFloat(document.getElementById('outside_area_charge')?.value) || initial.outsideCharge;
+        const freeEnabled    = document.getElementById('enable_free_shipping')?.checked ?? initial.freeShippingEnabled;
+        const freeThreshold  = parseFloat(document.getElementById('free_shipping_threshold')?.value) || initial.freeShippingThreshold;
+
+        const city     = cityInput.value.trim();
+        const subtotal = parseFloat(subtotalInput.value) || 0;
+        const areas    = getCheckedAreas();
+
+        if (!city) {
+            resultBox.className = 'alert alert-secondary mb-0';
+            resultBox.textContent = 'Select your operation area(s) and enter a city to preview the charge.';
+            return;
+        }
+
+        if (freeEnabled && freeThreshold > 0 && subtotal >= freeThreshold) {
+            resultBox.className = 'alert alert-success mb-0';
+            resultBox.innerHTML = `<strong>Free Shipping</strong> — subtotal meets the ৳${freeThreshold.toFixed(2)} threshold.`;
+            return;
+        }
+
+        const withinArea = areas.length > 0 && isWithinArea(city, areas);
+        const charge = withinArea ? insideCharge : outsideCharge;
+
+        resultBox.className = 'alert alert-info mb-0';
+        resultBox.innerHTML =
+            `<strong>${withinArea ? 'Inside Operation Area' : 'Outside Operation Area'}</strong> — ` +
+            `shipping charge: <strong>৳${charge.toFixed(2)}</strong>`;
+    };
+
+    document.addEventListener('change', e => {
+        if (e.target.classList.contains('area-checkbox') || e.target.id === 'enable_free_shipping') {
+            recalculate();
+        }
+    });
+
+    [
+        'previewCity', 'previewSubtotal', 'inside_area_charge', 'outside_area_charge', 'free_shipping_threshold',
+    ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', recalculate);
     });
 }

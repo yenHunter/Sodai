@@ -5,9 +5,10 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Tests\Traits\AdminTestHelpers;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Traits\AdminTestHelpers;
 
 class SettingModuleTest extends TestCase
 {
@@ -112,7 +113,7 @@ class SettingModuleTest extends TestCase
         $this->assertEquals('Cached Co', Setting::get('company', 'name'));
 
         // Directly mutate the DB row bypassing setMany() -> cache should still return old value.
-        \DB::table('settings')->where('group', 'company')->where('key', 'name')->update(['value' => 'Bypassed']);
+        DB::table('settings')->where('group', 'company')->where('key', 'name')->update(['value' => 'Bypassed']);
         $this->assertEquals('Cached Co', Setting::get('company', 'name'));
 
         // After setMany() busts the cache, the new value is visible.
@@ -126,20 +127,110 @@ class SettingModuleTest extends TestCase
             ->assertRedirect(route('admin.login.view'));
     }
 
-        public function test_admin_can_update_shipping_settings(): void
+    public function test_admin_can_update_shipping_settings(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.shipping.update'), [
-                'flat_rate'               => 5.99,
+                'operation_areas'         => ['Dhaka', 'Gazipur', 'Narayanganj'],
+                'inside_area_charge'      => 80,
+                'outside_area_charge'     => 130,
                 'enable_free_shipping'    => '1',
-                'free_shipping_threshold' => 50,
+                'free_shipping_threshold' => 2000,
             ])
             ->assertRedirect(route('admin.settings.shipping'));
 
-        $this->assertEquals('5.99', Setting::get('shipping', 'flat_rate'));
-        $this->assertEquals('1', Setting::get('shipping', 'enable_free_shipping'));
+        $service = app(\App\Services\Admin\SettingService::class);
+        $this->assertEquals(['Dhaka', 'Gazipur', 'Narayanganj'], $service->getOperationAreas());
+    }
+
+    public function test_shipping_requires_at_least_one_operation_area(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.shipping.update'), [
+                'inside_area_charge'  => 80,
+                'outside_area_charge' => 130,
+            ])
+            ->assertSessionHasErrors('operation_areas');
+    }
+
+    public function test_shipping_charge_resolves_in_area_rate(): void
+    {
+        Setting::setMany('shipping', [
+            'operation_areas'     => json_encode(['Dhaka', 'Gazipur']),
+            'inside_area_charge'  => 80,
+            'outside_area_charge' => 130,
+        ]);
+
+        $service = app(\App\Services\Admin\SettingService::class);
+
+        $this->assertEquals(80.0, $service->resolveShippingCharge('Dhaka', 500));
+        $this->assertEquals(80.0, $service->resolveShippingCharge('Uttara, Dhaka', 500));
+        $this->assertEquals(80.0, $service->resolveShippingCharge('Gazipur', 500));
+    }
+
+    public function test_shipping_charge_resolves_out_of_area_rate(): void
+    {
+        Setting::setMany('shipping', [
+            'operation_areas'     => json_encode(['Dhaka']),
+            'inside_area_charge'  => 80,
+            'outside_area_charge' => 130,
+        ]);
+
+        $service = app(\App\Services\Admin\SettingService::class);
+
+        $this->assertEquals(130.0, $service->resolveShippingCharge('Chattogram', 500));
+        $this->assertEquals(130.0, $service->resolveShippingCharge(null, 500));
+    }
+
+    public function test_admin_operating_from_multiple_cities_charges_in_area_for_any_of_them(): void
+    {
+        // Proves this isn't hardcoded to Dhaka — an admin operating out of
+        // Chattogram and Sylhet gets the in-area rate for either city.
+        Setting::setMany('shipping', [
+            'operation_areas'     => json_encode(['Chattogram', 'Sylhet']),
+            'inside_area_charge'  => 60,
+            'outside_area_charge' => 150,
+        ]);
+
+        $service = app(\App\Services\Admin\SettingService::class);
+
+        $this->assertEquals(60.0, $service->resolveShippingCharge('Chattogram', 500));
+        $this->assertEquals(60.0, $service->resolveShippingCharge('Sylhet', 500));
+        $this->assertEquals(150.0, $service->resolveShippingCharge('Dhaka', 500)); // Dhaka is now OUT of area
+    }
+
+    public function test_free_shipping_threshold_overrides_area_rates(): void
+    {
+        Setting::setMany('shipping', [
+            'operation_areas'         => json_encode(['Dhaka']),
+            'inside_area_charge'      => 80,
+            'outside_area_charge'     => 130,
+            'enable_free_shipping'    => '1',
+            'free_shipping_threshold' => 1000,
+        ]);
+
+        $service = app(\App\Services\Admin\SettingService::class);
+
+        $this->assertEquals(0.0, $service->resolveShippingCharge('Dhaka', 1200));
+        $this->assertEquals(0.0, $service->resolveShippingCharge('Chattogram', 1000));
+        $this->assertEquals(80.0, $service->resolveShippingCharge('Dhaka', 999)); // below threshold, still charged
+    }
+
+    public function test_no_operation_area_configured_always_charges_out_of_area_rate(): void
+    {
+        Setting::setMany('shipping', [
+            'operation_areas'     => json_encode([]),
+            'inside_area_charge'  => 80,
+            'outside_area_charge' => 130,
+        ]);
+
+        $service = app(\App\Services\Admin\SettingService::class);
+
+        $this->assertEquals(130.0, $service->resolveShippingCharge('Dhaka', 500));
     }
 
     public function test_admin_can_update_payment_settings(): void

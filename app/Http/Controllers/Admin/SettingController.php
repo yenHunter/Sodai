@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Setting;
+use App\Support\BangladeshDistricts;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\SettingService;
 use App\Http\Requests\Admin\Setting\UpdateTaxRequest;
@@ -104,8 +105,11 @@ class SettingController extends Controller
     public function shipping()
     {
         $settings = $this->settingService->getGroup('shipping');
+        $settings['operation_areas'] = $this->settingService->getOperationAreas() ?: ['Dhaka'];
 
-        return view('admin.settings.configuration.shipping', compact('settings'));
+        $districts = BangladeshDistricts::all();
+
+        return view('admin.settings.configuration.shipping', compact('settings', 'districts'));
     }
 
     public function updateShipping(UpdateShippingRequest $request)
