@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Log;
 class RefundService
 {
     public function __construct(
-        private OrderService $orderService
+        private OrderService $orderService,
+        private SettingService $settingService
     ) {}
 
     // ─────────────────────────────────────────────
@@ -121,7 +122,10 @@ class RefundService
 
     private function generateUniqueRefundNumber(): string
     {
-        $lastNumber = Refund::where('refund_number', 'like', 'REF-%')
+        $prefix = $this->settingService->getGroup('invoice')['invoice_prefix'] ?? 'INV-';
+        $prefix = rtrim($prefix, '-') . '-REF-';
+
+        $lastNumber = Refund::where('refund_number', 'like', $prefix . '%')
             ->lockForUpdate()
             ->orderBy('refund_number', 'desc')
             ->value('refund_number');
@@ -131,7 +135,7 @@ class RefundService
             $next = (int) substr($lastNumber, strrpos($lastNumber, '-') + 1) + 1;
         }
 
-        return 'REF-' . str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     // ─────────────────────────────────────────────

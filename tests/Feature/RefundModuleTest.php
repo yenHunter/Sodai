@@ -129,4 +129,21 @@ class RefundModuleTest extends TestCase
             ])
             ->assertForbidden();
     }
+
+    public function test_refund_number_uses_invoice_prefix_from_settings(): void
+    {
+        \App\Models\Setting::setMany('invoice', ['invoice_prefix' => 'SODAI-']);
+
+        $admin = $this->createAdminWithPermissions(['refund.view', 'refund.create']);
+        $order = Order::factory()->create(['total_amount' => 100]);
+
+        $this->actingAsAdmin($admin)->post(route('admin.ecommerce.refund.store'), [
+            'order_id' => $order->id,
+            'amount'   => 50,
+            'reason'   => 'Damaged item',
+        ]);
+
+        $refund = \App\Models\Refund::first();
+        $this->assertStringStartsWith('SODAI-REF-', $refund->refund_number);
+    }
 }

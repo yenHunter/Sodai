@@ -34,7 +34,7 @@ class UpdateOrderRequest extends FormRequest
             'discount_amount'  => ['nullable', 'numeric', 'min:0'],
             'shipping_charge'  => ['nullable', 'numeric', 'min:0'],
             'tax_amount'       => ['nullable', 'numeric', 'min:0'],
-            'coupon_code'      => ['nullable', 'string', 'max:50'],
+            'coupon_code'      => ['nullable', 'string', 'max:50', 'exists:coupons,code'],
             'notes'            => ['nullable', 'string'],
         ];
     }
@@ -45,15 +45,17 @@ class UpdateOrderRequest extends FormRequest
             'user_id.required' => 'Please select a customer.',
             'items.required'   => 'Add at least one product to the order.',
             'items.min'        => 'Add at least one product to the order.',
+            'coupon_code.exists' => 'This coupon code does not exist.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'discount_amount' => $this->input('discount_amount') ?: 0,
-            'shipping_charge' => $this->input('shipping_charge') ?: 0,
-            'tax_amount'      => $this->input('tax_amount') ?: 0,
+            'discount_amount' => $this->input('discount_amount') === '' ? null : $this->input('discount_amount'),
+            'shipping_charge' => $this->input('shipping_charge') === '' ? null : $this->input('shipping_charge'),
+            'tax_amount'      => $this->input('tax_amount') === '' ? null : $this->input('tax_amount'),
+            'coupon_code'     => $this->input('coupon_code') ? strtoupper(trim($this->input('coupon_code'))) : null,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Support\Str;
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Hash;
 
 class OrderService
 {
+    public function __construct(
+        private SettingService $settingService
+    ) {}
     // ─────────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────────
@@ -27,16 +31,28 @@ class OrderService
                 $items    = $this->buildItemsWithStockLock($data['items']);
                 $subtotal = collect($items)->sum('total_price');
 
+                $shippingCharge = $this->resolveShippingCharge($data, $subtotal);
+                $taxAmount      = $this->resolveTaxAmount($data, $subtotal);
+
+                $coupon         = null;
+                $discountAmount = (float) ($data['discount_amount'] ?? 0);
+
+                if (!empty($data['coupon_code'])) {
+                    $coupon         = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal);
+                    $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
+                }
+
                 $order = Order::create([
                     'order_number'     => $this->generateUniqueOrderNumber(),
                     'user_id'          => $data['user_id'],
                     'status'           => 'pending',
                     'subtotal'         => $subtotal,
-                    'discount_amount'  => $data['discount_amount'] ?? 0,
-                    'shipping_charge'  => $data['shipping_charge'] ?? 0,
-                    'tax_amount'       => $data['tax_amount'] ?? 0,
-                    'total_amount'     => $this->calculateTotal($subtotal, $data),
-                    'coupon_code'      => $data['coupon_code'] ?? null,
+                    'discount_amount'  => $discountAmount,
+                    'shipping_charge'  => $shippingCharge,
+                    'tax_amount'       => $taxAmount,
+                    'total_amount'     => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
+                    'coupon_code'      => $coupon?->code,
+                    'coupon_id'        => $coupon?->id,
                     'shipping_name'    => $data['shipping_name'],
                     'shipping_email'   => $data['shipping_email'],
                     'shipping_phone'   => $data['shipping_phone'],
@@ -50,6 +66,10 @@ class OrderService
 
                 $this->persistItemsAndAdjustStock($order, $items, decrement: true);
 
+                if ($coupon) {
+                    $coupon->increment('used_count');
+                }
+
                 $this->recordStatusHistory($order, null, 'pending', 'Order placed.');
 
                 Log::info('Order created successfully.', [
@@ -57,7 +77,7 @@ class OrderService
                     'order_number' => $order->order_number,
                 ]);
 
-                return $order->fresh(['items', 'user']);
+                return $order->fresh(['items', 'user', 'coupon']);
             });
         } catch (\Exception $e) {
             Log::error('Order creation failed.', ['exception' => $e]);
@@ -78,21 +98,41 @@ class OrderService
         try {
             return DB::transaction(function () use ($order, $data) {
 
-                // Restore stock from previously placed items before reapplying new ones.
                 $this->restoreStockForItems($order->items);
                 $order->items()->delete();
 
                 $items    = $this->buildItemsWithStockLock($data['items']);
                 $subtotal = collect($items)->sum('total_price');
 
+                $shippingCharge = $this->resolveShippingCharge($data, $subtotal);
+                $taxAmount      = $this->resolveTaxAmount($data, $subtotal);
+
+                $previousCouponId = $order->coupon_id;
+                $coupon           = null;
+                $discountAmount   = (float) ($data['discount_amount'] ?? 0);
+
+                if (!empty($data['coupon_code'])) {
+                    $coupon         = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal, ignoreOrderId: $order->id);
+                    $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
+                }
+
+                // Coupon changed (removed or swapped) — release the old one, consume the new one.
+                if ($previousCouponId && $previousCouponId !== $coupon?->id) {
+                    Coupon::where('id', $previousCouponId)->where('used_count', '>', 0)->decrement('used_count');
+                }
+                if ($coupon && $coupon->id !== $previousCouponId) {
+                    $coupon->increment('used_count');
+                }
+
                 $order->update([
                     'user_id'          => $data['user_id'],
                     'subtotal'         => $subtotal,
-                    'discount_amount'  => $data['discount_amount'] ?? 0,
-                    'shipping_charge'  => $data['shipping_charge'] ?? 0,
-                    'tax_amount'       => $data['tax_amount'] ?? 0,
-                    'total_amount'     => $this->calculateTotal($subtotal, $data),
-                    'coupon_code'      => $data['coupon_code'] ?? null,
+                    'discount_amount'  => $discountAmount,
+                    'shipping_charge'  => $shippingCharge,
+                    'tax_amount'       => $taxAmount,
+                    'total_amount'     => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
+                    'coupon_code'      => $coupon?->code,
+                    'coupon_id'        => $coupon?->id,
                     'shipping_name'    => $data['shipping_name'],
                     'shipping_email'   => $data['shipping_email'],
                     'shipping_phone'   => $data['shipping_phone'],
@@ -108,7 +148,7 @@ class OrderService
 
                 Log::info('Order updated successfully.', ['order_id' => $order->id]);
 
-                return $order->fresh(['items', 'user']);
+                return $order->fresh(['items', 'user', 'coupon']);
             });
         } catch (\Exception $e) {
             Log::error('Order update failed.', ['exception' => $e, 'order_id' => $order->id]);
@@ -266,6 +306,102 @@ class OrderService
         return $items;
     }
 
+    // ─────────────────────────────────────────────
+    // SETTINGS-DRIVEN RESOLUTION (shipping / tax)
+    // Admin form fields are treated as an override: if the admin
+    // typed a value, it's respected. If left blank, it's computed
+    // from the store's configured Shipping/Tax settings.
+    // ─────────────────────────────────────────────
+
+    private function resolveShippingCharge(array $data, float $subtotal): float
+    {
+        if (array_key_exists('shipping_charge', $data) && $data['shipping_charge'] !== null && $data['shipping_charge'] !== '') {
+            return round((float) $data['shipping_charge'], 2);
+        }
+
+        return round(
+            $this->settingService->resolveShippingCharge($data['shipping_city'] ?? null, $subtotal),
+            2
+        );
+    }
+
+    private function resolveTaxAmount(array $data, float $subtotal): float
+    {
+        if (array_key_exists('tax_amount', $data) && $data['tax_amount'] !== null && $data['tax_amount'] !== '') {
+            return round((float) $data['tax_amount'], 2);
+        }
+
+        $taxSettings = $this->settingService->getGroup('tax');
+
+        if (($taxSettings['tax_enabled'] ?? '0') !== '1') {
+            return 0.0;
+        }
+
+        $rate             = (float) ($taxSettings['tax_rate'] ?? 0);
+        $pricesIncludeTax = ($taxSettings['prices_include_tax'] ?? '0') === '1';
+
+        if ($rate <= 0) {
+            return 0.0;
+        }
+
+        // If prices already include tax, the tax line is informational only
+        // (already baked into subtotal) — don't add it again on top.
+        if ($pricesIncludeTax) {
+            return round($subtotal - ($subtotal / (1 + ($rate / 100))), 2);
+        }
+
+        return round($subtotal * ($rate / 100), 2);
+    }
+
+    // ─────────────────────────────────────────────
+    // COUPON VALIDATION & DISCOUNT CALCULATION
+    // ─────────────────────────────────────────────
+
+    private function validateAndLockCoupon(string $code, int $userId, float $subtotal, ?int $ignoreOrderId = null): Coupon
+    {
+        $coupon = Coupon::where('code', strtoupper(trim($code)))->lockForUpdate()->first();
+
+        if (!$coupon) {
+            throw new \Exception("Coupon \"{$code}\" does not exist.");
+        }
+
+        if (!$coupon->isCurrentlyValid()) {
+            throw new \Exception("Coupon \"{$coupon->code}\" is not currently valid (inactive, expired, not yet started, or usage limit reached).");
+        }
+
+        if ($subtotal < (float) $coupon->minimum_order_amount) {
+            throw new \Exception("Coupon \"{$coupon->code}\" requires a minimum order amount of {$coupon->minimum_order_amount}.");
+        }
+
+        $usedByCustomer = Order::where('user_id', $userId)
+            ->where('coupon_id', $coupon->id)
+            ->when($ignoreOrderId, fn($q) => $q->where('id', '!=', $ignoreOrderId))
+            ->whereNotIn('status', ['cancelled'])
+            ->count();
+
+        if ($usedByCustomer >= $coupon->usage_per_user) {
+            throw new \Exception("This customer has already used coupon \"{$coupon->code}\" the maximum number of times.");
+        }
+
+        return $coupon;
+    }
+
+    private function calculateCouponDiscount(Coupon $coupon, float $subtotal): float
+    {
+        if ($coupon->type === 'fixed') {
+            return round(min((float) $coupon->value, $subtotal), 2);
+        }
+
+        // percentage
+        $discount = $subtotal * ((float) $coupon->value / 100);
+
+        if ($coupon->maximum_discount) {
+            $discount = min($discount, (float) $coupon->maximum_discount);
+        }
+
+        return round(min($discount, $subtotal), 2);
+    }
+
     private function persistItemsAndAdjustStock(Order $order, array $items, bool $decrement): void
     {
         foreach ($items as $item) {
@@ -321,12 +457,9 @@ class OrderService
         ]);
     }
 
-    private function calculateTotal(float $subtotal, array $data): float
+    private function calculateTotal(float $subtotal, float $discountAmount, float $shippingCharge, float $taxAmount): float
     {
-        $total = $subtotal
-            - (float) ($data['discount_amount'] ?? 0)
-            + (float) ($data['shipping_charge'] ?? 0)
-            + (float) ($data['tax_amount'] ?? 0);
+        $total = $subtotal - $discountAmount + $shippingCharge + $taxAmount;
 
         return max(0, round($total, 2));
     }
@@ -337,17 +470,19 @@ class OrderService
 
     private function generateUniqueOrderNumber(): string
     {
-        $lastNumber = Order::where('order_number', 'like', 'ORD-%')
+        $prefix = $this->settingService->getGroup('order')['order_number_prefix'] ?? 'ORD-';
+
+        $lastNumber = Order::where('order_number', 'like', $prefix . '%')
             ->lockForUpdate()
             ->orderBy('order_number', 'desc')
             ->value('order_number');
 
         $next = 1;
         if ($lastNumber) {
-            $next = (int) substr($lastNumber, strrpos($lastNumber, '-') + 1) + 1;
+            $next = (int) substr($lastNumber, strrpos($lastNumber, '-') !== false ? strrpos($lastNumber, '-') + 1 : strlen($prefix)) + 1;
         }
 
-        return 'ORD-' . str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     // ─────────────────────────────────────────────

@@ -95,6 +95,10 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::get('/customers/{customer}/address', [OrderController::class, 'getCustomerAddress'])->name('customers.address');
             Route::get('/products/search',              [OrderController::class, 'searchProducts'])->name('products.search');
 
+            Route::get('/preview-shipping', [OrderController::class, 'previewShippingCharge'])->name('preview-shipping');
+            Route::get('/preview-tax', [OrderController::class, 'previewTax'])->name('preview-tax');
+            Route::post('/apply-coupon', [OrderController::class, 'applyCoupon'])->name('apply-coupon');
+
             Route::get('/{order}',        [OrderController::class, 'show'])->name('show');
             Route::get('/{order}/edit',    [OrderController::class, 'edit'])->name('edit')->middleware('permission:order.edit');
             Route::post('/{order}/update', [OrderController::class, 'update'])->name('update')->middleware('permission:order.edit');

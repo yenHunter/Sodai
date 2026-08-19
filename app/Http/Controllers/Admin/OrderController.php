@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Coupon;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Services\Admin\OrderService;
 use Illuminate\Support\Facades\Log;
+use App\Services\Admin\OrderService;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\SettingService;
 use App\Http\Requests\Admin\Order\StoreOrderRequest;
 use App\Http\Requests\Admin\Order\UpdateOrderRequest;
 
 class OrderController extends Controller
 {
     public function __construct(
-        private OrderService $orderService
+        private OrderService $orderService,
+        private SettingService $settingService
     ) {}
 
     // ─────────────────────────────────────────────
@@ -261,5 +264,120 @@ class OrderController extends Controller
             ]);
 
         return response()->json($products);
+    }
+
+    // ─────────────────────────────────────────────
+    // SHIPPING CHARGE PREVIEW (AJAX)
+    // Called from the POS form whenever the shipping city changes,
+    // so the admin sees the settings-driven charge before saving.
+    // ─────────────────────────────────────────────
+
+    public function previewShippingCharge(Request $request)
+    {
+        $request->validate([
+            'city'     => ['nullable', 'string', 'max:100'],
+            'subtotal' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $charge = $this->settingService->resolveShippingCharge(
+            $request->input('city'),
+            (float) $request->input('subtotal', 0)
+        );
+
+        return response()->json([
+            'shipping_charge' => $charge,
+            'within_area'     => $this->settingService->isWithinOperationArea($request->input('city')),
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // TAX PREVIEW (AJAX)
+    // ─────────────────────────────────────────────
+
+    public function previewTax(Request $request)
+    {
+        $request->validate([
+            'subtotal' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $taxSettings = $this->settingService->getGroup('tax');
+        $enabled     = ($taxSettings['tax_enabled'] ?? '0') === '1';
+        $rate        = (float) ($taxSettings['tax_rate'] ?? 0);
+        $label       = $taxSettings['tax_label'] ?? 'Tax';
+        $inclusive   = ($taxSettings['prices_include_tax'] ?? '0') === '1';
+
+        $subtotal = (float) $request->input('subtotal');
+
+        $taxAmount = 0.0;
+        if ($enabled && $rate > 0) {
+            $taxAmount = $inclusive
+                ? round($subtotal - ($subtotal / (1 + ($rate / 100))), 2)
+                : round($subtotal * ($rate / 100), 2);
+        }
+
+        return response()->json([
+            'tax_enabled' => $enabled,
+            'tax_label'   => $label,
+            'tax_rate'    => $rate,
+            'tax_amount'  => $taxAmount,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // COUPON VALIDATE / APPLY (AJAX)
+    // ─────────────────────────────────────────────
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'code'     => ['required', 'string', 'max:50'],
+            'user_id'  => ['required', 'integer', 'exists:users,id'],
+            'subtotal' => ['required', 'numeric', 'min:0'],
+            'order_id' => ['nullable', 'integer'],
+        ]);
+
+        $code    = strtoupper(trim($request->input('code')));
+        $coupon  = Coupon::where('code', $code)->first();
+        $subtotal = (float) $request->input('subtotal');
+
+        if (!$coupon) {
+            return response()->json(['success' => false, 'message' => "Coupon \"{$code}\" does not exist."], 422);
+        }
+
+        if (!$coupon->isCurrentlyValid()) {
+            return response()->json(['success' => false, 'message' => "Coupon \"{$coupon->code}\" is not currently valid."], 422);
+        }
+
+        if ($subtotal < (float) $coupon->minimum_order_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => "This coupon requires a minimum order of {$coupon->minimum_order_amount}.",
+            ], 422);
+        }
+
+        $usedByCustomer = \App\Models\Order::where('user_id', $request->input('user_id'))
+            ->where('coupon_id', $coupon->id)
+            ->when($request->input('order_id'), fn($q) => $q->where('id', '!=', $request->input('order_id')))
+            ->whereNotIn('status', ['cancelled'])
+            ->count();
+
+        if ($usedByCustomer >= $coupon->usage_per_user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This customer has already used this coupon the maximum number of times.',
+            ], 422);
+        }
+
+        $discount = $coupon->type === 'fixed'
+            ? min((float) $coupon->value, $subtotal)
+            : min($subtotal * ((float) $coupon->value / 100), $coupon->maximum_discount ?: PHP_FLOAT_MAX, $subtotal);
+
+        return response()->json([
+            'success'          => true,
+            'code'             => $coupon->code,
+            'type'             => $coupon->type,
+            'value_label'      => $coupon->value_label,
+            'discount_amount'  => round($discount, 2),
+        ]);
     }
 }

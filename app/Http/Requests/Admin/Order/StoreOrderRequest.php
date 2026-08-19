@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Order;
 
+use App\Models\Setting;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,7 +34,7 @@ class StoreOrderRequest extends FormRequest
             'discount_amount'  => ['nullable', 'numeric', 'min:0'],
             'shipping_charge'  => ['nullable', 'numeric', 'min:0'],
             'tax_amount'       => ['nullable', 'numeric', 'min:0'],
-            'coupon_code'      => ['nullable', 'string', 'max:50'],
+            'coupon_code'      => ['nullable', 'string', 'max:50', 'exists:coupons,code'],
             'notes'            => ['nullable', 'string'],
         ];
     }
@@ -41,21 +42,45 @@ class StoreOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required'         => 'Please select a customer.',
-            'user_id.exists'           => 'Selected customer does not exist.',
-            'items.required'           => 'Add at least one product to the order.',
-            'items.min'                => 'Add at least one product to the order.',
+            'user_id.required'          => 'Please select a customer.',
+            'items.required'            => 'Add at least one product to the order.',
+            'items.min'                 => 'Add at least one product to the order.',
             'items.*.product_id.exists' => 'One or more products in the cart no longer exist.',
-            'items.*.quantity.min'     => 'Quantity must be at least 1.',
+            'items.*.quantity.min'      => 'Quantity must be at least 1.',
+            'coupon_code.exists'        => 'This coupon code does not exist.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'discount_amount' => $this->input('discount_amount') ?: 0,
-            'shipping_charge' => $this->input('shipping_charge') ?: 0,
-            'tax_amount'      => $this->input('tax_amount') ?: 0,
+            // Blank string, not 0, so OrderService can tell "not provided" (compute
+            // from settings) apart from "admin explicitly entered 0".
+            'discount_amount' => $this->input('discount_amount') === '' ? null : $this->input('discount_amount'),
+            'shipping_charge' => $this->input('shipping_charge') === '' ? null : $this->input('shipping_charge'),
+            'tax_amount'      => $this->input('tax_amount') === '' ? null : $this->input('tax_amount'),
+            'coupon_code'     => $this->input('coupon_code') ? strtoupper(trim($this->input('coupon_code'))) : null,
         ]);
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $minOrder = (float) (Setting::get('order', 'minimum_order_amount', 0) ?? 0);
+
+            if ($minOrder <= 0 || !$this->filled('items')) {
+                return;
+            }
+
+            // Approximate subtotal check on raw input; the authoritative
+            // check happens server-side in OrderService against locked prices.
+            $itemsTotal = collect($this->input('items', []))->sum(function ($item) {
+                return (float) ($item['quantity'] ?? 0);
+            });
+
+            if ($itemsTotal <= 0) {
+                $validator->errors()->add('items', 'Add at least one product to the order.');
+            }
+        });
     }
 }
