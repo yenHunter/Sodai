@@ -191,12 +191,6 @@
                         <span class="menu-text" data-lang="apps-chat">Chat</span>
                     </a>
                 </li>
-                <li class="side-nav-item">
-                    <a class="side-nav-link" href="{{ url('/apps/social-feed') }}">
-                        <span class="menu-icon"><i data-lucide="rss"></i></span>
-                        <span class="menu-text" data-lang="apps-social-feed">Social Feed</span>
-                    </a>
-                </li>
                 <li class="side-nav-title mt-2" data-lang="ecommerce">Settings</li>
                 <li class="side-nav-item">
                     <a aria-controls="users" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"

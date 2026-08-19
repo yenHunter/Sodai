@@ -1,15 +1,15 @@
-@extends("shared.base", ["title" => "Social Feed"])
+@extends("admin.include.base", ["title" => "Social Feed"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "Apps", "title" => "Social Feed"])
+                @include("admin.include.partials.page-title", ["subtitle" => "Apps", "title" => "Social Feed"])
 
                 <div class="row">
                     <div class="col-xl-3 col-lg-6 order-lg-1 order-xl-1">
@@ -809,11 +809,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")
