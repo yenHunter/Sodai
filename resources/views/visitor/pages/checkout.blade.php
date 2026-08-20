@@ -170,7 +170,7 @@
 
                             </div>
                             <span class="ec-check-order-btn">
-                                <a class="btn btn-primary" href="#">Place Order</a>
+                                <a class="btn btn-primary" href="{{ route('visitor.order-confirm') }}">Place Order</a>
                             </span>
                         </div>
                     </div>
@@ -218,9 +218,11 @@
                                             <div class="ec-pro-image-outer">
                                                 <div class="ec-pro-image">
                                                     <a href="product-left-sidebar.html" class="image">
-                                                        <img class="main-image" src="{{ asset('visitor/images/product-image/1_1.jpg') }}"
+                                                        <img class="main-image"
+                                                            src="{{ asset('visitor/images/product-image/1_1.jpg') }}"
                                                             alt="Product" />
-                                                        <img class="hover-image" src="{{ asset('visitor/images/product-image/1_2.jpg') }}"
+                                                        <img class="hover-image"
+                                                            src="{{ asset('visitor/images/product-image/1_2.jpg') }}"
                                                             alt="Product" />
                                                     </a>
                                                 </div>
@@ -293,9 +295,11 @@
                                             <div class="ec-pro-image-outer">
                                                 <div class="ec-pro-image">
                                                     <a href="product-left-sidebar.html" class="image">
-                                                        <img class="main-image" src="{{ asset('visitor/images/product-image/8_1.jpg') }}"
+                                                        <img class="main-image"
+                                                            src="{{ asset('visitor/images/product-image/8_1.jpg') }}"
                                                             alt="Product" />
-                                                        <img class="hover-image" src="{{ asset('visitor/images/product-image/8_2.jpg') }}"
+                                                        <img class="hover-image"
+                                                            src="{{ asset('visitor/images/product-image/8_2.jpg') }}"
                                                             alt="Product" />
                                                     </a>
                                                 </div>
@@ -484,8 +488,10 @@
                         <div class="ec-pro-image-outer">
                             <div class="ec-pro-image">
                                 <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/6_1.jpg') }}" alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/6_2.jpg') }}" alt="Product" />
+                                    <img class="main-image" src="{{ asset('visitor/images/product-image/6_1.jpg') }}"
+                                        alt="Product" />
+                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/6_2.jpg') }}"
+                                        alt="Product" />
                                 </a>
                                 <span class="percentage">20%</span>
                                 <a href="#" class="quickview" data-link-action="quickview" title="Quick view"
@@ -552,8 +558,10 @@
                         <div class="ec-pro-image-outer">
                             <div class="ec-pro-image">
                                 <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/7_1.jpg') }}" alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/7_2.jpg') }}" alt="Product" />
+                                    <img class="main-image" src="{{ asset('visitor/images/product-image/7_1.jpg') }}"
+                                        alt="Product" />
+                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/7_2.jpg') }}"
+                                        alt="Product" />
                                 </a>
                                 <span class="percentage">20%</span>
                                 <span class="flags">
@@ -623,8 +631,10 @@
                         <div class="ec-pro-image-outer">
                             <div class="ec-pro-image">
                                 <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/1_1.jpg') }}" alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/1_2.jpg') }}" alt="Product" />
+                                    <img class="main-image" src="{{ asset('visitor/images/product-image/1_1.jpg') }}"
+                                        alt="Product" />
+                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/1_2.jpg') }}"
+                                        alt="Product" />
                                 </a>
                                 <span class="percentage">20%</span>
                                 <span class="flags">
@@ -702,8 +712,10 @@
                         <div class="ec-pro-image-outer">
                             <div class="ec-pro-image">
                                 <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/2_1.jpg') }}" alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/2_2.jpg') }}" alt="Product" />
+                                    <img class="main-image" src="{{ asset('visitor/images/product-image/2_1.jpg') }}"
+                                        alt="Product" />
+                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/2_2.jpg') }}"
+                                        alt="Product" />
                                 </a>
                                 <span class="percentage">20%</span>
                                 <span class="flags">
@@ -744,7 +756,8 @@
                                         <li class="active">
                                             <a href="#" class="ec-opt-clr-img"
                                                 data-src="{{ asset('visitor/images/product-image/2_1.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/2_2.jpg') }}" data-tooltip="Gray">
+                                                data-src-hover="{{ asset('visitor/images/product-image/2_2.jpg') }}"
+                                                data-tooltip="Gray">
                                                 <span style="background-color:#fdbf04;"></span>
                                             </a>
                                         </li>

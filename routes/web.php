@@ -26,6 +26,10 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
+Route::get('order-confirm', function () {
+    return view('visitor.pages.order-confirm');
+})->name('visitor.order-confirm');
+
 // Route::get('products', function () {
 //     return view('visitor.pages.products');
 // })->name('visitor.products');
