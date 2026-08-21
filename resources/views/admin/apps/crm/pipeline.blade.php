@@ -1,15 +1,15 @@
-@extends("shared.base", ["title" => "CRM Pipeline"])
+@extends("admin.include.base", ["title" => "CRM Pipeline"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "CRM", "title" => "Pipeline"])
+                @include("admin.include.partials.page-title", ["subtitle" => "CRM", "title" => "Pipeline"])
 
                 <div class="outlook-box kanban-app">
                     <div class="card h-100 mb-0 flex-grow-1">
@@ -856,11 +856,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")

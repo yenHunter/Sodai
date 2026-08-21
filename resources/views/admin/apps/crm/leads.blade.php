@@ -1,15 +1,15 @@
-@extends("shared.base", ["title" => "CRM Leads"])
+@extends("admin.include.base", ["title" => "CRM Leads"])
 
 @section("styles")
 @endsection
 
 @section("content")
     <div class="wrapper">
-        @include("shared.partials.topbar") @include("shared.partials.sidenav")
+        @include("admin.include.partials.topbar") @include("admin.include.partials.sidenav")
 
         <div class="content-page">
             <div class="container-fluid">
-                @include("shared.partials.page-title", ["subtitle" => "CRM", "title" => "Leads"])
+                @include("admin.include.partials.page-title", ["subtitle" => "CRM", "title" => "Leads"])
 
                 <div class="row row-cols-2 row-cols-md-4 row-cols-xl-6 g-1 mb-1">
                     <div class="col">
@@ -642,11 +642,11 @@
                 </div>
             </div>
 
-            @include("shared.partials.footer")
+            @include("admin.include.partials.footer")
         </div>
     </div>
 
-    @include("shared.partials.customizer") @include("shared.partials.footer-scripts")
+    @include("admin.include.partials.customizer") @include("admin.include.partials.footer-scripts")
 @endsection
 
 @section("scripts")
