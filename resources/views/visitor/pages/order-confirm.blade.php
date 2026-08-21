@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai - About Us', 'bodyClass' => 'aboutus_page'])
+@extends('visitor.layout.app', ['title' => 'Thank You', 'bodyClass' => 'cart_page'])
 
 @section('styles')
 @endsection

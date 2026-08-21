@@ -30,17 +30,29 @@ Route::get('order-confirm', function () {
     return view('visitor.pages.order-confirm');
 })->name('visitor.order-confirm');
 
-// Route::get('products', function () {
-//     return view('visitor.pages.products');
-// })->name('visitor.products');
+Route::get('privacy-policy', function () {
+    return view('visitor.pages.privacy-policy');
+})->name('visitor.privacy-policy');
 
-// Route::get('product-details', function () {
-//     return view('visitor.pages.product-details');
-// })->name('visitor.product-details');
+Route::get('shipping-policy', function () {
+    return view('visitor.pages.shipping-policy');
+})->name('visitor.shipping-policy');
 
-// Route::get('products-by-category', function () {
-//     return view('visitor.pages.products-by-category');
-// })->name('visitor.products-by-category');
+Route::get('terms-conditions', function () {
+    return view('visitor.pages.terms-conditions');
+})->name('visitor.terms-conditions');
+
+Route::get('return-refund-policy', function () {
+    return view('visitor.pages.return-refund-policy');
+})->name('visitor.return-refund-policy');
+
+Route::get('faq', function () {
+    return view('visitor.pages.faq');
+})->name('visitor.faq');
+
+Route::get('offers', function () {
+    return view('visitor.pages.offers');
+})->name('visitor.offers');
 
 Route::get('checkout', function () {
     return view('visitor.pages.checkout');

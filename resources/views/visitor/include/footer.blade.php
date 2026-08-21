@@ -19,8 +19,8 @@
                             <div class="ec-footer-logo">
                                 <a href="#">
                                     <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo">
-                                    <img class="dark-footer-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}" alt="Site Logo"
-                                        style="display: none;" />
+                                    <img class="dark-footer-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}"
+                                        alt="Site Logo" style="display: none;" />
                                 </a>
                             </div>
                             <h4 class="ec-footer-heading">Contact us</h4>
@@ -40,11 +40,18 @@
                             <h4 class="ec-footer-heading">Information</h4>
                             <div class="ec-footer-links">
                                 <ul class="align-items-center">
-                                    <li class="ec-footer-link"><a href="about-us.html">About us</a></li>
-                                    <li class="ec-footer-link"><a href="faq.html">FAQ</a></li>
-                                    <li class="ec-footer-link"><a href="track-order.html">Delivery Information</a>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.about') }}">About us</a>
                                     </li>
-                                    <li class="ec-footer-link"><a href="contact-us.html">Contact us</a></li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.faq') }}">FAQ</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.products.index') }}">Products</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.contact') }}">Contact us</a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -54,25 +61,39 @@
                             <h4 class="ec-footer-heading">Account</h4>
                             <div class="ec-footer-links">
                                 <ul class="align-items-center">
-                                    <li class="ec-footer-link"><a href="user-profile.html">My Account</a></li>
-                                    <li class="ec-footer-link"><a href="track-order.html">Order History</a></li>
-                                    <li class="ec-footer-link"><a href="wishlist.html">Wish List</a></li>
-                                    <li class="ec-footer-link"><a href="offer.html">Specials</a></li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.account.show') }}">My Account</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.account.orders.index') }}">Order History</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.account.wishlist.index') }}">Wish List</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.offers') }}">Offers</a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col-sm-12 col-lg-2 ec-footer-service">
                         <div class="ec-footer-widget">
-                            <h4 class="ec-footer-heading">Services</h4>
+                            <h4 class="ec-footer-heading">Policy</h4>
                             <div class="ec-footer-links">
                                 <ul class="align-items-center">
-                                    <li class="ec-footer-link"><a href="track-order.html">Discount Returns</a></li>
-                                    <li class="ec-footer-link"><a href="privacy-policy.html">Policy & policy </a>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.privacy-policy') }}">Privacy Policy</a>
                                     </li>
-                                    <li class="ec-footer-link"><a href="terms-condition.html">Customer Service</a>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.shipping-policy') }}">Shipping Policy</a>
                                     </li>
-                                    <li class="ec-footer-link"><a href="terms-condition.html">Term & condition</a>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.return-refund-policy') }}">Return & Refund
+                                            Policy</a>
+                                    </li>
+                                    <li class="ec-footer-link">
+                                        <a href="{{ route('visitor.terms-conditions') }}">Terms & Conditions</a>
                                     </li>
                                 </ul>
                             </div>
