@@ -164,7 +164,9 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/', [CouponController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:coupon.delete');
             Route::patch('/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:coupon.edit');
         });
+    });
 
+    Route::prefix('cms')->name('cms.')->group(function () {
         // ── Banners: only roles with banner permissions ──
         Route::middleware('permission:banner.view')->prefix('banners')->name('banner.')->group(function () {
             Route::get('/', [BannerController::class, 'index'])->name('index');

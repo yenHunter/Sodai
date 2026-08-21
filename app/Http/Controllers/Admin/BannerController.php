@@ -23,7 +23,7 @@ class BannerController extends Controller
     {
         $banners = $this->bannerService->getBannersList();
 
-        return view('admin.ecommerce.banner.index', compact('banners'));
+        return view('admin.cms.banner.index', compact('banners'));
     }
 
     // ─────────────────────────────────────────────
@@ -36,11 +36,11 @@ class BannerController extends Controller
             $this->bannerService->store($request->validated());
 
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('success', 'Banner created successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('error', 'Failed to create banner: ' . $e->getMessage());
         }
     }
@@ -55,11 +55,11 @@ class BannerController extends Controller
             $this->bannerService->update($banner, $request->validated());
 
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('success', 'Banner updated successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('error', 'Failed to update banner: ' . $e->getMessage());
         }
     }
@@ -74,11 +74,11 @@ class BannerController extends Controller
             $this->bannerService->delete($banner);
 
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('success', 'Banner deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('error', $e->getMessage());
         }
     }
@@ -90,7 +90,7 @@ class BannerController extends Controller
         $ids = array_filter(explode(',', $request->input('ids')), fn ($id) => is_numeric($id));
 
         if (empty($ids)) {
-            return redirect()->route('admin.ecommerce.banner.index')->with('error', 'No banners selected.');
+            return redirect()->route('admin.cms.banner.index')->with('error', 'No banners selected.');
         }
 
         $successCount = 0;
@@ -112,10 +112,10 @@ class BannerController extends Controller
 
         if (!empty($failedTitles)) {
             $message .= ' Failed: ' . implode(', ', $failedTitles) . '.';
-            return redirect()->route('admin.ecommerce.banner.index')->with('error', $message);
+            return redirect()->route('admin.cms.banner.index')->with('error', $message);
         }
 
-        return redirect()->route('admin.ecommerce.banner.index')->with('success', $message);
+        return redirect()->route('admin.cms.banner.index')->with('success', $message);
     }
 
     // ─────────────────────────────────────────────
@@ -129,11 +129,11 @@ class BannerController extends Controller
             $status  = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('success', "Banner {$status} successfully.");
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.ecommerce.banner.index')
+                ->route('admin.cms.banner.index')
                 ->with('error', 'Failed to update status.');
         }
     }

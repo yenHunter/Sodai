@@ -105,7 +105,7 @@
                                     </td>
                                     <td>
                                         @admincan('banner.edit')
-                                            <form action="{{ route('admin.ecommerce.banner.toggle-status', $banner) }}"
+                                            <form action="{{ route('admin.cms.banner.toggle-status', $banner) }}"
                                                 method="POST" class="d-inline toggle-status-form">
                                                 @csrf
                                                 @method('PATCH')
@@ -142,7 +142,7 @@
                                                     data-status="{{ $banner->is_active ? 'active' : 'inactive' }}"
                                                     data-image="{{ $banner->image_url }}"
                                                     data-mobile-image="{{ $banner->mobile_image_url }}"
-                                                    data-update-url="{{ route('admin.ecommerce.banner.update', $banner) }}">
+                                                    data-update-url="{{ route('admin.cms.banner.update', $banner) }}">
                                                     <i class="fs-lg" data-lucide="square-pen"></i>
                                                 </button>
                                             @endadmincan
@@ -153,7 +153,7 @@
                                                     title="Delete" data-bs-toggle="modal"
                                                     data-bs-target="#deleteBannerModal" data-id="{{ $banner->id }}"
                                                     data-title="{{ $banner->title ?: 'this banner' }}"
-                                                    data-delete-url="{{ route('admin.ecommerce.banner.destroy', $banner) }}">
+                                                    data-delete-url="{{ route('admin.cms.banner.destroy', $banner) }}">
                                                     <i class="fs-lg" data-lucide="trash-2"></i>
                                                 </button>
                                             @endadmincan
@@ -177,7 +177,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="bannerForm" method="POST" enctype="multipart/form-data"
-                    data-store-url="{{ route('admin.ecommerce.banner.store') }}">
+                    data-store-url="{{ route('admin.cms.banner.store') }}">
                     @csrf
                     <input type="hidden" name="_method" id="formMethod" value="POST">
                     <div class="modal-body">
@@ -376,7 +376,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <form id="bulkDeleteForm" action="{{ route('admin.ecommerce.banner.bulk-destroy') }}"
+                        <form id="bulkDeleteForm" action="{{ route('admin.cms.banner.bulk-destroy') }}"
                             method="POST">
                             @csrf
                             @method('DELETE')
