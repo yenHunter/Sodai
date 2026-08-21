@@ -25,7 +25,7 @@ class BannerModuleTest extends TestCase
         Banner::factory()->count(2)->create();
 
         $this->actingAsAdmin($admin)
-            ->get(route('admin.ecommerce.banner.index'))
+            ->get(route('admin.cms.banner.index'))
             ->assertOk();
     }
 
@@ -34,7 +34,7 @@ class BannerModuleTest extends TestCase
         $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
 
         $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.banner.store'), [
+            ->post(route('admin.cms.banner.store'), [
                 'title'       => 'New Fashion Collection',
                 'subtitle'    => 'Sale Offer',
                 'button_text' => 'Order Now',
@@ -43,7 +43,7 @@ class BannerModuleTest extends TestCase
                 'is_active'   => 'active',
                 'image'       => UploadedFile::fake()->image('slide.jpg'),
             ])
-            ->assertRedirect(route('admin.ecommerce.banner.index'));
+            ->assertRedirect(route('admin.cms.banner.index'));
 
         $this->assertDatabaseHas('banners', ['title' => 'New Fashion Collection']);
 
@@ -56,7 +56,7 @@ class BannerModuleTest extends TestCase
         $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
 
         $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.banner.store'), [
+            ->post(route('admin.cms.banner.store'), [
                 'position'  => 'home_slider',
                 'is_active' => 'active',
             ])
@@ -68,7 +68,7 @@ class BannerModuleTest extends TestCase
         $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
 
         $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.banner.store'), [
+            ->post(route('admin.cms.banner.store'), [
                 'position'  => 'invalid_position',
                 'is_active' => 'active',
                 'image'     => UploadedFile::fake()->image('slide.jpg'),
@@ -81,7 +81,7 @@ class BannerModuleTest extends TestCase
         $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
 
         $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.banner.store'), [
+            ->post(route('admin.cms.banner.store'), [
                 'position'   => 'home_slider',
                 'is_active'  => 'active',
                 'image'      => UploadedFile::fake()->image('slide.jpg'),
@@ -97,12 +97,12 @@ class BannerModuleTest extends TestCase
         $banner = Banner::factory()->create(['title' => 'Old Title', 'image' => 'banners/existing.jpg']);
 
         $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.banner.update', $banner), [
+            ->post(route('admin.cms.banner.update', $banner), [
                 'title'     => 'Updated Title',
                 'position'  => 'home_slider',
                 'is_active' => 'active',
             ])
-            ->assertRedirect(route('admin.ecommerce.banner.index'));
+            ->assertRedirect(route('admin.cms.banner.index'));
 
         $this->assertDatabaseHas('banners', [
             'id'    => $banner->id,
@@ -117,8 +117,8 @@ class BannerModuleTest extends TestCase
         $banner = Banner::factory()->create(['is_active' => true]);
 
         $this->actingAsAdmin($admin)
-            ->patch(route('admin.ecommerce.banner.toggle-status', $banner))
-            ->assertRedirect(route('admin.ecommerce.banner.index'));
+            ->patch(route('admin.cms.banner.toggle-status', $banner))
+            ->assertRedirect(route('admin.cms.banner.index'));
 
         $this->assertDatabaseHas('banners', ['id' => $banner->id, 'is_active' => false]);
     }
@@ -129,8 +129,8 @@ class BannerModuleTest extends TestCase
         $banner = Banner::factory()->create();
 
         $this->actingAsAdmin($admin)
-            ->delete(route('admin.ecommerce.banner.destroy', $banner))
-            ->assertRedirect(route('admin.ecommerce.banner.index'));
+            ->delete(route('admin.cms.banner.destroy', $banner))
+            ->assertRedirect(route('admin.cms.banner.index'));
 
         $this->assertSoftDeleted('banners', ['id' => $banner->id]);
     }
@@ -141,10 +141,10 @@ class BannerModuleTest extends TestCase
         $banners = Banner::factory()->count(3)->create();
 
         $this->actingAsAdmin($admin)
-            ->delete(route('admin.ecommerce.banner.bulk-destroy'), [
+            ->delete(route('admin.cms.banner.bulk-destroy'), [
                 'ids' => $banners->pluck('id')->implode(','),
             ])
-            ->assertRedirect(route('admin.ecommerce.banner.index'));
+            ->assertRedirect(route('admin.cms.banner.index'));
 
         foreach ($banners as $banner) {
             $this->assertSoftDeleted('banners', ['id' => $banner->id]);
@@ -162,7 +162,7 @@ class BannerModuleTest extends TestCase
 
     public function test_unauthenticated_user_is_redirected_from_banner_routes(): void
     {
-        $this->get(route('admin.ecommerce.banner.index'))
+        $this->get(route('admin.cms.banner.index'))
             ->assertRedirect(route('admin.login.view'));
     }
 }
