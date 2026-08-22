@@ -12,7 +12,7 @@ class AdminAuthenticated
     public function handle(Request $request, Closure $next): Response
     {
         // Check if admin is logged in
-        if (!Auth::guard('admin')->check()) {
+        if (! Auth::guard('admin')->check()) {
             return redirect()
                 ->route('admin.login.view')
                 ->with('error', 'Please login to access admin panel.');
@@ -21,7 +21,7 @@ class AdminAuthenticated
         $admin = Auth::guard('admin')->user();
 
         // Check if admin account is active
-        if (!$admin->isActive()) {
+        if (! $admin->isActive()) {
             Auth::guard('admin')->logout();
 
             $request->session()->invalidate();

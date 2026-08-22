@@ -18,9 +18,9 @@ class UpdateProfileRequest extends FormRequest
         $adminId = Auth::guard('admin')->id();
 
         return [
-            'name'   => ['required', 'string', 'max:255'],
-            'email'  => ['required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($adminId)],
-            'phone'  => ['nullable', 'string', 'max:30'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($adminId)],
+            'phone' => ['nullable', 'string', 'max:30'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ];
     }

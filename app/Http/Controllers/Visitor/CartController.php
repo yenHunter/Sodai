@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Visitor;
 
+use App\Http\Controllers\Controller;
 use App\Models\CartItem;
+use App\Services\Visitor\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\CartService;
-use App\Http\Controllers\Controller;
 
 class CartController extends Controller
 {
@@ -21,7 +21,7 @@ class CartController extends Controller
             $request->session()->getId()
         );
 
-        $cart  = $this->cartService->getCartWithItems($cart);
+        $cart = $this->cartService->getCartWithItems($cart);
         $total = $this->cartService->getCartTotal($cart);
 
         return view('visitor.pages.cart', compact('cart', 'total'));
@@ -31,7 +31,7 @@ class CartController extends Controller
     {
         $request->validate([
             'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'quantity'           => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $cart = $this->cartService->getOrCreateCart(

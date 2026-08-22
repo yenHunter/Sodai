@@ -19,19 +19,19 @@ class BrandService
         return DB::transaction(function () use ($data) {
 
             $logoPath = null;
-            if (!empty($data['logo'])) {
+            if (! empty($data['logo'])) {
                 $logoPath = $this->uploadImage($data['logo']);
             }
 
             return Brand::create([
-                'name'        => $data['name'],
-                'slug'        => $this->generateUniqueSlug($data['name']),
+                'name' => $data['name'],
+                'slug' => $this->generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
-                'website'     => $data['website'] ?? null,
-                'logo'        => $logoPath,
+                'website' => $data['website'] ?? null,
+                'logo' => $logoPath,
                 // ✅ Convert any format to boolean
-                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
-                'sort_order'  => $data['sort_order'] ?? 0,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'sort_order' => $data['sort_order'] ?? 0,
             ]);
         });
     }
@@ -46,7 +46,7 @@ class BrandService
 
             $logoPath = $brand->logo;
 
-            if (!empty($data['logo'])) {
+            if (! empty($data['logo'])) {
                 $this->deleteImage($brand->logo);
                 $logoPath = $this->uploadImage($data['logo']);
             }
@@ -57,14 +57,14 @@ class BrandService
             }
 
             $brand->update([
-                'name'        => $data['name'],
-                'slug'        => $slug,
+                'name' => $data['name'],
+                'slug' => $slug,
                 'description' => $data['description'] ?? null,
-                'website'     => $data['website'] ?? null,
-                'logo'        => $logoPath,
+                'website' => $data['website'] ?? null,
+                'logo' => $logoPath,
                 // ✅ Convert any format to boolean
-                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
-                'sort_order'  => $data['sort_order'] ?? 0,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'sort_order' => $data['sort_order'] ?? 0,
             ]);
 
             return $brand->fresh();
@@ -86,6 +86,7 @@ class BrandService
             }
 
             $this->deleteImage($brand->logo);
+
             return $brand->delete();
         });
     }
@@ -96,7 +97,7 @@ class BrandService
 
     public function toggleStatus(Brand $brand): Brand
     {
-        $brand->update(['is_active' => !$brand->is_active]);
+        $brand->update(['is_active' => ! $brand->is_active]);
 
         return $brand->fresh();
     }
@@ -108,16 +109,16 @@ class BrandService
     private function uploadImage(UploadedFile $image): string
     {
         try {
-            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('brands', $filename, 'public');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('brands', $filename, 'public');
 
-            if (!$path) {
+            if (! $path) {
                 throw new \Exception('Failed to upload logo.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Logo upload failed: ' . $e->getMessage());
+            throw new \Exception('Logo upload failed: '.$e->getMessage());
         }
     }
 
@@ -158,17 +159,19 @@ class BrandService
         string $name,
         ?int $ignoreId = null
     ): string {
-        $slug     = Str::slug($name);
+        $slug = Str::slug($name);
         $original = $slug;
-        $count    = 1;
+        $count = 1;
 
         while (true) {
             $query = Brand::where('slug', $slug);
             if ($ignoreId) {
                 $query->where('id', '!=', $ignoreId);
             }
-            if (!$query->exists()) break;
-            $slug = $original . '-' . $count++;
+            if (! $query->exists()) {
+                break;
+            }
+            $slug = $original.'-'.$count++;
         }
 
         return $slug;

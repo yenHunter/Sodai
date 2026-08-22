@@ -15,10 +15,10 @@ class UpdateTaxRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tax_enabled'         => ['nullable'],
-            'tax_label'           => ['nullable', 'string', 'max:50'],
-            'tax_rate'            => ['required', 'numeric', 'min:0', 'max:100'],
-            'prices_include_tax'  => ['nullable'],
+            'tax_enabled' => ['nullable'],
+            'tax_label' => ['nullable', 'string', 'max:50'],
+            'tax_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'prices_include_tax' => ['nullable'],
         ];
     }
 

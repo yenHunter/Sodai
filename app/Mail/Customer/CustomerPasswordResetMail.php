@@ -15,13 +15,13 @@ class CustomerPasswordResetMail extends Mailable
     public function __construct(
         public string $resetUrl,
         public string $customerName,
-        public int    $expiresInMinutes = 60,
+        public int $expiresInMinutes = 60,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reset Your Password - ' . config('app.name'),
+            subject: 'Reset Your Password - '.config('app.name'),
         );
     }
 

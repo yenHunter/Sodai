@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('product_relations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')
-                  ->constrained()
-                  ->onDelete('cascade');
+                ->constrained()
+                ->onDelete('cascade');
             $table->foreignId('related_product_id')
-                  ->constrained('products')
-                  ->onDelete('cascade');
+                ->constrained('products')
+                ->onDelete('cascade');
             $table->timestamps();
 
             $table->unique(['product_id', 'related_product_id']);

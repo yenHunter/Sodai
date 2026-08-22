@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use App\Models\Address;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\AddressService;
 use App\Http\Controllers\Controller;
-use App\Traits\Visitor\EnsuresCustomerOwnership;
 use App\Http\Requests\Visitor\Address\StoreAddressRequest;
 use App\Http\Requests\Visitor\Address\UpdateAddressRequest;
+use App\Models\Address;
+use App\Services\Visitor\AddressService;
+use App\Traits\Visitor\EnsuresCustomerOwnership;
+use Illuminate\Support\Facades\Auth;
 
 class AddressController extends Controller
 {
@@ -32,7 +32,7 @@ class AddressController extends Controller
 
             return redirect()->back()->with('success', 'Address added successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to add address: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to add address: '.$e->getMessage());
         }
     }
 
@@ -45,7 +45,7 @@ class AddressController extends Controller
 
             return redirect()->back()->with('success', 'Address updated successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update address: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update address: '.$e->getMessage());
         }
     }
 

@@ -15,7 +15,7 @@ class StoreBrandRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => [
+            'name' => [
                 'required',
                 'string',
                 'max:100',
@@ -26,21 +26,21 @@ class StoreBrandRequest extends FormRequest
                 'string',
                 'max:500',
             ],
-            'website'     => [
+            'website' => [
                 'nullable',
                 'url',
                 'max:255',
             ],
-            'logo'        => [
+            'logo' => [
                 'nullable',
                 'image',
                 'mimes:jpeg,jpg,png,webp',
                 'max:2048',
             ],
-            'is_active'   => [
+            'is_active' => [
                 'required',
             ],
-            'sort_order'  => [
+            'sort_order' => [
                 'nullable',
                 'integer',
                 'min:0',
@@ -52,13 +52,13 @@ class StoreBrandRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'      => 'Brand name is required.',
-            'name.unique'        => 'This brand name already exists.',
-            'name.max'           => 'Brand name cannot exceed 100 characters.',
-            'website.url'        => 'Please enter a valid URL (e.g. https://example.com).',
-            'logo.image'         => 'File must be an image.',
-            'logo.mimes'         => 'Logo must be jpeg, jpg, png or webp.',
-            'logo.max'           => 'Logo size cannot exceed 2MB.',
+            'name.required' => 'Brand name is required.',
+            'name.unique' => 'This brand name already exists.',
+            'name.max' => 'Brand name cannot exceed 100 characters.',
+            'website.url' => 'Please enter a valid URL (e.g. https://example.com).',
+            'logo.image' => 'File must be an image.',
+            'logo.mimes' => 'Logo must be jpeg, jpg, png or webp.',
+            'logo.max' => 'Logo size cannot exceed 2MB.',
             'is_active.required' => 'Status is required.',
         ];
     }

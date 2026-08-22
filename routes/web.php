@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Visitor\AuthController;
+use Illuminate\Support\Facades\Route;
 
 // ── Email Verification (public — customer has no session until verified) ──
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])

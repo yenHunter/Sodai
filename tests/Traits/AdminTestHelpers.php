@@ -12,7 +12,7 @@ trait AdminTestHelpers
 
     protected function ensurePermissionsSeeded(): void
     {
-        if (!$this->permissionsSeededForTest) {
+        if (! $this->permissionsSeededForTest) {
             $this->seed(RolePermissionSeeder::class);
             $this->permissionsSeededForTest = true;
         }
@@ -36,7 +36,7 @@ trait AdminTestHelpers
         $this->ensurePermissionsSeeded();
 
         $admin = Admin::factory()->create(['is_active' => true]);
-        $role  = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'admin']);
+        $role = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'admin']);
         $admin->assignRole($role);
 
         return $admin;

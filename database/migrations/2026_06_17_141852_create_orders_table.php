@@ -24,7 +24,7 @@ return new class extends Migration
                 'shipped',
                 'delivered',
                 'cancelled',
-                'refunded'
+                'refunded',
             ])->default('pending');
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);

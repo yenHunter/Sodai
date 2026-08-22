@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use App\Models\Order;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\CustomerOrderService;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Services\Visitor\CustomerOrderService;
 use App\Traits\Visitor\EnsuresCustomerOwnership;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -37,14 +37,14 @@ class OrderController extends Controller
     private function buildTrackingSteps(string $status): array
     {
         $steps = [
-            'pending'    => 'Order Placed',
-            'confirmed'  => 'Confirmed',
+            'pending' => 'Order Placed',
+            'confirmed' => 'Confirmed',
             'processing' => 'Processing',
-            'shipped'    => 'Shipped',
-            'delivered'  => 'Delivered',
+            'shipped' => 'Shipped',
+            'delivered' => 'Delivered',
         ];
 
-        $order      = array_keys($steps);
+        $order = array_keys($steps);
         $currentIdx = array_search($status, $order, true);
 
         // Cancelled/refunded orders never reach a linear step, so no step is "current".
@@ -52,8 +52,8 @@ class OrderController extends Controller
 
         return collect($steps)->values()->map(function ($label, $i) use ($currentIdx) {
             return [
-                'label'  => $label,
-                'icon'   => $i + 1,
+                'label' => $label,
+                'icon' => $i + 1,
                 'active' => $currentIdx >= 0 && $i <= $currentIdx,
             ];
         })->toArray();

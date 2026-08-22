@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Coupon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class CouponModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_view_coupon_index(): void
     {
@@ -27,9 +27,9 @@ class CouponModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.coupon.store'), [
-                'code'      => 'summer25',
-                'type'      => 'percentage',
-                'value'     => 25,
+                'code' => 'summer25',
+                'type' => 'percentage',
+                'value' => 25,
                 'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.ecommerce.coupon.index'));
@@ -43,9 +43,9 @@ class CouponModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.coupon.store'), [
-                'code'      => 'TOOMUCH',
-                'type'      => 'percentage',
-                'value'     => 150,
+                'code' => 'TOOMUCH',
+                'type' => 'percentage',
+                'value' => 150,
                 'is_active' => 'active',
             ])
             ->assertSessionHasErrors('value');
@@ -58,9 +58,9 @@ class CouponModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.coupon.store'), [
-                'code'      => 'FIXED10',
-                'type'      => 'fixed',
-                'value'     => 10,
+                'code' => 'FIXED10',
+                'type' => 'fixed',
+                'value' => 10,
                 'is_active' => 'active',
             ])
             ->assertSessionHasErrors('code');
@@ -72,11 +72,11 @@ class CouponModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.coupon.store'), [
-                'code'       => 'BADDATES',
-                'type'       => 'fixed',
-                'value'      => 10,
-                'is_active'  => 'active',
-                'starts_at'  => now()->addDays(5)->format('Y-m-d H:i:s'),
+                'code' => 'BADDATES',
+                'type' => 'fixed',
+                'value' => 10,
+                'is_active' => 'active',
+                'starts_at' => now()->addDays(5)->format('Y-m-d H:i:s'),
                 'expires_at' => now()->addDays(1)->format('Y-m-d H:i:s'),
             ])
             ->assertSessionHasErrors('expires_at');
@@ -84,14 +84,14 @@ class CouponModuleTest extends TestCase
 
     public function test_admin_can_update_coupon(): void
     {
-        $admin  = $this->createAdminWithPermissions(['coupon.view', 'coupon.edit']);
+        $admin = $this->createAdminWithPermissions(['coupon.view', 'coupon.edit']);
         $coupon = Coupon::factory()->create(['value' => 10]);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.coupon.update', $coupon), [
-                'code'      => $coupon->code,
-                'type'      => 'percentage',
-                'value'     => 15,
+                'code' => $coupon->code,
+                'type' => 'percentage',
+                'value' => 15,
                 'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.ecommerce.coupon.index'));
@@ -101,7 +101,7 @@ class CouponModuleTest extends TestCase
 
     public function test_admin_can_toggle_coupon_status(): void
     {
-        $admin  = $this->createAdminWithPermissions(['coupon.view', 'coupon.edit']);
+        $admin = $this->createAdminWithPermissions(['coupon.view', 'coupon.edit']);
         $coupon = Coupon::factory()->create(['is_active' => true]);
 
         $this->actingAsAdmin($admin)
@@ -113,7 +113,7 @@ class CouponModuleTest extends TestCase
 
     public function test_used_coupon_cannot_be_deleted(): void
     {
-        $admin  = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
+        $admin = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
         $coupon = Coupon::factory()->used(3)->create();
 
         $this->actingAsAdmin($admin)
@@ -125,7 +125,7 @@ class CouponModuleTest extends TestCase
 
     public function test_admin_can_delete_unused_coupon(): void
     {
-        $admin  = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
+        $admin = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
         $coupon = Coupon::factory()->create();
 
         $this->actingAsAdmin($admin)
@@ -137,7 +137,7 @@ class CouponModuleTest extends TestCase
 
     public function test_admin_can_bulk_delete_coupons(): void
     {
-        $admin   = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
+        $admin = $this->createAdminWithPermissions(['coupon.view', 'coupon.delete']);
         $coupons = Coupon::factory()->count(3)->create();
 
         $this->actingAsAdmin($admin)

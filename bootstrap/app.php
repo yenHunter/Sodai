@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Middleware\AdminAuthenticated;
+use App\Http\Middleware\CheckAdminPermission;
+use App\Http\Middleware\CustomerAuthenticated;
+use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -7,8 +13,8 @@ use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
             Route::middleware('web')
@@ -24,15 +30,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         // Global middleware - applies to all requests
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(SecurityHeaders::class);
 
         // Named middleware aliases
         $middleware->alias([
-            'guest'                => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'auth.admin'           => \App\Http\Middleware\AdminAuthenticated::class,
-            'auth.customer'        => \App\Http\Middleware\CustomerAuthenticated::class,
-            'prevent.back.history' => \App\Http\Middleware\PreventBackHistory::class,
-            'permission'           => \App\Http\Middleware\CheckAdminPermission::class,
+            'guest' => RedirectIfAuthenticated::class,
+            'auth.admin' => AdminAuthenticated::class,
+            'auth.customer' => CustomerAuthenticated::class,
+            'prevent.back.history' => PreventBackHistory::class,
+            'permission' => CheckAdminPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

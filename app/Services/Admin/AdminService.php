@@ -3,13 +3,13 @@
 namespace App\Services\Admin;
 
 use App\Models\Admin;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class AdminService
 {
@@ -22,16 +22,16 @@ class AdminService
         return DB::transaction(function () use ($data) {
 
             $avatarPath = null;
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $admin = Admin::create([
-                'name'      => $data['name'],
-                'email'     => $data['email'],
-                'phone'     => $data['phone'] ?? null,
-                'password'  => Hash::make($data['password']),
-                'avatar'    => $avatarPath,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'avatar' => $avatarPath,
                 'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
             ]);
 
@@ -51,25 +51,25 @@ class AdminService
         return DB::transaction(function () use ($admin, $data) {
 
             $avatarPath = $admin->avatar;
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $this->deleteAvatar($admin->avatar);
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $updatePayload = [
-                'name'      => $data['name'],
-                'email'     => $data['email'],
-                'phone'     => $data['phone'] ?? null,
-                'avatar'    => $avatarPath,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'avatar' => $avatarPath,
                 'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
             ];
 
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $updatePayload['password'] = Hash::make($data['password']);
             }
 
             // Guard: cannot deactivate your own account
-            if ((int) $admin->id === (int) Auth::guard('admin')->id() && !$updatePayload['is_active']) {
+            if ((int) $admin->id === (int) Auth::guard('admin')->id() && ! $updatePayload['is_active']) {
                 throw new \Exception('You cannot deactivate your own account.');
             }
 
@@ -109,6 +109,7 @@ class AdminService
 
         return DB::transaction(function () use ($admin) {
             $this->deleteAvatar($admin->avatar);
+
             return $admin->delete();
         });
     }
@@ -123,7 +124,7 @@ class AdminService
             throw new \Exception('You cannot change the status of your own account.');
         }
 
-        $admin->update(['is_active' => !$admin->is_active]);
+        $admin->update(['is_active' => ! $admin->is_active]);
 
         return $admin->fresh();
     }
@@ -137,15 +138,15 @@ class AdminService
         return DB::transaction(function () use ($admin, $data) {
             $avatarPath = $admin->avatar;
 
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $this->deleteAvatar($admin->avatar);
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $admin->update([
-                'name'   => $data['name'],
-                'email'  => $data['email'],
-                'phone'  => $data['phone'] ?? null,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
                 'avatar' => $avatarPath,
             ]);
 
@@ -165,16 +166,16 @@ class AdminService
     private function uploadAvatar(UploadedFile $image): string
     {
         try {
-            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('admins/avatars', $filename, 'public');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('admins/avatars', $filename, 'public');
 
-            if (!$path) {
+            if (! $path) {
                 throw new \Exception('Failed to upload avatar.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Avatar upload failed: ' . $e->getMessage());
+            throw new \Exception('Avatar upload failed: '.$e->getMessage());
         }
     }
 
@@ -191,9 +192,16 @@ class AdminService
 
     private function resolveIsActive(mixed $value): bool
     {
-        if (is_bool($value)) return $value;
-        if (is_int($value)) return $value === 1;
-        if (is_string($value)) return in_array(strtolower($value), ['active', '1', 'true']);
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['active', '1', 'true']);
+        }
+
         return false;
     }
 

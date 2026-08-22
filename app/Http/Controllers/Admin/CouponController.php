@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Coupon;
-use Illuminate\Http\Request;
-use App\Services\Admin\CouponService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Coupon\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupon\UpdateCouponRequest;
+use App\Models\Coupon;
+use App\Services\Admin\CouponService;
+use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
@@ -41,7 +41,7 @@ class CouponController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.coupon.index')
-                ->with('error', 'Failed to create coupon: ' . $e->getMessage());
+                ->with('error', 'Failed to create coupon: '.$e->getMessage());
         }
     }
 
@@ -60,7 +60,7 @@ class CouponController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.coupon.index')
-                ->with('error', 'Failed to update coupon: ' . $e->getMessage());
+                ->with('error', 'Failed to update coupon: '.$e->getMessage());
         }
     }
 
@@ -94,11 +94,13 @@ class CouponController extends Controller
         }
 
         $successCount = 0;
-        $failedCodes  = [];
+        $failedCodes = [];
 
         foreach ($ids as $id) {
             $coupon = Coupon::find($id);
-            if (!$coupon) continue;
+            if (! $coupon) {
+                continue;
+            }
 
             try {
                 $this->couponService->delete($coupon);
@@ -108,10 +110,11 @@ class CouponController extends Controller
             }
         }
 
-        $message = "{$successCount} coupon" . ($successCount === 1 ? '' : 's') . " deleted successfully.";
+        $message = "{$successCount} coupon".($successCount === 1 ? '' : 's').' deleted successfully.';
 
-        if (!empty($failedCodes)) {
-            $message .= ' Skipped (already used): ' . implode(', ', $failedCodes) . '.';
+        if (! empty($failedCodes)) {
+            $message .= ' Skipped (already used): '.implode(', ', $failedCodes).'.';
+
             return redirect()->route('admin.ecommerce.coupon.index')->with('error', $message);
         }
 
@@ -126,7 +129,7 @@ class CouponController extends Controller
     {
         try {
             $updated = $this->couponService->toggleStatus($coupon);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.ecommerce.coupon.index')

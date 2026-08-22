@@ -31,17 +31,17 @@ class ForgotPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required'                 => 'Email address is required.',
-            'email.email'                     => 'Please enter a valid email address.',
-            'g-recaptcha-response.required'  => 'reCAPTCHA verification failed. Please try again.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
 
     public function ensureIsNotRateLimited(): void
     {
-        $key = 'customer-forgot-password:' . $this->ip();
+        $key = 'customer-forgot-password:'.$this->ip();
 
-        if (!RateLimiter::tooManyAttempts($key, 3)) {
+        if (! RateLimiter::tooManyAttempts($key, 3)) {
             return;
         }
 
@@ -54,6 +54,6 @@ class ForgotPasswordRequest extends FormRequest
 
     public function incrementRateLimiter(): void
     {
-        RateLimiter::hit('customer-forgot-password:' . $this->ip(), 600);
+        RateLimiter::hit('customer-forgot-password:'.$this->ip(), 600);
     }
 }

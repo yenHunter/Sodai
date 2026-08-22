@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Visitor\Auth;
 
 use App\Rules\ReCaptcha;
-use Illuminate\Support\Str;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
@@ -18,7 +18,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'string', 'email', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:6'],
             'g-recaptcha-response' => [
                 'required',
@@ -33,8 +33,8 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required'                => 'Email address is required.',
-            'password.required'             => 'Password is required.',
+            'email.required' => 'Email address is required.',
+            'password.required' => 'Password is required.',
             'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
@@ -43,7 +43,7 @@ class LoginRequest extends FormRequest
     {
         $key = $this->throttleKey();
 
-        if (!RateLimiter::tooManyAttempts($key, 5)) {
+        if (! RateLimiter::tooManyAttempts($key, 5)) {
             return;
         }
 
@@ -66,6 +66,6 @@ class LoginRequest extends FormRequest
 
     public function throttleKey(): string
     {
-        return 'customer-login:' . Str::lower($this->input('email')) . '|' . $this->ip();
+        return 'customer-login:'.Str::lower($this->input('email')).'|'.$this->ip();
     }
 }

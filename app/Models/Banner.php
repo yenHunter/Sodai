@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Banner extends Model
 {
     use HasFactory, SoftDeletes;
 
     public const POSITIONS = ['home_slider', 'home_promo', 'category_banner', 'popup'];
+
     public const TEXT_POSITIONS = ['left', 'center', 'right'];
+
     public const TARGETS = ['_self', '_blank'];
 
     protected $fillable = [
@@ -34,9 +36,9 @@ class Banner extends Model
     protected function casts(): array
     {
         return [
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
             'sort_order' => 'integer',
-            'starts_at'  => 'datetime',
+            'starts_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }
@@ -47,40 +49,47 @@ class Banner extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        return $this->image ? asset('storage/'.$this->image) : null;
     }
 
     public function getMobileImageUrlAttribute(): ?string
     {
-        return $this->mobile_image ? asset('storage/' . $this->mobile_image) : null;
+        return $this->mobile_image ? asset('storage/'.$this->mobile_image) : null;
     }
 
     public function getStatusLabelAttribute(): string
     {
-        if (!$this->is_active) return 'Inactive';
-        if ($this->expires_at && $this->expires_at->isPast()) return 'Expired';
-        if ($this->starts_at && $this->starts_at->isFuture()) return 'Scheduled';
+        if (! $this->is_active) {
+            return 'Inactive';
+        }
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return 'Expired';
+        }
+        if ($this->starts_at && $this->starts_at->isFuture()) {
+            return 'Scheduled';
+        }
+
         return 'Active';
     }
 
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->status_label) {
-            'Active'    => 'bg-success',
+            'Active' => 'bg-success',
             'Scheduled' => 'bg-info',
-            'Expired'   => 'bg-danger',
-            default     => 'bg-secondary',
+            'Expired' => 'bg-danger',
+            default => 'bg-secondary',
         };
     }
 
     public function getPositionLabelAttribute(): string
     {
         return match ($this->position) {
-            'home_slider'     => 'Home Slider',
-            'home_promo'      => 'Home Promo',
+            'home_slider' => 'Home Slider',
+            'home_promo' => 'Home Promo',
             'category_banner' => 'Category Banner',
-            'popup'           => 'Popup',
-            default           => ucfirst(str_replace('_', ' ', $this->position)),
+            'popup' => 'Popup',
+            default => ucfirst(str_replace('_', ' ', $this->position)),
         };
     }
 
@@ -90,9 +99,16 @@ class Banner extends Model
 
     public function isCurrentlyValid(): bool
     {
-        if (!$this->is_active) return false;
-        if ($this->starts_at && $this->starts_at->isFuture()) return false;
-        if ($this->expires_at && $this->expires_at->isPast()) return false;
+        if (! $this->is_active) {
+            return false;
+        }
+        if ($this->starts_at && $this->starts_at->isFuture()) {
+            return false;
+        }
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return false;
+        }
+
         return true;
     }
 

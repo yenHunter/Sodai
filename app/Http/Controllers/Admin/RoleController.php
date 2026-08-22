@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
-use App\Services\Admin\RoleService;
-use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Role\StoreRoleRequest;
 use App\Http\Requests\Admin\Role\UpdateRolePermissionsRequest;
+use App\Services\Admin\RoleService;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -33,7 +32,7 @@ class RoleController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.roles.index')
-                ->with('error', 'Failed to create role: ' . $e->getMessage());
+                ->with('error', 'Failed to create role: '.$e->getMessage());
         }
     }
 

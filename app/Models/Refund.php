@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Refund extends Model
 {
-    use SoftDeletes, HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const STATUSES = ['pending', 'approved', 'rejected'];
 
@@ -27,7 +27,7 @@ class Refund extends Model
     protected function casts(): array
     {
         return [
-            'amount'       => 'decimal:2',
+            'amount' => 'decimal:2',
             'processed_at' => 'datetime',
         ];
     }
@@ -68,10 +68,10 @@ class Refund extends Model
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->status) {
-            'pending'  => 'badge-soft-warning',
+            'pending' => 'badge-soft-warning',
             'approved' => 'badge-soft-success',
             'rejected' => 'badge-soft-danger',
-            default    => 'badge-soft-secondary',
+            default => 'badge-soft-secondary',
         };
     }
 
@@ -83,8 +83,8 @@ class Refund extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('refund_number', 'like', "%{$search}%")
-              ->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', "%{$search}%"))
-              ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+                ->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', "%{$search}%"))
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
         });
     }
 

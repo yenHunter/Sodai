@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class ReviewModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_view_review_index_with_stats(): void
     {
@@ -25,9 +25,9 @@ class ReviewModuleTest extends TestCase
 
     public function test_approving_review_recalculates_product_rating(): void
     {
-        $admin   = $this->createAdminWithPermissions(['review.view', 'review.approve']);
+        $admin = $this->createAdminWithPermissions(['review.view', 'review.approve']);
         $product = Product::factory()->create(['average_rating' => 0, 'review_count' => 0]);
-        $review  = Review::factory()->create(['product_id' => $product->id, 'rating' => 5, 'status' => 'pending']);
+        $review = Review::factory()->create(['product_id' => $product->id, 'rating' => 5, 'status' => 'pending']);
 
         $this->actingAsAdmin($admin)
             ->patch(route('admin.ecommerce.review.approve', $review))
@@ -39,7 +39,7 @@ class ReviewModuleTest extends TestCase
 
     public function test_rejecting_review_excludes_it_from_product_rating(): void
     {
-        $admin   = $this->createAdminWithPermissions(['review.view', 'review.approve']);
+        $admin = $this->createAdminWithPermissions(['review.view', 'review.approve']);
         $product = Product::factory()->create();
         Review::factory()->create(['product_id' => $product->id, 'rating' => 5, 'status' => 'approved']);
         $pendingReview = Review::factory()->create(['product_id' => $product->id, 'rating' => 1, 'status' => 'pending']);
@@ -53,7 +53,7 @@ class ReviewModuleTest extends TestCase
 
     public function test_deleting_review_recalculates_product_rating(): void
     {
-        $admin   = $this->createAdminWithPermissions(['review.view', 'review.delete']);
+        $admin = $this->createAdminWithPermissions(['review.view', 'review.delete']);
         $product = Product::factory()->create();
         $review1 = Review::factory()->create(['product_id' => $product->id, 'rating' => 4, 'status' => 'approved']);
         Review::factory()->create(['product_id' => $product->id, 'rating' => 2, 'status' => 'approved']);
@@ -79,7 +79,7 @@ class ReviewModuleTest extends TestCase
 
     public function test_admin_can_bulk_delete_reviews(): void
     {
-        $admin   = $this->createAdminWithPermissions(['review.view', 'review.delete']);
+        $admin = $this->createAdminWithPermissions(['review.view', 'review.delete']);
         $reviews = Review::factory()->count(3)->create();
 
         $this->actingAsAdmin($admin)

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use App\Services\Admin\CustomerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Customer\StoreCustomerRequest;
 use App\Http\Requests\Admin\Customer\UpdateCustomerRequest;
+use App\Models\User;
+use App\Services\Admin\CustomerService;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -33,7 +33,7 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.customer.index')
-                ->with('error', 'Failed to create customer: ' . $e->getMessage());
+                ->with('error', 'Failed to create customer: '.$e->getMessage());
         }
     }
 
@@ -48,7 +48,7 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.customer.index')
-                ->with('error', 'Failed to update customer: ' . $e->getMessage());
+                ->with('error', 'Failed to update customer: '.$e->getMessage());
         }
     }
 
@@ -80,11 +80,13 @@ class CustomerController extends Controller
         }
 
         $successCount = 0;
-        $failedNames  = [];
+        $failedNames = [];
 
         foreach ($ids as $id) {
             $customer = User::find($id);
-            if (!$customer) continue;
+            if (! $customer) {
+                continue;
+            }
 
             try {
                 $this->customerService->delete($customer);
@@ -94,10 +96,11 @@ class CustomerController extends Controller
             }
         }
 
-        $message = "{$successCount} customer" . ($successCount === 1 ? '' : 's') . " deleted successfully.";
+        $message = "{$successCount} customer".($successCount === 1 ? '' : 's').' deleted successfully.';
 
-        if (!empty($failedNames)) {
-            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
+        if (! empty($failedNames)) {
+            $message .= ' Failed: '.implode(', ', $failedNames).'.';
+
             return redirect()->route('admin.ecommerce.customer.index')->with('error', $message);
         }
 
@@ -108,7 +111,7 @@ class CustomerController extends Controller
     {
         try {
             $updated = $this->customerService->toggleStatus($customer);
-            $status  = $updated->status === 'active' ? 'activated' : 'deactivated';
+            $status = $updated->status === 'active' ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.ecommerce.customer.index')
@@ -131,7 +134,7 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.customer.index')
-                ->with('error', 'Failed to resend email: ' . $e->getMessage());
+                ->with('error', 'Failed to resend email: '.$e->getMessage());
         }
     }
 }

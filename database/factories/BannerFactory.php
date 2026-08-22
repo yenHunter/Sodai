@@ -12,17 +12,17 @@ class BannerFactory extends Factory
     public function definition(): array
     {
         return [
-            'title'         => $this->faker->sentence(3),
-            'subtitle'      => 'Sale Offer',
-            'description'   => $this->faker->sentence(10),
-            'button_text'   => 'Order Now',
-            'button_url'    => '/products',
+            'title' => $this->faker->sentence(3),
+            'subtitle' => 'Sale Offer',
+            'description' => $this->faker->sentence(10),
+            'button_text' => 'Order Now',
+            'button_url' => '/products',
             'button_target' => '_self',
-            'image'         => 'banners/fake-banner.jpg',
-            'position'      => 'home_slider',
+            'image' => 'banners/fake-banner.jpg',
+            'position' => 'home_slider',
             'text_position' => 'left',
-            'is_active'     => true,
-            'sort_order'    => 0,
+            'is_active' => true,
+            'sort_order' => 0,
         ];
     }
 

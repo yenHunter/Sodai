@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Category;
-use Illuminate\Http\Request;
-use App\Services\Admin\CategoryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Category\StoreCategoryRequest;
 use App\Http\Requests\Admin\Category\UpdateCategoryRequest;
+use App\Models\Category;
+use App\Services\Admin\CategoryService;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -21,7 +21,7 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories       = $this->categoryService->getCategoriesWithChildren();
+        $categories = $this->categoryService->getCategoriesWithChildren();
         $parentCategories = $this->categoryService->getParentCategories();
 
         return view(
@@ -45,7 +45,7 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.category.index')
-                ->with('error', 'Failed to create category: ' . $e->getMessage());
+                ->with('error', 'Failed to create category: '.$e->getMessage());
         }
     }
 
@@ -58,7 +58,7 @@ class CategoryController extends Controller
         // Load relationships
         $category->load('parent', 'children');
 
-        $categories       = $this->categoryService->getCategoriesWithChildren();
+        $categories = $this->categoryService->getCategoriesWithChildren();
         $parentCategories = $this->categoryService->getParentCategories();
 
         return view('admin.ecommerce.category.index', compact(
@@ -83,7 +83,7 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.category.index')
-                ->with('error', 'Failed to update category: ' . $e->getMessage());
+                ->with('error', 'Failed to update category: '.$e->getMessage());
         }
     }
 
@@ -109,12 +109,12 @@ class CategoryController extends Controller
     public function bulkDestroy(Request $request)
     {
         $request->validate([
-            'ids'   => ['required', 'string'],
+            'ids' => ['required', 'string'],
         ]);
 
         $ids = array_filter(
             explode(',', $request->input('ids')),
-            fn($id) => is_numeric($id)
+            fn ($id) => is_numeric($id)
         );
 
         if (empty($ids)) {
@@ -124,11 +124,13 @@ class CategoryController extends Controller
         }
 
         $successCount = 0;
-        $failedNames  = [];
+        $failedNames = [];
 
         foreach ($ids as $id) {
             $category = Category::find($id);
-            if (!$category) continue;
+            if (! $category) {
+                continue;
+            }
 
             try {
                 $this->categoryService->delete($category);
@@ -138,12 +140,13 @@ class CategoryController extends Controller
             }
         }
 
-        $message = "{$successCount} categor" .
-            ($successCount === 1 ? 'y' : 'ies') .
-            " deleted successfully.";
+        $message = "{$successCount} categor".
+            ($successCount === 1 ? 'y' : 'ies').
+            ' deleted successfully.';
 
-        if (!empty($failedNames)) {
-            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
+        if (! empty($failedNames)) {
+            $message .= ' Failed: '.implode(', ', $failedNames).'.';
+
             return redirect()
                 ->route('admin.ecommerce.category.index')
                 ->with('error', $message);
@@ -162,10 +165,10 @@ class CategoryController extends Controller
     {
         try {
             $updated = $this->categoryService->toggleStatus($category);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
             $message = "Category {$status} successfully.";
 
-            if (!$updated->is_active && $category->children()->count() > 0) {
+            if (! $updated->is_active && $category->children()->count() > 0) {
                 $message .= ' All sub-categories deactivated too.';
             }
 

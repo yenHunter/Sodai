@@ -27,7 +27,7 @@ class CheckAdminPermission
         // If AJAX/API request
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'You do not have permission to perform this action.'
+                'message' => 'You do not have permission to perform this action.',
             ], 403);
         }
 

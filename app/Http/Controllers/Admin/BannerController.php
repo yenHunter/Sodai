@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Banner;
-use Illuminate\Http\Request;
-use App\Services\Admin\BannerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Banner\StoreBannerRequest;
 use App\Http\Requests\Admin\Banner\UpdateBannerRequest;
+use App\Models\Banner;
+use App\Services\Admin\BannerService;
+use Illuminate\Http\Request;
 
 class BannerController extends Controller
 {
@@ -41,7 +41,7 @@ class BannerController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.cms.banner.index')
-                ->with('error', 'Failed to create banner: ' . $e->getMessage());
+                ->with('error', 'Failed to create banner: '.$e->getMessage());
         }
     }
 
@@ -60,7 +60,7 @@ class BannerController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.cms.banner.index')
-                ->with('error', 'Failed to update banner: ' . $e->getMessage());
+                ->with('error', 'Failed to update banner: '.$e->getMessage());
         }
     }
 
@@ -98,7 +98,9 @@ class BannerController extends Controller
 
         foreach ($ids as $id) {
             $banner = Banner::find($id);
-            if (!$banner) continue;
+            if (! $banner) {
+                continue;
+            }
 
             try {
                 $this->bannerService->delete($banner);
@@ -108,10 +110,11 @@ class BannerController extends Controller
             }
         }
 
-        $message = "{$successCount} banner" . ($successCount === 1 ? '' : 's') . " deleted successfully.";
+        $message = "{$successCount} banner".($successCount === 1 ? '' : 's').' deleted successfully.';
 
-        if (!empty($failedTitles)) {
-            $message .= ' Failed: ' . implode(', ', $failedTitles) . '.';
+        if (! empty($failedTitles)) {
+            $message .= ' Failed: '.implode(', ', $failedTitles).'.';
+
             return redirect()->route('admin.cms.banner.index')->with('error', $message);
         }
 
@@ -126,7 +129,7 @@ class BannerController extends Controller
     {
         try {
             $updated = $this->bannerService->toggleStatus($banner);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.cms.banner.index')

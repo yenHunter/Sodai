@@ -35,14 +35,14 @@ class OrderStatusHistory extends Model
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->to_status) {
-            'pending'    => 'bg-warning',
-            'confirmed'  => 'bg-info',
+            'pending' => 'bg-warning',
+            'confirmed' => 'bg-info',
             'processing' => 'bg-primary',
-            'shipped'    => 'bg-info',
-            'delivered'  => 'bg-success',
-            'cancelled'  => 'bg-danger',
-            'refunded'   => 'bg-secondary',
-            default      => 'bg-secondary',
+            'shipped' => 'bg-info',
+            'delivered' => 'bg-success',
+            'cancelled' => 'bg-danger',
+            'refunded' => 'bg-secondary',
+            default => 'bg-secondary',
         };
     }
 }

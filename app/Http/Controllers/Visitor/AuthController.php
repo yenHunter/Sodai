@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Visitor\Auth\ForgotPasswordRequest;
+use App\Http\Requests\Visitor\Auth\LoginRequest;
+use App\Http\Requests\Visitor\Auth\RegisterRequest;
+use App\Http\Requests\Visitor\Auth\ResetPasswordRequest;
+use App\Http\Requests\Visitor\Auth\SetPasswordRequest;
+use App\Mail\Customer\CustomerPasswordResetMail;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Mail\Customer\CustomerPasswordResetMail;
-use App\Http\Requests\Visitor\Auth\LoginRequest;
-use App\Http\Requests\Visitor\Auth\RegisterRequest;
-use App\Http\Requests\Visitor\Auth\ForgotPasswordRequest;
-use App\Http\Requests\Visitor\Auth\ResetPasswordRequest;
-use App\Http\Requests\Visitor\Auth\SetPasswordRequest;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -40,9 +41,9 @@ class AuthController extends Controller
         $request->ensureIsNotRateLimited();
 
         $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
+        $remember = $request->boolean('remember');
 
-        if (!Auth::guard('customer')->attempt($credentials, $remember)) {
+        if (! Auth::guard('customer')->attempt($credentials, $remember)) {
             $request->incrementRateLimiter();
 
             User::where('email', $request->email)->first()?->incrementFailedAttempts();
@@ -56,7 +57,7 @@ class AuthController extends Controller
 
         $customer = Auth::guard('customer')->user();
 
-        if (!$customer->hasVerifiedEmail()) {
+        if (! $customer->hasVerifiedEmail()) {
             Auth::guard('customer')->logout();
 
             return back()
@@ -119,7 +120,7 @@ class AuthController extends Controller
     {
         $customer = User::findOrFail($id);
 
-        if (!hash_equals((string) $hash, sha1($customer->getEmailForVerification()))) {
+        if (! hash_equals((string) $hash, sha1($customer->getEmailForVerification()))) {
             abort(403, 'Invalid verification link.');
         }
 
@@ -147,7 +148,7 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $key = 'resend-verification:' . Str::lower($request->email) . '|' . $request->ip();
+        $key = 'resend-verification:'.Str::lower($request->email).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
@@ -161,7 +162,7 @@ class AuthController extends Controller
 
         $customer = User::where('email', $request->email)->first();
 
-        if ($customer && !$customer->hasVerifiedEmail()) {
+        if ($customer && ! $customer->hasVerifiedEmail()) {
             $customer->sendEmailVerificationNotification();
         }
 
@@ -188,11 +189,11 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         $customer = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'status'   => 'active',
+            'status' => 'active',
         ]);
 
         $customer->sendEmailVerificationNotification();
@@ -225,7 +226,7 @@ class AuthController extends Controller
 
         // Always show success message even if email not found —
         // prevents email enumeration, same pattern as Admin auth.
-        if (!$customer) {
+        if (! $customer) {
             $request->incrementRateLimiter();
 
             return back()->with(
@@ -241,8 +242,8 @@ class AuthController extends Controller
         $token = Str::random(64);
 
         DB::table('password_reset_tokens')->insert([
-            'email'      => $customer->email,
-            'token'      => Hash::make($token),
+            'email' => $customer->email,
+            'token' => Hash::make($token),
             'created_at' => now(),
         ]);
 
@@ -275,7 +276,7 @@ class AuthController extends Controller
             return redirect()->route('visitor.index');
         }
 
-        if (!$request->has('email') || !$token) {
+        if (! $request->has('email') || ! $token) {
             return redirect()
                 ->route('visitor.password.request')
                 ->with('error', 'Invalid password reset link.');
@@ -293,13 +294,13 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$tokenRecord) {
+        if (! $tokenRecord) {
             return back()->withErrors([
                 'email' => 'Invalid or expired reset link. Please request a new one.',
             ]);
         }
 
-        $createdAt = \Carbon\Carbon::parse($tokenRecord->created_at);
+        $createdAt = Carbon::parse($tokenRecord->created_at);
         if ($createdAt->addMinutes(self::TOKEN_EXPIRY_MINUTES)->isPast()) {
             DB::table('password_reset_tokens')
                 ->where('email', $request->email)
@@ -310,7 +311,7 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!Hash::check($request->token, $tokenRecord->token)) {
+        if (! Hash::check($request->token, $tokenRecord->token)) {
             return back()->withErrors([
                 'email' => 'Invalid reset link. Please request a new one.',
             ]);
@@ -320,7 +321,7 @@ class AuthController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$customer) {
+        if (! $customer) {
             return back()->withErrors([
                 'email' => 'No active account found with this email.',
             ]);
@@ -332,7 +333,7 @@ class AuthController extends Controller
 
         // Successfully following the emailed link is itself proof of email
         // ownership for admin-created accounts, so treat this as verification too.
-        if (!$customer->hasVerifiedEmail()) {
+        if (! $customer->hasVerifiedEmail()) {
             $customer->markEmailAsVerified();
         }
 
@@ -352,7 +353,7 @@ class AuthController extends Controller
 
     public function setPasswordView(Request $request, string $token)
     {
-        if (!$request->has('email') || !$token) {
+        if (! $request->has('email') || ! $token) {
             return redirect()
                 ->route('visitor.index')
                 ->with('error', 'Invalid password set-up link.');
@@ -370,13 +371,13 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$tokenRecord) {
+        if (! $tokenRecord) {
             return back()->withErrors([
                 'email' => 'Invalid or expired link. Please contact support for a new one.',
             ]);
         }
 
-        $createdAt = \Carbon\Carbon::parse($tokenRecord->created_at);
+        $createdAt = Carbon::parse($tokenRecord->created_at);
         if ($createdAt->addMinutes(self::TOKEN_EXPIRY_MINUTES)->isPast()) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
@@ -385,7 +386,7 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!Hash::check($request->token, $tokenRecord->token)) {
+        if (! Hash::check($request->token, $tokenRecord->token)) {
             return back()->withErrors([
                 'email' => 'Invalid link. Please contact support for a new one.',
             ]);
@@ -393,7 +394,7 @@ class AuthController extends Controller
 
         $customer = User::where('email', $request->email)->first();
 
-        if (!$customer) {
+        if (! $customer) {
             return back()->withErrors([
                 'email' => 'No account found with this email.',
             ]);

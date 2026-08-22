@@ -26,11 +26,11 @@ class RefundService
 
             return Refund::create([
                 'refund_number' => $this->generateUniqueRefundNumber(),
-                'order_id'      => $order->id,
-                'user_id'       => $order->user_id,
-                'amount'        => $data['amount'],
-                'reason'        => $data['reason'],
-                'status'        => 'pending',
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'amount' => $data['amount'],
+                'reason' => $data['reason'],
+                'status' => 'pending',
             ]);
         });
     }
@@ -41,14 +41,14 @@ class RefundService
 
     public function update(Refund $refund, array $data): Refund
     {
-        if (!$refund->isEditable()) {
+        if (! $refund->isEditable()) {
             throw new \Exception('Only pending refunds can be edited.');
         }
 
         $refund->update([
             'order_id' => $data['order_id'],
-            'amount'   => $data['amount'],
-            'reason'   => $data['reason'],
+            'amount' => $data['amount'],
+            'reason' => $data['reason'],
         ]);
 
         return $refund->fresh();
@@ -60,7 +60,7 @@ class RefundService
 
     public function delete(Refund $refund): bool
     {
-        if (!$refund->isDeletable()) {
+        if (! $refund->isDeletable()) {
             throw new \Exception('Approved refunds cannot be deleted.');
         }
 
@@ -79,8 +79,8 @@ class RefundService
 
         return DB::transaction(function () use ($refund, $note) {
             $refund->update([
-                'status'       => 'approved',
-                'admin_note'   => $note,
+                'status' => 'approved',
+                'admin_note' => $note,
                 'processed_by' => Auth::guard('admin')->id(),
                 'processed_at' => now(),
             ]);
@@ -88,7 +88,7 @@ class RefundService
             $order = $refund->order;
 
             // Sync order status + restore stock, unless already refunded/cancelled (idempotency guard).
-            if ($order && !in_array($order->status, ['refunded', 'cancelled'])) {
+            if ($order && ! in_array($order->status, ['refunded', 'cancelled'])) {
                 $this->orderService->updateStatus($order, 'refunded', "Refund #{$refund->refund_number} approved.");
             }
 
@@ -105,8 +105,8 @@ class RefundService
         }
 
         $refund->update([
-            'status'       => 'rejected',
-            'admin_note'   => $note,
+            'status' => 'rejected',
+            'admin_note' => $note,
             'processed_by' => Auth::guard('admin')->id(),
             'processed_at' => now(),
         ]);
@@ -123,9 +123,9 @@ class RefundService
     private function generateUniqueRefundNumber(): string
     {
         $prefix = $this->settingService->getGroup('invoice')['invoice_prefix'] ?? 'INV-';
-        $prefix = rtrim($prefix, '-') . '-REF-';
+        $prefix = rtrim($prefix, '-').'-REF-';
 
-        $lastNumber = Refund::where('refund_number', 'like', $prefix . '%')
+        $lastNumber = Refund::where('refund_number', 'like', $prefix.'%')
             ->lockForUpdate()
             ->orderBy('refund_number', 'desc')
             ->value('refund_number');
@@ -135,7 +135,7 @@ class RefundService
             $next = (int) substr($lastNumber, strrpos($lastNumber, '-') + 1) + 1;
         }
 
-        return $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     // ─────────────────────────────────────────────
@@ -146,11 +146,11 @@ class RefundService
     {
         $query = Refund::with(['order', 'user', 'processedBy']);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->ofStatus($filters['status']);
         }
 
@@ -162,8 +162,8 @@ class RefundService
         $counts = Refund::selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status');
 
         return [
-            'total'    => (int) $counts->sum(),
-            'pending'  => (int) ($counts->get('pending') ?? 0),
+            'total' => (int) $counts->sum(),
+            'pending' => (int) ($counts->get('pending') ?? 0),
             'approved' => (int) ($counts->get('approved') ?? 0),
             'rejected' => (int) ($counts->get('rejected') ?? 0),
         ];

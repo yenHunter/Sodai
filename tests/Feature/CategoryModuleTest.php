@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class CategoryModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_with_permission_can_view_category_index(): void
     {
@@ -38,7 +38,7 @@ class CategoryModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.category.store'), [
-                'name'      => 'Electronics',
+                'name' => 'Electronics',
                 'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.ecommerce.category.index'));
@@ -53,7 +53,7 @@ class CategoryModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.category.store'), [
-                'name'      => 'Electronics',
+                'name' => 'Electronics',
                 'is_active' => 'active',
             ])
             ->assertSessionHasErrors('name');
@@ -61,12 +61,12 @@ class CategoryModuleTest extends TestCase
 
     public function test_admin_can_update_category(): void
     {
-        $admin    = $this->createAdminWithPermissions(['category.view', 'category.edit']);
+        $admin = $this->createAdminWithPermissions(['category.view', 'category.edit']);
         $category = Category::factory()->create(['name' => 'Old Name']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.category.update', $category), [
-                'name'      => 'New Name',
+                'name' => 'New Name',
                 'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.ecommerce.category.index'));
@@ -76,9 +76,9 @@ class CategoryModuleTest extends TestCase
 
     public function test_category_with_empty_child_categories_cascades_delete(): void
     {
-        $admin  = $this->createAdminWithPermissions(['category.view', 'category.delete']);
+        $admin = $this->createAdminWithPermissions(['category.view', 'category.delete']);
         $parent = Category::factory()->create();
-        $child  = Category::factory()->create(['parent_id' => $parent->id]);
+        $child = Category::factory()->create(['parent_id' => $parent->id]);
 
         $this->actingAsAdmin($admin)
             ->delete(route('admin.ecommerce.category.destroy', $parent))
@@ -90,9 +90,9 @@ class CategoryModuleTest extends TestCase
 
     public function test_category_cannot_be_deleted_if_child_has_products(): void
     {
-        $admin  = $this->createAdminWithPermissions(['category.view', 'category.delete']);
+        $admin = $this->createAdminWithPermissions(['category.view', 'category.delete']);
         $parent = Category::factory()->create();
-        $child  = Category::factory()->create(['parent_id' => $parent->id]);
+        $child = Category::factory()->create(['parent_id' => $parent->id]);
         Product::factory()->create(['category_id' => $child->id]);
 
         $this->actingAsAdmin($admin)
@@ -105,7 +105,7 @@ class CategoryModuleTest extends TestCase
 
     public function test_category_with_products_cannot_be_deleted(): void
     {
-        $admin    = $this->createAdminWithPermissions(['category.view', 'category.delete']);
+        $admin = $this->createAdminWithPermissions(['category.view', 'category.delete']);
         $category = Category::factory()->create();
         Product::factory()->create(['category_id' => $category->id]);
 
@@ -118,7 +118,7 @@ class CategoryModuleTest extends TestCase
 
     public function test_admin_can_delete_empty_category(): void
     {
-        $admin    = $this->createAdminWithPermissions(['category.view', 'category.delete']);
+        $admin = $this->createAdminWithPermissions(['category.view', 'category.delete']);
         $category = Category::factory()->create();
 
         $this->actingAsAdmin($admin)

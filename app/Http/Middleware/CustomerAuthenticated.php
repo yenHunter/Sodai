@@ -10,7 +10,7 @@ class CustomerAuthenticated
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::guard('customer')->check()) {
+        if (! Auth::guard('customer')->check()) {
             return redirect()
                 ->route('login')
                 ->with('error', 'Please login to continue.');
@@ -18,8 +18,9 @@ class CustomerAuthenticated
 
         $user = Auth::guard('customer')->user();
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             Auth::guard('customer')->logout();
+
             return redirect()
                 ->route('login')
                 ->with('error', 'Please verify your email address before continuing.')
@@ -28,6 +29,7 @@ class CustomerAuthenticated
 
         if ($user->isBanned()) {
             Auth::guard('customer')->logout();
+
             return redirect()
                 ->route('login')
                 ->with('error', 'Your account has been suspended. Contact support.');
@@ -35,6 +37,7 @@ class CustomerAuthenticated
 
         if ($user->isLocked()) {
             Auth::guard('customer')->logout();
+
             return redirect()
                 ->route('login')
                 ->with('error', 'Account temporarily locked. Try again later.');

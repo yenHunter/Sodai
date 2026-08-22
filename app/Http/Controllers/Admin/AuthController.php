@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Admin;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\Admin\AdminPasswordResetMail;
+use App\Http\Requests\Admin\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Admin\Auth\LoginRequest;
 use App\Http\Requests\Admin\Auth\ResetPasswordRequest;
-use App\Http\Requests\Admin\Auth\ForgotPasswordRequest;
+use App\Mail\Admin\AdminPasswordResetMail;
+use App\Models\Admin;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -35,9 +36,9 @@ class AuthController extends Controller
         $request->ensureIsNotRateLimited();
 
         $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
+        $remember = $request->boolean('remember');
 
-        if (!Auth::guard('admin')->attempt($credentials, $remember)) {
+        if (! Auth::guard('admin')->attempt($credentials, $remember)) {
             $request->incrementRateLimiter();
 
             return back()
@@ -93,12 +94,12 @@ class AuthController extends Controller
         $request->ensureIsNotRateLimited();
 
         $admin = Admin::where('email', $request->email)
-                      ->where('is_active', true)
-                      ->first();
+            ->where('is_active', true)
+            ->first();
 
         // Always show success message even if email not found
         // This prevents email enumeration attacks
-        if (!$admin) {
+        if (! $admin) {
             $request->incrementRateLimiter();
 
             return back()->with(
@@ -109,16 +110,16 @@ class AuthController extends Controller
 
         // Delete any existing token for this email
         DB::table('admin_password_reset_tokens')
-          ->where('email', $admin->email)
-          ->delete();
+            ->where('email', $admin->email)
+            ->delete();
 
         // Generate secure token
         $token = Str::random(64);
 
         // Store hashed token in database
         DB::table('admin_password_reset_tokens')->insert([
-            'email'      => $admin->email,
-            'token'      => Hash::make($token),
+            'email' => $admin->email,
+            'token' => Hash::make($token),
             'created_at' => now(),
         ]);
 
@@ -155,7 +156,7 @@ class AuthController extends Controller
         }
 
         // Basic validation before showing form
-        if (!$request->has('email') || !$token) {
+        if (! $request->has('email') || ! $token) {
             return redirect()
                 ->route('admin.password.request')
                 ->with('error', 'Invalid password reset link.');
@@ -171,24 +172,24 @@ class AuthController extends Controller
     {
         // Find token record
         $tokenRecord = DB::table('admin_password_reset_tokens')
-                         ->where('email', $request->email)
-                         ->first();
+            ->where('email', $request->email)
+            ->first();
 
         // Validate token exists
-        if (!$tokenRecord) {
+        if (! $tokenRecord) {
             return back()->withErrors([
                 'email' => 'Invalid or expired reset link. Please request a new one.',
             ]);
         }
 
         // Check token expiry (30 minutes)
-        $createdAt = \Carbon\Carbon::parse($tokenRecord->created_at);
+        $createdAt = Carbon::parse($tokenRecord->created_at);
         if ($createdAt->addMinutes(30)->isPast()) {
 
             // Clean up expired token
             DB::table('admin_password_reset_tokens')
-              ->where('email', $request->email)
-              ->delete();
+                ->where('email', $request->email)
+                ->delete();
 
             return back()->withErrors([
                 'email' => 'This reset link has expired. Please request a new one.',
@@ -196,7 +197,7 @@ class AuthController extends Controller
         }
 
         // Verify token matches hashed token
-        if (!Hash::check($request->token, $tokenRecord->token)) {
+        if (! Hash::check($request->token, $tokenRecord->token)) {
             return back()->withErrors([
                 'email' => 'Invalid reset link. Please request a new one.',
             ]);
@@ -204,10 +205,10 @@ class AuthController extends Controller
 
         // Find admin
         $admin = Admin::where('email', $request->email)
-                      ->where('is_active', true)
-                      ->first();
+            ->where('is_active', true)
+            ->first();
 
-        if (!$admin) {
+        if (! $admin) {
             return back()->withErrors([
                 'email' => 'No active admin account found with this email.',
             ]);
@@ -220,8 +221,8 @@ class AuthController extends Controller
 
         // Delete used token
         DB::table('admin_password_reset_tokens')
-          ->where('email', $request->email)
-          ->delete();
+            ->where('email', $request->email)
+            ->delete();
 
         // Log out all other sessions for this admin
         Auth::guard('admin')->logoutOtherDevices($request->password);

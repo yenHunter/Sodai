@@ -28,11 +28,12 @@ class WishlistService
 
         if ($existing) {
             $existing->delete();
+
             return ['added' => false];
         }
 
         Wishlist::create([
-            'user_id'    => $customer->id,
+            'user_id' => $customer->id,
             'product_id' => $product->id,
         ]);
 

@@ -19,7 +19,7 @@ class UpdateCategoryRequest extends FormRequest
         $categoryId = $this->route('category')->id;
 
         return [
-            'name'        => [
+            'name' => [
                 'required',
                 'string',
                 'max:100',
@@ -30,7 +30,7 @@ class UpdateCategoryRequest extends FormRequest
                 'string',
                 'max:500',
             ],
-            'parent_id'   => [
+            'parent_id' => [
                 'nullable',
                 'integer',
                 Rule::notIn([$categoryId]),
@@ -51,17 +51,17 @@ class UpdateCategoryRequest extends FormRequest
                     }
                 },
             ],
-            'image'       => [
+            'image' => [
                 'nullable',
                 'image',
                 'mimes:jpeg,jpg,png,webp',
                 'max:2048',
             ],
             // ✅ Accept string 'active'/'inactive'
-            'is_active'   => [
+            'is_active' => [
                 'required',
             ],
-            'sort_order'  => [
+            'sort_order' => [
                 'nullable',
                 'integer',
                 'min:0',
@@ -73,13 +73,13 @@ class UpdateCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'      => 'Category name is required.',
-            'name.unique'        => 'This category name already exists.',
-            'parent_id.not_in'   => 'A category cannot be its own parent.',
-            'parent_id.exists'   => 'Selected parent category does not exist.',
-            'image.image'        => 'File must be an image.',
-            'image.mimes'        => 'Image must be jpeg, jpg, png or webp.',
-            'image.max'          => 'Image size cannot exceed 2MB.',
+            'name.required' => 'Category name is required.',
+            'name.unique' => 'This category name already exists.',
+            'parent_id.not_in' => 'A category cannot be its own parent.',
+            'parent_id.exists' => 'Selected parent category does not exist.',
+            'image.image' => 'File must be an image.',
+            'image.mimes' => 'Image must be jpeg, jpg, png or webp.',
+            'image.max' => 'Image size cannot exceed 2MB.',
             'is_active.required' => 'Status is required.',
         ];
     }
@@ -88,7 +88,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         $this->merge([
             'sort_order' => $this->input('sort_order') ?? 0,
-            'parent_id'  => $this->input('parent_id') ?: null,
+            'parent_id' => $this->input('parent_id') ?: null,
         ]);
     }
 }

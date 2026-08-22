@@ -3,15 +3,16 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]
+        app()[PermissionRegistrar::class]
             ->forgetCachedPermissions();
 
         // ═══════════════════════════════════════════
@@ -111,7 +112,7 @@ class RolePermissionSeeder extends Seeder
         // Create all permissions for admin guard
         foreach ($permissions as $permission) {
             Permission::create([
-                'name'       => $permission,
+                'name' => $permission,
                 'guard_name' => 'admin',
             ]);
         }
@@ -122,15 +123,14 @@ class RolePermissionSeeder extends Seeder
 
         // ── Super Admin: All permissions ────────────
         $superAdmin = Role::create([
-            'name'       => 'super-admin',
+            'name' => 'super-admin',
             'guard_name' => 'admin',
         ]);
         $superAdmin->givePermissionTo(Permission::where('guard_name', 'admin')->get());
 
-
         // ── Manager: Everything except admin management ──
         $manager = Role::create([
-            'name'       => 'manager',
+            'name' => 'manager',
             'guard_name' => 'admin',
         ]);
         $manager->givePermissionTo([
@@ -193,10 +193,9 @@ class RolePermissionSeeder extends Seeder
             'setting.view',
         ]);
 
-
         // ── Order Manager: Orders & customers only ──
         $orderManager = Role::create([
-            'name'       => 'order-manager',
+            'name' => 'order-manager',
             'guard_name' => 'admin',
         ]);
         $orderManager->givePermissionTo([
@@ -211,10 +210,9 @@ class RolePermissionSeeder extends Seeder
             'customer.view',
         ]);
 
-
         // ── Content Editor: Products, Categories, Banners ──
         $contentEditor = Role::create([
-            'name'       => 'content-editor',
+            'name' => 'content-editor',
             'guard_name' => 'admin',
         ]);
         $contentEditor->givePermissionTo([
@@ -237,10 +235,9 @@ class RolePermissionSeeder extends Seeder
             'banner.edit',
         ]);
 
-
         // ── Support: View orders, handle reviews & customers ──
         $support = Role::create([
-            'name'       => 'support',
+            'name' => 'support',
             'guard_name' => 'admin',
         ]);
         $support->givePermissionTo([

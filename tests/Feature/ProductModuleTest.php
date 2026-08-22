@@ -2,18 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Category;
-use App\Models\Brand;
+use App\Models\OrderItem;
 use App\Models\Product;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class ProductModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -48,22 +48,22 @@ class ProductModuleTest extends TestCase
 
     public function test_admin_can_create_product_with_thumbnail(): void
     {
-        $admin    = $this->createAdminWithPermissions(['product.view', 'product.create']);
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.create']);
         $category = Category::factory()->create();
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.product.store'), [
                 'category_id' => $category->id,
-                'name'        => 'Test Product',
-                'is_active'   => 'active',
-                'thumbnail'   => UploadedFile::fake()->image('thumb.png'),
-                'variants'    => [
+                'name' => 'Test Product',
+                'is_active' => 'active',
+                'thumbnail' => UploadedFile::fake()->image('thumb.png'),
+                'variants' => [
                     [
-                        'price'               => 99.99,
-                        'stock_quantity'      => 10,
+                        'price' => 99.99,
+                        'stock_quantity' => 10,
                         'low_stock_threshold' => 5,
-                        'is_active'           => 'active',
-                        'is_default'          => 'true',
+                        'is_active' => 'active',
+                        'is_default' => 'true',
                     ],
                 ],
             ])
@@ -82,7 +82,7 @@ class ProductModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.product.store'), [
-                'name'  => 'Test Product',
+                'name' => 'Test Product',
                 'price' => 50,
             ])
             ->assertSessionHasErrors('category_id');
@@ -90,14 +90,14 @@ class ProductModuleTest extends TestCase
 
     public function test_sku_is_auto_generated_on_create(): void
     {
-        $admin    = $this->createAdminWithPermissions(['product.view', 'product.create']);
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.create']);
         $category = Category::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.product.store'), [
             'category_id' => $category->id,
-            'name'        => 'SKU Test Product',
-            'is_active'   => 'active',
-            'variants'    => [
+            'name' => 'SKU Test Product',
+            'is_active' => 'active',
+            'variants' => [
                 ['price' => 10, 'stock_quantity' => 5, 'low_stock_threshold' => 1, 'is_active' => 'active'],
             ],
         ]);
@@ -108,7 +108,7 @@ class ProductModuleTest extends TestCase
 
     public function test_admin_can_view_product_details_page(): void
     {
-        $admin   = $this->createAdminWithPermissions(['product.view']);
+        $admin = $this->createAdminWithPermissions(['product.view']);
         $product = Product::factory()->create();
 
         $this->actingAsAdmin($admin)
@@ -120,24 +120,24 @@ class ProductModuleTest extends TestCase
 
     public function test_admin_can_update_product(): void
     {
-        $admin    = $this->createAdminWithPermissions(['product.view', 'product.edit']);
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.edit']);
         $category = Category::factory()->create();
-        $product  = Product::factory()->create(['category_id' => $category->id, 'name' => 'Old Name']);
-        $variant  = $product->defaultVariant;
+        $product = Product::factory()->create(['category_id' => $category->id, 'name' => 'Old Name']);
+        $variant = $product->defaultVariant;
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.product.update', $product), [
                 'category_id' => $category->id,
-                'name'        => 'Updated Name',
-                'is_active'   => 'active',
-                'variants'    => [
+                'name' => 'Updated Name',
+                'is_active' => 'active',
+                'variants' => [
                     [
-                        'id'                  => $variant->id,
-                        'price'               => 150,
-                        'stock_quantity'      => 20,
+                        'id' => $variant->id,
+                        'price' => 150,
+                        'stock_quantity' => 20,
                         'low_stock_threshold' => 5,
-                        'is_active'           => 'active',
-                        'is_default'          => 'true',
+                        'is_active' => 'active',
+                        'is_default' => 'true',
                     ],
                 ],
             ])
@@ -148,7 +148,7 @@ class ProductModuleTest extends TestCase
 
     public function test_admin_can_quick_update_stock(): void
     {
-        $admin   = $this->createAdminWithPermissions(['product.view', 'product.edit']);
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.edit']);
         $product = Product::factory()->create();
         $variant = $product->defaultVariant;
         $variant->update(['stock_quantity' => 10]);
@@ -167,10 +167,10 @@ class ProductModuleTest extends TestCase
     {
         // Adjust this test once OrderItem factory linkage is finalized;
         // placeholder assumes Product::canDelete() checks orderItems() relation.
-        $admin   = $this->createAdminWithPermissions(['product.view', 'product.delete']);
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.delete']);
         $product = Product::factory()->create();
 
-        \App\Models\OrderItem::factory()->create(['product_id' => $product->id]);
+        OrderItem::factory()->create(['product_id' => $product->id]);
 
         $this->actingAsAdmin($admin)
             ->delete(route('admin.ecommerce.product.destroy', $product))

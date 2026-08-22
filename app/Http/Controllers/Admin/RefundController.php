@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Refund;
-use Illuminate\Http\Request;
-use App\Services\Admin\RefundService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Refund\StoreRefundRequest;
 use App\Http\Requests\Admin\Refund\UpdateRefundRequest;
+use App\Models\Refund;
+use App\Services\Admin\RefundService;
+use Illuminate\Http\Request;
 
 class RefundController extends Controller
 {
@@ -18,8 +18,8 @@ class RefundController extends Controller
     public function index(Request $request)
     {
         $refunds = $this->refundService->getRefundsList($request->only(['search', 'status']));
-        $stats   = $this->refundService->getRefundStats();
-        $orders  = $this->refundService->getOrdersForSelect();
+        $stats = $this->refundService->getRefundStats();
+        $orders = $this->refundService->getOrdersForSelect();
 
         return view('admin.ecommerce.refund.index', compact('refunds', 'stats', 'orders'));
     }
@@ -35,7 +35,7 @@ class RefundController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.refund.index')
-                ->with('error', 'Failed to create refund: ' . $e->getMessage());
+                ->with('error', 'Failed to create refund: '.$e->getMessage());
         }
     }
 
@@ -50,7 +50,7 @@ class RefundController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.refund.index')
-                ->with('error', 'Failed to update refund: ' . $e->getMessage());
+                ->with('error', 'Failed to update refund: '.$e->getMessage());
         }
     }
 
@@ -84,7 +84,9 @@ class RefundController extends Controller
 
         foreach ($ids as $id) {
             $refund = Refund::find($id);
-            if (!$refund) continue;
+            if (! $refund) {
+                continue;
+            }
 
             try {
                 $this->refundService->delete($refund);
@@ -95,8 +97,8 @@ class RefundController extends Controller
         }
 
         $message = "{$successCount} refund(s) deleted successfully.";
-        if (!empty($failedNumbers)) {
-            $message .= ' Skipped (approved): ' . implode(', ', $failedNumbers) . '.';
+        if (! empty($failedNumbers)) {
+            $message .= ' Skipped (approved): '.implode(', ', $failedNumbers).'.';
         }
 
         return redirect()->route('admin.ecommerce.refund.index')->with('success', $message);

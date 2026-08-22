@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Refund;
 
+use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,21 +17,23 @@ class StoreRefundRequest extends FormRequest
     {
         return [
             'order_id' => ['required', 'integer', 'exists:orders,id'],
-            'amount'   => [
+            'amount' => [
                 'required',
                 'numeric',
                 'min:0.01',
                 function ($attribute, $value, $fail) {
-                    $order = \App\Models\Order::find($this->input('order_id'));
-                    if (!$order) return;
-                    
+                    $order = Order::find($this->input('order_id'));
+                    if (! $order) {
+                        return;
+                    }
+
                     $remaining = (float) $order->total_amount - $order->refunded_amount;
                     if ($value > $remaining) {
                         $fail("Refund amount cannot exceed the remaining refundable balance of \${$remaining}.");
                     }
                 },
             ],
-            'reason'   => ['required', 'string', 'max:1000'],
+            'reason' => ['required', 'string', 'max:1000'],
         ];
     }
 
@@ -38,10 +41,10 @@ class StoreRefundRequest extends FormRequest
     {
         return [
             'order_id.required' => 'Please select an order.',
-            'order_id.exists'   => 'Selected order does not exist.',
-            'amount.required'   => 'Refund amount is required.',
-            'amount.min'        => 'Refund amount must be greater than 0.',
-            'reason.required'   => 'Please provide a reason for the refund.',
+            'order_id.exists' => 'Selected order does not exist.',
+            'amount.required' => 'Refund amount is required.',
+            'amount.min' => 'Refund amount must be greater than 0.',
+            'reason.required' => 'Please provide a reason for the refund.',
         ];
     }
 }

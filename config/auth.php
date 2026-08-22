@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Admin;
+use App\Models\User;
+
 return [
 
     /*
@@ -14,7 +17,7 @@ return [
     */
 
     'defaults' => [
-        'guard'     => 'customer',
+        'guard' => 'customer',
         'passwords' => 'customers',
     ],
 
@@ -37,19 +40,19 @@ return [
 
     'guards' => [
         'web' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'users',
         ],
 
         // Customer guard
         'customer' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'customers',
         ],
 
         // Admin guard
         'admin' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'admins',
         ],
     ],
@@ -74,17 +77,17 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\User::class,
+            'model' => User::class,
         ],
 
         'customers' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\User::class,
+            'model' => User::class,
         ],
 
         'admins' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\Admin::class,
+            'model' => Admin::class,
         ],
     ],
 
@@ -110,15 +113,15 @@ return [
     'passwords' => [
         'customers' => [
             'provider' => 'customers',
-            'table'    => 'password_reset_tokens',
-            'expire'   => 60,
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
             'throttle' => 60,
         ],
 
         'admins' => [
             'provider' => 'admins',
-            'table'    => 'admin_password_reset_tokens',
-            'expire'   => 30,
+            'table' => 'admin_password_reset_tokens',
+            'expire' => 30,
             'throttle' => 60,
         ],
     ],

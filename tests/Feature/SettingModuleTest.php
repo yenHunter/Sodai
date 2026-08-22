@@ -2,17 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Setting;
+use App\Services\Admin\SettingService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Tests\Traits\AdminTestHelpers;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+use Tests\Traits\AdminTestHelpers;
 
 class SettingModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -35,13 +36,13 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.company.update'), [
-                'name'                     => 'Sodai',
-                'email'                    => 'hello@sodai.com',
-                'phone'                    => '+8801700000000',
-                'address'                  => 'Dhaka, Bangladesh',
-                'currency'                 => 'BDT',
+                'name' => 'Sodai',
+                'email' => 'hello@sodai.com',
+                'phone' => '+8801700000000',
+                'address' => 'Dhaka, Bangladesh',
+                'currency' => 'BDT',
                 'currency_symbol_position' => 'before',
-                'timezone'                 => 'Asia/Dhaka',
+                'timezone' => 'Asia/Dhaka',
             ])
             ->assertRedirect(route('admin.settings.company'));
 
@@ -133,15 +134,15 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.shipping.update'), [
-                'operation_areas'         => ['Dhaka', 'Gazipur', 'Narayanganj'],
-                'inside_area_charge'      => 80,
-                'outside_area_charge'     => 130,
-                'enable_free_shipping'    => '1',
+                'operation_areas' => ['Dhaka', 'Gazipur', 'Narayanganj'],
+                'inside_area_charge' => 80,
+                'outside_area_charge' => 130,
+                'enable_free_shipping' => '1',
                 'free_shipping_threshold' => 2000,
             ])
             ->assertRedirect(route('admin.settings.shipping'));
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
         $this->assertEquals(['Dhaka', 'Gazipur', 'Narayanganj'], $service->getOperationAreas());
     }
 
@@ -151,7 +152,7 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.shipping.update'), [
-                'inside_area_charge'  => 80,
+                'inside_area_charge' => 80,
                 'outside_area_charge' => 130,
             ])
             ->assertSessionHasErrors('operation_areas');
@@ -160,12 +161,12 @@ class SettingModuleTest extends TestCase
     public function test_shipping_charge_resolves_in_area_rate(): void
     {
         Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Dhaka', 'Gazipur']),
-            'inside_area_charge'  => 80,
+            'operation_areas' => json_encode(['Dhaka', 'Gazipur']),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
 
         $this->assertEquals(80.0, $service->resolveShippingCharge('Dhaka', 500));
         $this->assertEquals(80.0, $service->resolveShippingCharge('Uttara, Dhaka', 500));
@@ -175,12 +176,12 @@ class SettingModuleTest extends TestCase
     public function test_shipping_charge_resolves_out_of_area_rate(): void
     {
         Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Dhaka']),
-            'inside_area_charge'  => 80,
+            'operation_areas' => json_encode(['Dhaka']),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
 
         $this->assertEquals(130.0, $service->resolveShippingCharge('Chattogram', 500));
         $this->assertEquals(130.0, $service->resolveShippingCharge(null, 500));
@@ -191,12 +192,12 @@ class SettingModuleTest extends TestCase
         // Proves this isn't hardcoded to Dhaka — an admin operating out of
         // Chattogram and Sylhet gets the in-area rate for either city.
         Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Chattogram', 'Sylhet']),
-            'inside_area_charge'  => 60,
+            'operation_areas' => json_encode(['Chattogram', 'Sylhet']),
+            'inside_area_charge' => 60,
             'outside_area_charge' => 150,
         ]);
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
 
         $this->assertEquals(60.0, $service->resolveShippingCharge('Chattogram', 500));
         $this->assertEquals(60.0, $service->resolveShippingCharge('Sylhet', 500));
@@ -206,14 +207,14 @@ class SettingModuleTest extends TestCase
     public function test_free_shipping_threshold_overrides_area_rates(): void
     {
         Setting::setMany('shipping', [
-            'operation_areas'         => json_encode(['Dhaka']),
-            'inside_area_charge'      => 80,
-            'outside_area_charge'     => 130,
-            'enable_free_shipping'    => '1',
+            'operation_areas' => json_encode(['Dhaka']),
+            'inside_area_charge' => 80,
+            'outside_area_charge' => 130,
+            'enable_free_shipping' => '1',
             'free_shipping_threshold' => 1000,
         ]);
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
 
         $this->assertEquals(0.0, $service->resolveShippingCharge('Dhaka', 1200));
         $this->assertEquals(0.0, $service->resolveShippingCharge('Chattogram', 1000));
@@ -223,12 +224,12 @@ class SettingModuleTest extends TestCase
     public function test_no_operation_area_configured_always_charges_out_of_area_rate(): void
     {
         Setting::setMany('shipping', [
-            'operation_areas'     => json_encode([]),
-            'inside_area_charge'  => 80,
+            'operation_areas' => json_encode([]),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
-        $service = app(\App\Services\Admin\SettingService::class);
+        $service = app(SettingService::class);
 
         $this->assertEquals(130.0, $service->resolveShippingCharge('Dhaka', 500));
     }
@@ -239,7 +240,7 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.payment.update'), [
-                'cod_enabled'           => '1',
+                'cod_enabled' => '1',
                 'bank_transfer_enabled' => '0',
             ])
             ->assertRedirect(route('admin.settings.payment'));
@@ -269,7 +270,7 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.invoice.update'), [
-                'invoice_prefix'          => 'INV-2026-',
+                'invoice_prefix' => 'INV-2026-',
                 'invoice_starting_number' => 5000,
             ])
             ->assertRedirect(route('admin.settings.invoice'));
@@ -283,7 +284,7 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.order.update'), [
-                'order_number_prefix'      => 'ORD-',
+                'order_number_prefix' => 'ORD-',
                 'auto_cancel_unpaid_hours' => 24,
             ])
             ->assertRedirect(route('admin.settings.order'));
@@ -298,8 +299,8 @@ class SettingModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.tax.update'), [
                 'tax_enabled' => '1',
-                'tax_label'   => 'VAT',
-                'tax_rate'    => 15,
+                'tax_label' => 'VAT',
+                'tax_rate' => 15,
             ])
             ->assertRedirect(route('admin.settings.tax'));
 
@@ -324,7 +325,7 @@ class SettingModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.notification.update'), [
                 'admin_alert_email' => 'alerts@sodai.com',
-                'notify_new_order'  => '1',
+                'notify_new_order' => '1',
             ])
             ->assertRedirect(route('admin.settings.notification'));
 
@@ -348,7 +349,7 @@ class SettingModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.marketing.update'), [
-                'meta_title'   => 'Sodai — Shop Online',
+                'meta_title' => 'Sodai — Shop Online',
                 'facebook_url' => 'https://facebook.com/sodai',
             ])
             ->assertRedirect(route('admin.settings.marketing'));

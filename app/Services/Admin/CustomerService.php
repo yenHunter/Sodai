@@ -2,15 +2,15 @@
 
 namespace App\Services\Admin;
 
+use App\Mail\Admin\CustomerSetPasswordMail;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Mail\Admin\CustomerSetPasswordMail;
+use Illuminate\Support\Str;
 
 class CustomerService
 {
@@ -25,18 +25,18 @@ class CustomerService
         return DB::transaction(function () use ($data) {
 
             $avatarPath = null;
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $customer = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'phone'    => $data['phone'] ?? null,
-                'avatar'   => $avatarPath,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'avatar' => $avatarPath,
                 // Temporary, unusable password — customer sets a real one via emailed link.
                 'password' => Hash::make(Str::random(40)),
-                'status'   => $data['status'],
+                'status' => $data['status'],
             ]);
 
             $this->sendSetPasswordEmail($customer);
@@ -57,15 +57,15 @@ class CustomerService
 
             $avatarPath = $customer->avatar;
 
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $this->deleteAvatar($customer->avatar);
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $customer->update([
-                'name'   => $data['name'],
-                'email'  => $data['email'],
-                'phone'  => $data['phone'] ?? null,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
                 'avatar' => $avatarPath,
                 'status' => $data['status'],
             ]);
@@ -86,6 +86,7 @@ class CustomerService
 
         return DB::transaction(function () use ($customer) {
             $this->deleteAvatar($customer->avatar);
+
             return $customer->delete();
         });
     }
@@ -120,8 +121,8 @@ class CustomerService
         $token = Str::random(64);
 
         DB::table('password_reset_tokens')->insert([
-            'email'      => $customer->email,
-            'token'      => Hash::make($token),
+            'email' => $customer->email,
+            'token' => Hash::make($token),
             'created_at' => now(),
         ]);
 
@@ -131,8 +132,8 @@ class CustomerService
         ]);
 
         Mail::to($customer->email)->send(new CustomerSetPasswordMail(
-            setPasswordUrl:   $setPasswordUrl,
-            customerName:     $customer->name,
+            setPasswordUrl: $setPasswordUrl,
+            customerName: $customer->name,
             expiresInMinutes: self::TOKEN_EXPIRY_MINUTES,
         ));
     }
@@ -144,16 +145,16 @@ class CustomerService
     private function uploadAvatar(UploadedFile $image): string
     {
         try {
-            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('customers/avatars', $filename, 'public');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('customers/avatars', $filename, 'public');
 
-            if (!$path) {
+            if (! $path) {
                 throw new \Exception('Failed to upload avatar.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Avatar upload failed: ' . $e->getMessage());
+            throw new \Exception('Avatar upload failed: '.$e->getMessage());
         }
     }
 

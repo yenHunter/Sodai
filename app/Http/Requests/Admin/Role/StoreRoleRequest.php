@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin\Role;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreRoleRequest extends FormRequest
 {
@@ -29,8 +29,8 @@ class StoreRoleRequest extends FormRequest
     {
         return [
             'name.required' => 'Role name is required.',
-            'name.regex'    => 'Role name may only contain lowercase letters, numbers and hyphens (e.g. order-manager).',
-            'name.unique'   => 'This role name already exists.',
+            'name.regex' => 'Role name may only contain lowercase letters, numbers and hyphens (e.g. order-manager).',
+            'name.unique' => 'This role name already exists.',
         ];
     }
 }

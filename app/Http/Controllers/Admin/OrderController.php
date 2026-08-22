@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use App\Models\Order;
-use App\Models\Coupon;
-use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Services\Admin\OrderService;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Services\Admin\SettingService;
 use App\Http\Requests\Admin\Order\StoreOrderRequest;
 use App\Http\Requests\Admin\Order\UpdateOrderRequest;
+use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
+use App\Services\Admin\OrderService;
+use App\Services\Admin\SettingService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -29,7 +29,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = $this->orderService->getOrdersList($request->only(['search', 'status', 'date_from', 'date_to']));
-        $stats  = $this->orderService->getOrderStats();
+        $stats = $this->orderService->getOrderStats();
 
         return view('admin.ecommerce.order.index', compact('orders', 'stats'));
     }
@@ -69,12 +69,12 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Admin failed to create order.', [
                 'exception' => $e,
-                'admin_id'  => Auth::guard('admin')->id(),
+                'admin_id' => Auth::guard('admin')->id(),
             ]);
 
             return redirect()
                 ->route('admin.ecommerce.order.create')
-                ->with('error', 'Failed to create order: ' . $e->getMessage())
+                ->with('error', 'Failed to create order: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -85,7 +85,7 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        if (!$order->isEditable()) {
+        if (! $order->isEditable()) {
             return redirect()
                 ->route('admin.ecommerce.order.show', $order)
                 ->with('error', 'This order can no longer be edited because of its current status.');
@@ -111,13 +111,13 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Admin failed to update order.', [
                 'exception' => $e,
-                'admin_id'  => Auth::guard('admin')->id(),
-                'order_id'  => $order->id,
+                'admin_id' => Auth::guard('admin')->id(),
+                'order_id' => $order->id,
             ]);
 
             return redirect()
                 ->route('admin.ecommerce.order.edit', $order)
-                ->with('error', 'Failed to update order: ' . $e->getMessage())
+                ->with('error', 'Failed to update order: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -148,8 +148,8 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => ['required', 'in:' . implode(',', Order::STATUSES)],
-            'note'   => ['nullable', 'string', 'max:500'],
+            'status' => ['required', 'in:'.implode(',', Order::STATUSES)],
+            'note' => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
@@ -206,13 +206,13 @@ class OrderController extends Controller
         $address = $customer->defaultAddress()->first() ?? $customer->addresses()->first();
 
         return response()->json([
-            'name'    => $customer->name,
-            'email'   => $customer->email,
-            'phone'   => $customer->phone ?? $address?->recipient_phone,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'phone' => $customer->phone ?? $address?->recipient_phone,
             'address' => $address ? trim("{$address->address_line_1} {$address->address_line_2}") : null,
-            'city'    => $address?->city,
-            'state'   => $address?->state,
-            'zip'     => $address?->zip_code,
+            'city' => $address?->city,
+            'state' => $address?->state,
+            'zip' => $address?->zip_code,
             'country' => $address?->country ?? 'Bangladesh',
         ]);
     }
@@ -220,7 +220,7 @@ class OrderController extends Controller
     public function quickCreateCustomer(Request $request)
     {
         $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
         ]);
@@ -235,7 +235,7 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create customer: ' . $e->getMessage(),
+                'message' => 'Failed to create customer: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -250,16 +250,16 @@ class OrderController extends Controller
             ->select('id', 'name', 'thumbnail', 'min_price', 'max_price', 'total_stock')
             ->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', "%{$search}%"));
+                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', "%{$search}%"));
             })
             ->limit(20)
             ->get()
-            ->map(fn($p) => [
-                'id'             => $p->id,
-                'name'           => $p->name,
-                'sku'            => $p->defaultVariant?->sku,
-                'thumbnail_url'  => $p->thumbnail_url,
-                'price'          => (float) $p->final_price,
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'sku' => $p->defaultVariant?->sku,
+                'thumbnail_url' => $p->thumbnail_url,
+                'price' => (float) $p->final_price,
                 'stock_quantity' => $p->total_stock,
             ]);
 
@@ -275,7 +275,7 @@ class OrderController extends Controller
     public function previewShippingCharge(Request $request)
     {
         $request->validate([
-            'city'     => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
             'subtotal' => ['nullable', 'numeric', 'min:0'],
         ]);
 
@@ -286,7 +286,7 @@ class OrderController extends Controller
 
         return response()->json([
             'shipping_charge' => $charge,
-            'within_area'     => $this->settingService->isWithinOperationArea($request->input('city')),
+            'within_area' => $this->settingService->isWithinOperationArea($request->input('city')),
         ]);
     }
 
@@ -301,10 +301,10 @@ class OrderController extends Controller
         ]);
 
         $taxSettings = $this->settingService->getGroup('tax');
-        $enabled     = ($taxSettings['tax_enabled'] ?? '0') === '1';
-        $rate        = (float) ($taxSettings['tax_rate'] ?? 0);
-        $label       = $taxSettings['tax_label'] ?? 'Tax';
-        $inclusive   = ($taxSettings['prices_include_tax'] ?? '0') === '1';
+        $enabled = ($taxSettings['tax_enabled'] ?? '0') === '1';
+        $rate = (float) ($taxSettings['tax_rate'] ?? 0);
+        $label = $taxSettings['tax_label'] ?? 'Tax';
+        $inclusive = ($taxSettings['prices_include_tax'] ?? '0') === '1';
 
         $subtotal = (float) $request->input('subtotal');
 
@@ -317,9 +317,9 @@ class OrderController extends Controller
 
         return response()->json([
             'tax_enabled' => $enabled,
-            'tax_label'   => $label,
-            'tax_rate'    => $rate,
-            'tax_amount'  => $taxAmount,
+            'tax_label' => $label,
+            'tax_rate' => $rate,
+            'tax_amount' => $taxAmount,
         ]);
     }
 
@@ -330,21 +330,21 @@ class OrderController extends Controller
     public function applyCoupon(Request $request)
     {
         $request->validate([
-            'code'     => ['required', 'string', 'max:50'],
-            'user_id'  => ['required', 'integer', 'exists:users,id'],
+            'code' => ['required', 'string', 'max:50'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
             'subtotal' => ['required', 'numeric', 'min:0'],
             'order_id' => ['nullable', 'integer'],
         ]);
 
-        $code    = strtoupper(trim($request->input('code')));
-        $coupon  = Coupon::where('code', $code)->first();
+        $code = strtoupper(trim($request->input('code')));
+        $coupon = Coupon::where('code', $code)->first();
         $subtotal = (float) $request->input('subtotal');
 
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json(['success' => false, 'message' => "Coupon \"{$code}\" does not exist."], 422);
         }
 
-        if (!$coupon->isCurrentlyValid()) {
+        if (! $coupon->isCurrentlyValid()) {
             return response()->json(['success' => false, 'message' => "Coupon \"{$coupon->code}\" is not currently valid."], 422);
         }
 
@@ -355,9 +355,9 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $usedByCustomer = \App\Models\Order::where('user_id', $request->input('user_id'))
+        $usedByCustomer = Order::where('user_id', $request->input('user_id'))
             ->where('coupon_id', $coupon->id)
-            ->when($request->input('order_id'), fn($q) => $q->where('id', '!=', $request->input('order_id')))
+            ->when($request->input('order_id'), fn ($q) => $q->where('id', '!=', $request->input('order_id')))
             ->whereNotIn('status', ['cancelled'])
             ->count();
 
@@ -373,11 +373,11 @@ class OrderController extends Controller
             : min($subtotal * ((float) $coupon->value / 100), $coupon->maximum_discount ?: PHP_FLOAT_MAX, $subtotal);
 
         return response()->json([
-            'success'          => true,
-            'code'             => $coupon->code,
-            'type'             => $coupon->type,
-            'value_label'      => $coupon->value_label,
-            'discount_amount'  => round($discount, 2),
+            'success' => true,
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value_label' => $coupon->value_label,
+            'discount_amount' => round($discount, 2),
         ]);
     }
 }

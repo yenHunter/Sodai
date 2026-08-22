@@ -19,19 +19,19 @@ class CategoryService
         return DB::transaction(function () use ($data) {
 
             $imagePath = null;
-            if (!empty($data['image'])) {
+            if (! empty($data['image'])) {
                 $imagePath = $this->uploadImage($data['image']);
             }
 
             return Category::create([
-                'name'        => $data['name'],
-                'slug'        => $this->generateUniqueSlug($data['name']),
+                'name' => $data['name'],
+                'slug' => $this->generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
-                'parent_id'   => $data['parent_id'] ?? null,
-                'image'       => $imagePath,
+                'parent_id' => $data['parent_id'] ?? null,
+                'image' => $imagePath,
                 // ✅ Convert any format to boolean
-                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
-                'sort_order'  => $data['sort_order'] ?? 0,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'sort_order' => $data['sort_order'] ?? 0,
             ]);
         });
     }
@@ -46,7 +46,7 @@ class CategoryService
 
             $imagePath = $category->image;
 
-            if (!empty($data['image'])) {
+            if (! empty($data['image'])) {
                 $this->deleteImage($category->image);
                 $imagePath = $this->uploadImage($data['image']);
             }
@@ -57,14 +57,14 @@ class CategoryService
             }
 
             $category->update([
-                'name'        => $data['name'],
-                'slug'        => $slug,
+                'name' => $data['name'],
+                'slug' => $slug,
                 'description' => $data['description'] ?? null,
-                'parent_id'   => $data['parent_id'] ?? null,
-                'image'       => $imagePath,
+                'parent_id' => $data['parent_id'] ?? null,
+                'image' => $imagePath,
                 // ✅ Convert any format to boolean
-                'is_active'   => $this->resolveIsActive($data['is_active'] ?? false),
-                'sort_order'  => $data['sort_order'] ?? 0,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'sort_order' => $data['sort_order'] ?? 0,
             ]);
 
             return $category->fresh();
@@ -98,6 +98,7 @@ class CategoryService
             }
 
             $this->deleteImage($category->image);
+
             return $category->delete();
         });
     }
@@ -108,10 +109,10 @@ class CategoryService
 
     public function toggleStatus(Category $category): Category
     {
-        $newStatus = !$category->is_active;
+        $newStatus = ! $category->is_active;
         $category->update(['is_active' => $newStatus]);
 
-        if (!$newStatus && $category->hasChildren()) {
+        if (! $newStatus && $category->hasChildren()) {
             $category->children()->update(['is_active' => false]);
         }
 
@@ -125,16 +126,16 @@ class CategoryService
     private function uploadImage(UploadedFile $image): string
     {
         try {
-            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $path     = $image->storeAs('categories', $filename, 'public');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('categories', $filename, 'public');
 
-            if (!$path) {
+            if (! $path) {
                 throw new \Exception('Failed to upload image.');
             }
 
             return $path;
         } catch (\Exception $e) {
-            throw new \Exception('Image upload failed: ' . $e->getMessage());
+            throw new \Exception('Image upload failed: '.$e->getMessage());
         }
     }
 
@@ -175,17 +176,19 @@ class CategoryService
         string $name,
         ?int $ignoreId = null
     ): string {
-        $slug     = Str::slug($name);
+        $slug = Str::slug($name);
         $original = $slug;
-        $count    = 1;
+        $count = 1;
 
         while (true) {
             $query = Category::where('slug', $slug);
             if ($ignoreId) {
                 $query->where('id', '!=', $ignoreId);
             }
-            if (!$query->exists()) break;
-            $slug = $original . '-' . $count++;
+            if (! $query->exists()) {
+                break;
+            }
+            $slug = $original.'-'.$count++;
         }
 
         return $slug;

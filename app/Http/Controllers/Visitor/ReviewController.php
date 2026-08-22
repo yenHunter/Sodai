@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use App\Models\Review;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\CustomerReviewService;
 use App\Http\Controllers\Controller;
-use App\Traits\Visitor\EnsuresCustomerOwnership;
 use App\Http\Requests\Visitor\Review\StoreReviewRequest;
 use App\Http\Requests\Visitor\Review\UpdateReviewRequest;
+use App\Models\Review;
+use App\Services\Visitor\CustomerReviewService;
+use App\Traits\Visitor\EnsuresCustomerOwnership;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
@@ -20,8 +20,8 @@ class ReviewController extends Controller
 
     public function index()
     {
-        $customer  = Auth::guard('customer')->user();
-        $reviews   = $this->reviewService->getCustomerReviews($customer);
+        $customer = Auth::guard('customer')->user();
+        $reviews = $this->reviewService->getCustomerReviews($customer);
         $reviewable = $this->reviewService->getReviewableItems($customer);
 
         return view('visitor.pages.user-reviews', compact('reviews', 'reviewable'));

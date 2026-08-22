@@ -16,8 +16,8 @@ class UpdateNotificationRequest extends FormRequest
     {
         return [
             'admin_alert_email' => ['required', 'email', 'max:150'],
-            'notify_new_order'  => ['nullable'],
-            'notify_low_stock'  => ['nullable'],
+            'notify_new_order' => ['nullable'],
+            'notify_low_stock' => ['nullable'],
             'notify_new_review' => ['nullable'],
         ];
     }

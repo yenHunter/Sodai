@@ -12,13 +12,13 @@ class CouponFactory extends Factory
     public function definition(): array
     {
         return [
-            'code'                 => strtoupper($this->faker->unique()->bothify('SAVE##??')),
-            'type'                 => 'percentage',
-            'value'                => 10,
+            'code' => strtoupper($this->faker->unique()->bothify('SAVE##??')),
+            'type' => 'percentage',
+            'value' => 10,
             'minimum_order_amount' => 0,
-            'usage_per_user'       => 1,
-            'used_count'           => 0,
-            'is_active'            => true,
+            'usage_per_user' => 1,
+            'used_count' => 0,
+            'is_active' => true,
         ];
     }
 

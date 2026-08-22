@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Product;
-use Illuminate\Http\Request;
-use App\Models\ProductImage;
-use App\Models\ProductVariant;
-use App\Services\Admin\ProductService;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Admin\Product\StoreProductRequest;
 use App\Http\Requests\Admin\Product\UpdateProductRequest;
+use App\Models\Product;
+use App\Models\ProductImage;
+use App\Models\ProductOption;
+use App\Models\ProductVariant;
+use App\Models\Tag;
+use App\Services\Admin\ProductService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -69,7 +71,7 @@ class ProductController extends Controller
             }
         }
 
-        $products   = $query->latest()->paginate(15)->withQueryString();
+        $products = $query->latest()->paginate(15)->withQueryString();
         $categories = $this->productService->getAssignableCategories();
 
         return view('admin.ecommerce.product.index', compact('products', 'categories'));
@@ -81,7 +83,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product     = $this->productService->getProductForDetails($product);
+        $product = $this->productService->getProductForDetails($product);
         $activeAttrs = $this->productService->getActiveAttributeKeys();
 
         return view('admin.ecommerce.product.details', compact('product', 'activeAttrs'));
@@ -93,10 +95,10 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories     = $this->productService->getAssignableCategories();
-        $brands         = $this->productService->getActiveBrands();
-        $products       = $this->productService->getProductsForRelation();
-        $activeAttrs    = $this->productService->getActiveAttributeKeys();
+        $categories = $this->productService->getAssignableCategories();
+        $brands = $this->productService->getActiveBrands();
+        $products = $this->productService->getProductsForRelation();
+        $activeAttrs = $this->productService->getActiveAttributeKeys();
         $productOptions = $this->productService->getProductOptions();
 
         return view(
@@ -120,12 +122,12 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             Log::error('Admin failed to create product.', [
                 'exception' => $e,
-                'admin_id'  => Auth::guard('admin')->id(),
+                'admin_id' => Auth::guard('admin')->id(),
             ]);
 
             return redirect()
                 ->route('admin.ecommerce.product.create')
-                ->with('error', 'Failed to create product: ' . $e->getMessage())
+                ->with('error', 'Failed to create product: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -138,9 +140,9 @@ class ProductController extends Controller
     {
         $product = $this->productService->getProductWithRelations($product);
 
-        $categories     = $this->productService->getAssignableCategories();
-        $brands         = $this->productService->getActiveBrands();
-        $products       = $this->productService->getProductsForRelation($product->id);
+        $categories = $this->productService->getAssignableCategories();
+        $brands = $this->productService->getActiveBrands();
+        $products = $this->productService->getProductsForRelation($product->id);
         $productOptions = $this->productService->getProductOptions();
 
         return view(
@@ -163,14 +165,14 @@ class ProductController extends Controller
                 ->with('success', 'Product updated successfully.');
         } catch (\Exception $e) {
             Log::error('Admin failed to update product.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
                 'product_id' => $product->id,
             ]);
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
-                ->with('error', 'Failed to update product: ' . $e->getMessage())
+                ->with('error', 'Failed to update product: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -189,8 +191,8 @@ class ProductController extends Controller
                 ->with('success', 'Product deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Admin failed to delete product.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
                 'product_id' => $product->id,
             ]);
 
@@ -213,11 +215,13 @@ class ProductController extends Controller
         }
 
         $successCount = 0;
-        $failedNames  = [];
+        $failedNames = [];
 
         foreach ($ids as $id) {
             $product = Product::find($id);
-            if (!$product) continue;
+            if (! $product) {
+                continue;
+            }
 
             try {
                 $this->productService->delete($product);
@@ -226,18 +230,19 @@ class ProductController extends Controller
                 $failedNames[] = $product->name;
 
                 Log::warning('Bulk delete: product skipped due to error.', [
-                    'exception'  => $e,
-                    'admin_id'   => Auth::guard('admin')->id(),
+                    'exception' => $e,
+                    'admin_id' => Auth::guard('admin')->id(),
                     'product_id' => $product->id,
-                    'name'       => $product->name,
+                    'name' => $product->name,
                 ]);
             }
         }
 
-        $message = "{$successCount} product" . ($successCount === 1 ? '' : 's') . " deleted successfully.";
+        $message = "{$successCount} product".($successCount === 1 ? '' : 's').' deleted successfully.';
 
-        if (!empty($failedNames)) {
-            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
+        if (! empty($failedNames)) {
+            $message .= ' Failed: '.implode(', ', $failedNames).'.';
+
             return redirect()->route('admin.ecommerce.product.index')->with('error', $message);
         }
 
@@ -252,15 +257,15 @@ class ProductController extends Controller
     {
         try {
             $updated = $this->productService->toggleStatus($product);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product {$status} successfully.");
         } catch (\Exception $e) {
             Log::error('Admin failed to toggle product status.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
                 'product_id' => $product->id,
             ]);
 
@@ -274,15 +279,15 @@ class ProductController extends Controller
     {
         try {
             $updated = $this->productService->toggleFeatured($product);
-            $status  = $updated->is_featured ? 'marked as featured' : 'removed from featured';
+            $status = $updated->is_featured ? 'marked as featured' : 'removed from featured';
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product {$status}.");
         } catch (\Exception $e) {
             Log::error('Admin failed to toggle product featured status.', [
-                'exception'  => $e,
-                'admin_id'   => Auth::guard('admin')->id(),
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
                 'product_id' => $product->id,
             ]);
 
@@ -340,7 +345,7 @@ class ProductController extends Controller
     public function reorderImages(Request $request, Product $product)
     {
         $request->validate([
-            'ordered_ids'   => ['required', 'array'],
+            'ordered_ids' => ['required', 'array'],
             'ordered_ids.*' => ['integer', 'exists:product_images,id'],
         ]);
 
@@ -365,7 +370,7 @@ class ProductController extends Controller
     {
         $search = $request->input('q', '');
 
-        $tags = \App\Models\Tag::where('name', 'like', "%{$search}%")->limit(10)->pluck('name');
+        $tags = Tag::where('name', 'like', "%{$search}%")->limit(10)->pluck('name');
 
         return response()->json($tags);
     }
@@ -376,7 +381,7 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        $search  = $request->input('q', '');
+        $search = $request->input('q', '');
         $exclude = $request->input('exclude');
 
         $products = Product::active()
@@ -398,7 +403,7 @@ class ProductController extends Controller
     {
         $search = $request->input('q', '');
 
-        $options = \App\Models\ProductOption::with('values')
+        $options = ProductOption::with('values')
             ->where('name', 'like', "%{$search}%")
             ->limit(10)
             ->get();
@@ -425,10 +430,10 @@ class ProductController extends Controller
             $updated = $this->productService->updateVariantStock($variant, $request->input('stock_quantity'));
 
             return response()->json([
-                'success'         => true,
-                'message'         => 'Stock updated successfully.',
-                'stock_status'    => $updated->is_out_of_stock ? 'Out of Stock' : ($updated->is_low_stock ? 'Low Stock' : 'In Stock'),
-                'is_low_stock'    => $updated->is_low_stock,
+                'success' => true,
+                'message' => 'Stock updated successfully.',
+                'stock_status' => $updated->is_out_of_stock ? 'Out of Stock' : ($updated->is_low_stock ? 'Low Stock' : 'In Stock'),
+                'is_low_stock' => $updated->is_low_stock,
                 'is_out_of_stock' => $updated->is_out_of_stock,
                 'product_total_stock' => $product->fresh()->total_stock,
             ]);

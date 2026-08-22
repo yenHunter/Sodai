@@ -2,16 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class OrderModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_view_order_index_with_stats(): void
     {
@@ -26,31 +29,31 @@ class OrderModuleTest extends TestCase
 
     public function test_admin_can_create_order_and_stock_decrements(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['price' => 20, 'stock_quantity' => 10]);
         $product->refreshPriceAndStockCache();
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.order.store'), [
-                'user_id'          => $customer->id,
-                'shipping_name'    => 'John Doe',
-                'shipping_email'   => 'john@example.com',
-                'shipping_phone'   => '01700000000',
+                'user_id' => $customer->id,
+                'shipping_name' => 'John Doe',
+                'shipping_email' => 'john@example.com',
+                'shipping_phone' => '01700000000',
                 'shipping_address' => '123 Street',
-                'shipping_city'    => 'Dhaka',
-                'shipping_state'   => 'Dhaka',
-                'shipping_zip'     => '1200',
+                'shipping_city' => 'Dhaka',
+                'shipping_state' => 'Dhaka',
+                'shipping_zip' => '1200',
                 'shipping_country' => 'Bangladesh',
-                'items'            => [
+                'items' => [
                     ['product_id' => $product->id, 'quantity' => 3],
                 ],
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('product_variants', [
-            'id'             => $product->defaultVariant->id,
+            'id' => $product->defaultVariant->id,
             'stock_quantity' => 7,
         ]);
         $this->assertDatabaseCount('orders', 1);
@@ -59,24 +62,24 @@ class OrderModuleTest extends TestCase
 
     public function test_order_creation_fails_with_insufficient_stock(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['stock_quantity' => 2]);
         $product->refreshPriceAndStockCache();
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.order.store'), [
-                'user_id'          => $customer->id,
-                'shipping_name'    => 'Jane',
-                'shipping_email'   => 'jane@example.com',
-                'shipping_phone'   => '01700000000',
+                'user_id' => $customer->id,
+                'shipping_name' => 'Jane',
+                'shipping_email' => 'jane@example.com',
+                'shipping_phone' => '01700000000',
                 'shipping_address' => 'Address',
-                'shipping_city'    => 'Dhaka',
-                'shipping_state'   => 'Dhaka',
-                'shipping_zip'     => '1200',
+                'shipping_city' => 'Dhaka',
+                'shipping_state' => 'Dhaka',
+                'shipping_zip' => '1200',
                 'shipping_country' => 'Bangladesh',
-                'items'            => [
+                'items' => [
                     ['product_id' => $product->id, 'quantity' => 5],
                 ],
             ])
@@ -88,9 +91,9 @@ class OrderModuleTest extends TestCase
 
     public function test_creating_order_logs_initial_status_history(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.order.store'), [
             'user_id' => $customer->id,
@@ -107,9 +110,9 @@ class OrderModuleTest extends TestCase
 
         $order = Order::first();
         $this->assertDatabaseHas('order_status_histories', [
-            'order_id'    => $order->id,
+            'order_id' => $order->id,
             'from_status' => null,
-            'to_status'   => 'pending',
+            'to_status' => 'pending',
         ]);
     }
 
@@ -121,33 +124,33 @@ class OrderModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->patch(route('admin.ecommerce.order.status.update', $order), [
                 'status' => 'confirmed',
-                'note'   => 'Confirmed by admin.',
+                'note' => 'Confirmed by admin.',
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'confirmed']);
         $this->assertDatabaseHas('order_status_histories', [
-            'order_id'    => $order->id,
+            'order_id' => $order->id,
             'from_status' => 'pending',
-            'to_status'   => 'confirmed',
-            'note'        => 'Confirmed by admin.',
+            'to_status' => 'confirmed',
+            'note' => 'Confirmed by admin.',
         ]);
     }
 
     public function test_cancelling_order_restores_stock(): void
     {
-        $admin   = $this->createAdminWithPermissions(['order.view', 'order.cancel']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.cancel']);
         $product = Product::factory()->create();
         $variant = $product->defaultVariant;
         $variant->update(['stock_quantity' => 5]);
         $product->refreshPriceAndStockCache();
 
         $order = Order::factory()->withStatus('pending')->create();
-        \App\Models\OrderItem::factory()->create([
-            'order_id'           => $order->id,
-            'product_id'         => $product->id,
+        OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
             'product_variant_id' => $variant->id,
-            'quantity'           => 3,
+            'quantity' => 3,
         ]);
         $variant->decrement('stock_quantity', 3); // simulate the original decrement
         $product->refreshPriceAndStockCache();
@@ -203,11 +206,11 @@ class OrderModuleTest extends TestCase
 
     public function test_order_number_uses_configured_prefix(): void
     {
-        \App\Models\Setting::setMany('order', ['order_number_prefix' => 'SODAI-']);
+        Setting::setMany('order', ['order_number_prefix' => 'SODAI-']);
 
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.order.store'), [
             'user_id' => $customer->id,
@@ -228,15 +231,15 @@ class OrderModuleTest extends TestCase
 
     public function test_shipping_charge_is_computed_from_settings_when_not_provided(): void
     {
-        \App\Models\Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Dhaka']),
-            'inside_area_charge'  => 80,
+        Setting::setMany('shipping', [
+            'operation_areas' => json_encode(['Dhaka']),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['price' => 100]);
         $product->refreshPriceAndStockCache();
 
@@ -259,15 +262,15 @@ class OrderModuleTest extends TestCase
 
     public function test_manual_shipping_charge_overrides_settings_calculation(): void
     {
-        \App\Models\Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Dhaka']),
-            'inside_area_charge'  => 80,
+        Setting::setMany('shipping', [
+            'operation_areas' => json_encode(['Dhaka']),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.order.store'), [
             'user_id' => $customer->id,
@@ -289,11 +292,11 @@ class OrderModuleTest extends TestCase
 
     public function test_tax_is_computed_from_settings_when_not_provided(): void
     {
-        \App\Models\Setting::setMany('tax', ['tax_enabled' => '1', 'tax_rate' => 10, 'prices_include_tax' => '0']);
+        Setting::setMany('tax', ['tax_enabled' => '1', 'tax_rate' => 10, 'prices_include_tax' => '0']);
 
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['price' => 100]);
         $product->refreshPriceAndStockCache();
 
@@ -316,13 +319,13 @@ class OrderModuleTest extends TestCase
 
     public function test_valid_coupon_applies_discount_and_increments_usage(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['price' => 200]);
         $product->refreshPriceAndStockCache();
 
-        $coupon = \App\Models\Coupon::factory()->create([
+        $coupon = Coupon::factory()->create([
             'code' => 'SAVE20',
             'type' => 'percentage',
             'value' => 20,
@@ -351,11 +354,11 @@ class OrderModuleTest extends TestCase
 
     public function test_expired_coupon_is_rejected_on_order_creation(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
 
-        \App\Models\Coupon::factory()->create([
+        Coupon::factory()->create([
             'code' => 'EXPIRED10',
             'expires_at' => now()->subDay(),
         ]);
@@ -379,13 +382,13 @@ class OrderModuleTest extends TestCase
 
     public function test_coupon_below_minimum_order_amount_is_rejected(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view', 'order.create']);
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.create']);
         $customer = User::factory()->create();
-        $product  = Product::factory()->create();
+        $product = Product::factory()->create();
         $product->defaultVariant->update(['price' => 10]);
         $product->refreshPriceAndStockCache();
 
-        \App\Models\Coupon::factory()->create([
+        Coupon::factory()->create([
             'code' => 'BIGORDER',
             'minimum_order_amount' => 500,
         ]);
@@ -409,9 +412,9 @@ class OrderModuleTest extends TestCase
 
     public function test_admin_can_preview_shipping_charge_via_ajax(): void
     {
-        \App\Models\Setting::setMany('shipping', [
-            'operation_areas'     => json_encode(['Dhaka']),
-            'inside_area_charge'  => 80,
+        Setting::setMany('shipping', [
+            'operation_areas' => json_encode(['Dhaka']),
+            'inside_area_charge' => 80,
             'outside_area_charge' => 130,
         ]);
 
@@ -425,9 +428,9 @@ class OrderModuleTest extends TestCase
 
     public function test_admin_can_apply_coupon_via_ajax(): void
     {
-        $admin    = $this->createAdminWithPermissions(['order.view']);
+        $admin = $this->createAdminWithPermissions(['order.view']);
         $customer = User::factory()->create();
-        \App\Models\Coupon::factory()->create(['code' => 'AJAX10', 'type' => 'fixed', 'value' => 10]);
+        Coupon::factory()->create(['code' => 'AJAX10', 'type' => 'fixed', 'value' => 10]);
 
         $this->actingAsAdmin($admin)
             ->postJson(route('admin.ecommerce.order.apply-coupon'), [

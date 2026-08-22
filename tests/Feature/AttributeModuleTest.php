@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Attribute;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Admin\AttributeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class AttributeModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_view_attribute_list(): void
     {
@@ -24,12 +24,12 @@ class AttributeModuleTest extends TestCase
 
     public function test_admin_can_update_attribute_label_and_status(): void
     {
-        $admin     = $this->createAdminWithPermissions(['attribute.view', 'attribute.edit']);
+        $admin = $this->createAdminWithPermissions(['attribute.view', 'attribute.edit']);
         $attribute = Attribute::factory()->create(['key' => 'color', 'label' => 'Color']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.attribute.update', $attribute), [
-                'label'  => 'Colour',
+                'label' => 'Colour',
                 'status' => 'inactive',
             ])
             ->assertRedirect();
@@ -41,10 +41,10 @@ class AttributeModuleTest extends TestCase
 
     public function test_toggling_status_updates_cached_active_keys(): void
     {
-        $admin     = $this->createAdminWithPermissions(['attribute.view', 'attribute.edit']);
+        $admin = $this->createAdminWithPermissions(['attribute.view', 'attribute.edit']);
         $attribute = Attribute::factory()->create(['key' => 'size', 'status' => 'active']);
 
-        $service = app(\App\Services\Admin\AttributeService::class);
+        $service = app(AttributeService::class);
         $this->assertContains('size', $service->getActiveKeys());
 
         $this->actingAsAdmin($admin)->patch(route('admin.ecommerce.attribute.toggle-status', $attribute));
@@ -64,7 +64,7 @@ class AttributeModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('activeAttrs', function ($attrs) {
-            return in_array('color', $attrs) && !in_array('weight', $attrs);
+            return in_array('color', $attrs) && ! in_array('weight', $attrs);
         });
     }
 }

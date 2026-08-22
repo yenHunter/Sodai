@@ -2,30 +2,30 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Admin;
-use Tests\Traits\AdminTestHelpers;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+use Tests\Traits\AdminTestHelpers;
 
 class AdminUserModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_with_permission_can_create_new_admin(): void
     {
         $admin = $this->createAdminWithPermissions(['admin.view', 'admin.create']);
-        $role  = Role::create(['name' => 'staff', 'guard_name' => 'admin']);
+        $role = Role::create(['name' => 'staff', 'guard_name' => 'admin']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.users.store'), [
-                'name'                  => 'New Staff',
-                'email'                 => 'staff@example.com',
-                'password'              => 'Password123',
+                'name' => 'New Staff',
+                'email' => 'staff@example.com',
+                'password' => 'Password123',
                 'password_confirmation' => 'Password123',
-                'role_id'               => $role->id,
-                'is_active'             => 'active',
+                'role_id' => $role->id,
+                'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.users.index'));
 
@@ -46,13 +46,13 @@ class AdminUserModuleTest extends TestCase
     public function test_admin_cannot_deactivate_own_account(): void
     {
         $admin = $this->createAdminWithPermissions(['admin.view', 'admin.edit']);
-        $role  = Role::create(['name' => 'self-role', 'guard_name' => 'admin']);
+        $role = Role::create(['name' => 'self-role', 'guard_name' => 'admin']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.users.update', $admin), [
-                'name'      => $admin->name,
-                'email'     => $admin->email,
-                'role_id'   => $role->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'role_id' => $role->id,
                 'is_active' => 'inactive',
             ])
             ->assertRedirect(route('admin.users.index'));
@@ -75,7 +75,7 @@ class AdminUserModuleTest extends TestCase
     public function test_super_admin_role_permissions_cannot_be_edited(): void
     {
         $superAdmin = $this->createSuperAdmin();
-        $role       = Role::where('name', 'super-admin')->where('guard_name', 'admin')->first();
+        $role = Role::where('name', 'super-admin')->where('guard_name', 'admin')->first();
 
         $this->actingAsAdmin($superAdmin)
             ->post(route('admin.users.roles.update', $role), ['permissions' => []])
@@ -85,7 +85,7 @@ class AdminUserModuleTest extends TestCase
     public function test_role_assigned_to_admins_cannot_be_deleted(): void
     {
         $admin = $this->createSuperAdmin();
-        $role  = Role::create(['name' => 'in-use-role', 'guard_name' => 'admin']);
+        $role = Role::create(['name' => 'in-use-role', 'guard_name' => 'admin']);
         Admin::factory()->create()->assignRole($role);
 
         $this->actingAsAdmin($admin)
@@ -110,7 +110,7 @@ class AdminUserModuleTest extends TestCase
 
         $response = $this->actingAsAdmin($admin)
             ->post(route('admin.users.profile.update'), [
-                'name'  => 'Updated Name',
+                'name' => 'Updated Name',
                 'email' => $admin->email,
             ]);
 
@@ -125,8 +125,8 @@ class AdminUserModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.users.profile.password'), [
-                'current_password'     => 'wrong-password',
-                'password'              => 'NewPassword123!',
+                'current_password' => 'wrong-password',
+                'password' => 'NewPassword123!',
                 'password_confirmation' => 'NewPassword123!',
             ])
             ->assertSessionHasErrors('current_password');
@@ -135,13 +135,13 @@ class AdminUserModuleTest extends TestCase
     public function test_admin_can_change_password_with_correct_current_password(): void
     {
         $admin = Admin::factory()->create(['password' => bcrypt('OldPassword123')]);
-        $role  = Role::create(['name' => 'basic', 'guard_name' => 'admin']);
+        $role = Role::create(['name' => 'basic', 'guard_name' => 'admin']);
         $admin->assignRole($role);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.users.profile.password'), [
-                'current_password'     => 'OldPassword123',
-                'password'              => 'NewPassword123!',
+                'current_password' => 'OldPassword123',
+                'password' => 'NewPassword123!',
                 'password_confirmation' => 'NewPassword123!',
             ])
             ->assertRedirect(route('admin.users.profile.edit'));

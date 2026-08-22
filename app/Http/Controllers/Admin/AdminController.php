@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Admin;
-use Illuminate\Http\Request;
-use App\Services\Admin\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\StoreAdminRequest;
 use App\Http\Requests\Admin\User\UpdateAdminRequest;
+use App\Models\Admin;
+use App\Services\Admin\AdminService;
 
 class AdminController extends Controller
 {
@@ -18,7 +17,7 @@ class AdminController extends Controller
     public function index()
     {
         $admins = $this->adminService->getAdminsList();
-        $roles  = $this->adminService->getRolesForSelect();
+        $roles = $this->adminService->getRolesForSelect();
 
         return view('admin.settings.users.index', compact('admins', 'roles'));
     }
@@ -34,7 +33,7 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'Failed to create admin: ' . $e->getMessage());
+                ->with('error', 'Failed to create admin: '.$e->getMessage());
         }
     }
 
@@ -49,7 +48,7 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'Failed to update admin: ' . $e->getMessage());
+                ->with('error', 'Failed to update admin: '.$e->getMessage());
         }
     }
 
@@ -72,7 +71,7 @@ class AdminController extends Controller
     {
         try {
             $updated = $this->adminService->toggleStatus($admin);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.users.index')

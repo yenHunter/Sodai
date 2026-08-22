@@ -1,23 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\CartController;
-use App\Http\Controllers\Admin\BrandController;
-use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\RefundController;
-use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\AttributeController;
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\ReviewController;
-use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CartController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\AttributeController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SettingController;
+use Illuminate\Support\Facades\Route;
 
 // Guest
 Route::middleware('guest:admin')->group(function () {
@@ -58,9 +58,9 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
         // — Products: only roles with product permissions —
         Route::middleware('permission:product.view')->prefix('products')->name('product.')->group(function () {
-            Route::get('/',        [ProductController::class, 'index'])->name('index');
-            Route::get('/create',  [ProductController::class, 'create'])->name('create');
-            Route::post('/store',  [ProductController::class, 'store'])->name('store')->middleware('permission:product.create');
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/store', [ProductController::class, 'store'])->name('store')->middleware('permission:product.create');
             // Bulk destroy BEFORE /{product} wildcard — critical ordering
             Route::delete('/bulk-destroy', [ProductController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:product.delete');
             // Tag search BEFORE /{product} wildcard
@@ -68,16 +68,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             // Product search for Select2 BEFORE /{product} wildcard
             Route::get('/search', [ProductController::class, 'search'])->name('search');
             // Wildcard routes AFTER all static routes
-            Route::get('/{product}',      [ProductController::class, 'show'])->name('show');
+            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit')->middleware('permission:product.edit');
             Route::post('/{product}/update', [ProductController::class, 'update'])->name('update')->middleware('permission:product.edit');
-            Route::delete('/{product}',   [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
-            Route::patch('/{product}/toggle-status',   [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy')->middleware('permission:product.delete');
+            Route::patch('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:product.edit');
             Route::patch('/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('toggle-featured')->middleware('permission:product.edit');
             // Image management AJAX endpoints
-            Route::delete('/{product}/images/{image}',         [ProductController::class, 'deleteImage'])->name('images.delete')->middleware('permission:product.edit');
-            Route::patch('/{product}/images/{image}/primary',  [ProductController::class, 'setPrimaryImage'])->name('images.set-primary')->middleware('permission:product.edit');
-            Route::post('/{product}/images/reorder',           [ProductController::class, 'reorderImages'])->name('images.reorder')->middleware('permission:product.edit');
+            Route::delete('/{product}/images/{image}', [ProductController::class, 'deleteImage'])->name('images.delete')->middleware('permission:product.edit');
+            Route::patch('/{product}/images/{image}/primary', [ProductController::class, 'setPrimaryImage'])->name('images.set-primary')->middleware('permission:product.edit');
+            Route::post('/{product}/images/reorder', [ProductController::class, 'reorderImages'])->name('images.reorder')->middleware('permission:product.edit');
             // Stock quick update
             Route::patch('/{product}/variants/{variant}/stock', [ProductController::class, 'updateStock'])->name('stock.update')->middleware('permission:product.edit');
             Route::get('/options/search', [ProductController::class, 'searchOptions'])->name('options.search');
@@ -85,27 +85,27 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
         // ── Orders ──
         Route::middleware('permission:order.view')->prefix('orders')->name('order.')->group(function () {
-            Route::get('/',       [OrderController::class, 'index'])->name('index');
+            Route::get('/', [OrderController::class, 'index'])->name('index');
             Route::get('/create', [OrderController::class, 'create'])->name('create')->middleware('permission:order.create');
             Route::post('/store', [OrderController::class, 'store'])->name('store')->middleware('permission:order.create');
 
             // POS AJAX endpoints — must be BEFORE the {order} wildcard
-            Route::get('/customers/search',            [OrderController::class, 'searchCustomers'])->name('customers.search');
-            Route::post('/customers/quick-create',      [OrderController::class, 'quickCreateCustomer'])->name('customers.quick-create')->middleware('permission:order.create');
+            Route::get('/customers/search', [OrderController::class, 'searchCustomers'])->name('customers.search');
+            Route::post('/customers/quick-create', [OrderController::class, 'quickCreateCustomer'])->name('customers.quick-create')->middleware('permission:order.create');
             Route::get('/customers/{customer}/address', [OrderController::class, 'getCustomerAddress'])->name('customers.address');
-            Route::get('/products/search',              [OrderController::class, 'searchProducts'])->name('products.search');
+            Route::get('/products/search', [OrderController::class, 'searchProducts'])->name('products.search');
 
             Route::get('/preview-shipping', [OrderController::class, 'previewShippingCharge'])->name('preview-shipping');
             Route::get('/preview-tax', [OrderController::class, 'previewTax'])->name('preview-tax');
             Route::post('/apply-coupon', [OrderController::class, 'applyCoupon'])->name('apply-coupon');
 
-            Route::get('/{order}',        [OrderController::class, 'show'])->name('show');
-            Route::get('/{order}/edit',    [OrderController::class, 'edit'])->name('edit')->middleware('permission:order.edit');
+            Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+            Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit')->middleware('permission:order.edit');
             Route::post('/{order}/update', [OrderController::class, 'update'])->name('update')->middleware('permission:order.edit');
-            Route::delete('/{order}',      [OrderController::class, 'destroy'])->name('destroy')->middleware('permission:order.delete');
+            Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy')->middleware('permission:order.delete');
 
             Route::patch('/{order}/status', [OrderController::class, 'updateStatus'])->name('status.update')->middleware('permission:order.update-status');
-            Route::patch('/{order}/cancel',  [OrderController::class, 'cancel'])->name('cancel')->middleware('permission:order.cancel');
+            Route::patch('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel')->middleware('permission:order.cancel');
         });
 
         // ── Customers ──

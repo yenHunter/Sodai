@@ -24,14 +24,14 @@ class RedirectIfAuthenticated
                     }
                     break;
 
-                // ── Customer Guard ──
+                    // ── Customer Guard ──
                 case 'customer':
                     if (Auth::guard('customer')->check()) {
                         return redirect()->route('visitor.index');
                     }
                     break;
 
-                // ── Default Guard ──
+                    // ── Default Guard ──
                 default:
                     if (Auth::guard($guard)->check()) {
                         return redirect('/');

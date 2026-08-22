@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
 {
@@ -24,7 +23,7 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
@@ -41,14 +40,14 @@ class Category extends Model
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id')
-                    ->orderBy('sort_order');
+            ->orderBy('sort_order');
     }
 
     public function activeChildren()
     {
         return $this->hasMany(Category::class, 'parent_id')
-                    ->where('is_active', true)
-                    ->orderBy('sort_order');
+            ->where('is_active', true)
+            ->orderBy('sort_order');
     }
 
     public function products()
@@ -63,15 +62,16 @@ class Category extends Model
     public function getFullNameAttribute(): string
     {
         if ($this->parent) {
-            return $this->parent->name . ' > ' . $this->name;
+            return $this->parent->name.' > '.$this->name;
         }
+
         return $this->name;
     }
 
     public function getImageUrlAttribute(): ?string
     {
         if ($this->image) {
-            return asset('storage/' . $this->thumbnail);
+            return asset('storage/'.$this->thumbnail);
         }
 
         return asset('visitor/images/banner/5.png');
@@ -88,7 +88,7 @@ class Category extends Model
 
     public function isChild(): bool
     {
-        return !is_null($this->parent_id);
+        return ! is_null($this->parent_id);
     }
 
     public function hasChildren(): bool

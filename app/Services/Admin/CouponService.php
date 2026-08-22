@@ -3,8 +3,8 @@
 namespace App\Services\Admin;
 
 use App\Models\Coupon;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CouponService
 {
@@ -16,16 +16,16 @@ class CouponService
     {
         return DB::transaction(function () use ($data) {
             return Coupon::create([
-                'code'                 => Str::upper(trim($data['code'])),
-                'type'                 => $data['type'],
-                'value'                => $data['value'],
+                'code' => Str::upper(trim($data['code'])),
+                'type' => $data['type'],
+                'value' => $data['value'],
                 'minimum_order_amount' => $data['minimum_order_amount'] ?? 0,
-                'maximum_discount'     => $data['maximum_discount'] ?? null,
-                'usage_limit'          => $data['usage_limit'] ?? null,
-                'usage_per_user'       => $data['usage_per_user'] ?? 1,
-                'is_active'            => $this->resolveIsActive($data['is_active'] ?? false),
-                'starts_at'            => $data['starts_at'] ?? null,
-                'expires_at'           => $data['expires_at'] ?? null,
+                'maximum_discount' => $data['maximum_discount'] ?? null,
+                'usage_limit' => $data['usage_limit'] ?? null,
+                'usage_per_user' => $data['usage_per_user'] ?? 1,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'starts_at' => $data['starts_at'] ?? null,
+                'expires_at' => $data['expires_at'] ?? null,
             ]);
         });
     }
@@ -38,16 +38,16 @@ class CouponService
     {
         return DB::transaction(function () use ($coupon, $data) {
             $coupon->update([
-                'code'                 => Str::upper(trim($data['code'])),
-                'type'                 => $data['type'],
-                'value'                => $data['value'],
+                'code' => Str::upper(trim($data['code'])),
+                'type' => $data['type'],
+                'value' => $data['value'],
                 'minimum_order_amount' => $data['minimum_order_amount'] ?? 0,
-                'maximum_discount'     => $data['maximum_discount'] ?? null,
-                'usage_limit'          => $data['usage_limit'] ?? null,
-                'usage_per_user'       => $data['usage_per_user'] ?? 1,
-                'is_active'            => $this->resolveIsActive($data['is_active'] ?? false),
-                'starts_at'            => $data['starts_at'] ?? null,
-                'expires_at'           => $data['expires_at'] ?? null,
+                'maximum_discount' => $data['maximum_discount'] ?? null,
+                'usage_limit' => $data['usage_limit'] ?? null,
+                'usage_per_user' => $data['usage_per_user'] ?? 1,
+                'is_active' => $this->resolveIsActive($data['is_active'] ?? false),
+                'starts_at' => $data['starts_at'] ?? null,
+                'expires_at' => $data['expires_at'] ?? null,
             ]);
 
             return $coupon->fresh();
@@ -73,7 +73,7 @@ class CouponService
 
     public function toggleStatus(Coupon $coupon): Coupon
     {
-        $coupon->update(['is_active' => !$coupon->is_active]);
+        $coupon->update(['is_active' => ! $coupon->is_active]);
 
         return $coupon->fresh();
     }
@@ -85,9 +85,16 @@ class CouponService
 
     private function resolveIsActive(mixed $value): bool
     {
-        if (is_bool($value)) return $value;
-        if (is_int($value)) return $value === 1;
-        if (is_string($value)) return strtolower($value) === 'active';
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (is_string($value)) {
+            return strtolower($value) === 'active';
+        }
+
         return false;
     }
 

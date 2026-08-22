@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\Product;
 use App\Models\Category;
-use Illuminate\Support\Str;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class ProductFactory extends Factory
 {
@@ -17,14 +17,14 @@ class ProductFactory extends Factory
         $name = $this->faker->unique()->words(3, true);
 
         return [
-            'category_id'    => Category::factory(),
-            'name'           => ucfirst($name),
-            'slug'           => Str::slug($name),
-            'is_active'      => true,
-            'is_featured'    => false,
-            'total_sales'    => 0,
+            'category_id' => Category::factory(),
+            'name' => ucfirst($name),
+            'slug' => Str::slug($name),
+            'is_active' => true,
+            'is_featured' => false,
+            'total_sales' => 0,
             'average_rating' => 0,
-            'review_count'   => 0,
+            'review_count' => 0,
         ];
     }
 

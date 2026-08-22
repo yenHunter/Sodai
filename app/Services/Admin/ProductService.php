@@ -2,23 +2,23 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Tag;
 use App\Models\Brand;
-use App\Models\Product;
 use App\Models\Category;
-use Illuminate\Support\Str;
+use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductOption;
-use App\Models\ProductVariant;
-use Illuminate\Http\UploadedFile;
 use App\Models\ProductOptionValue;
+use App\Models\ProductVariant;
+use App\Models\Tag;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
 
 class ProductService
 {
@@ -64,21 +64,21 @@ class ProductService
             return DB::transaction(function () use ($data) {
 
                 $thumbnailPath = null;
-                if (!empty($data['thumbnail'])) {
+                if (! empty($data['thumbnail'])) {
                     $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
                 }
 
                 $product = Product::create([
-                    'name'              => $data['name'],
-                    'slug'              => $this->generateUniqueSlug($data['name']),
+                    'name' => $data['name'],
+                    'slug' => $this->generateUniqueSlug($data['name']),
                     'short_description' => $data['short_description'] ?? null,
-                    'description'       => $data['description'] ?? null,
-                    'category_id'       => $data['category_id'],
-                    'brand_id'          => $data['brand_id'] ?? null,
-                    'thumbnail'         => $thumbnailPath,
-                    'is_active'         => $this->resolveBoolean($data['is_active'] ?? false),
-                    'is_featured'       => $this->resolveBoolean($data['is_featured'] ?? false),
-                    'meta'              => $data['meta'] ?? null,
+                    'description' => $data['description'] ?? null,
+                    'category_id' => $data['category_id'],
+                    'brand_id' => $data['brand_id'] ?? null,
+                    'thumbnail' => $thumbnailPath,
+                    'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
+                    'is_featured' => $this->resolveBoolean($data['is_featured'] ?? false),
+                    'meta' => $data['meta'] ?? null,
                 ]);
 
                 $variantsInput = $data['variants'] ?? [];
@@ -93,23 +93,23 @@ class ProductService
 
                 $this->ensureExactlyOneDefaultVariant($product);
 
-                if (!empty($data['images'])) {
+                if (! empty($data['images'])) {
                     $this->storeProductImages($product, $data['images']);
                 }
 
-                if (!empty($data['tags'])) {
+                if (! empty($data['tags'])) {
                     $this->syncTags($product, $data['tags']);
                 }
 
-                if (!empty($data['related_products'])) {
+                if (! empty($data['related_products'])) {
                     $this->syncRelatedProducts($product, $data['related_products']);
                 }
 
                 $product->refreshPriceAndStockCache();
 
                 Log::info('Product created successfully.', [
-                    'product_id'    => $product->id,
-                    'name'          => $product->name,
+                    'product_id' => $product->id,
+                    'name' => $product->name,
                     'variant_count' => $product->variants()->count(),
                 ]);
 
@@ -123,7 +123,7 @@ class ProductService
         } catch (\Exception $e) {
             Log::error('Product creation failed.', [
                 'exception' => $e,
-                'data'      => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
+                'data' => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
             ]);
             throw $e;
         }
@@ -144,7 +144,7 @@ class ProductService
             return DB::transaction(function () use ($product, $data) {
 
                 $thumbnailPath = $product->thumbnail;
-                if (!empty($data['thumbnail'])) {
+                if (! empty($data['thumbnail'])) {
                     $this->deleteImage($product->thumbnail);
                     $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
                 }
@@ -155,25 +155,25 @@ class ProductService
                 }
 
                 $product->update([
-                    'name'              => $data['name'],
-                    'slug'              => $slug,
+                    'name' => $data['name'],
+                    'slug' => $slug,
                     'short_description' => $data['short_description'] ?? null,
-                    'description'       => $data['description'] ?? null,
-                    'category_id'       => $data['category_id'],
-                    'brand_id'          => $data['brand_id'] ?? null,
-                    'thumbnail'         => $thumbnailPath,
-                    'is_active'         => $this->resolveBoolean($data['is_active'] ?? false),
-                    'is_featured'       => $this->resolveBoolean($data['is_featured'] ?? false),
-                    'meta'              => $data['meta'] ?? null,
+                    'description' => $data['description'] ?? null,
+                    'category_id' => $data['category_id'],
+                    'brand_id' => $data['brand_id'] ?? null,
+                    'thumbnail' => $thumbnailPath,
+                    'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
+                    'is_featured' => $this->resolveBoolean($data['is_featured'] ?? false),
+                    'meta' => $data['meta'] ?? null,
                 ]);
 
-                if (!empty($data['delete_variant_ids'])) {
+                if (! empty($data['delete_variant_ids'])) {
                     $this->deleteVariants($product, $data['delete_variant_ids']);
                 }
 
                 $variantsInput = $data['variants'] ?? [];
                 foreach ($variantsInput as $index => $variantData) {
-                    if (!empty($variantData['id'])) {
+                    if (! empty($variantData['id'])) {
                         $this->updateVariant($product, (int) $variantData['id'], $variantData);
                     } else {
                         $this->createVariant($product, $variantData, isDefault: false);
@@ -186,11 +186,11 @@ class ProductService
 
                 $this->ensureExactlyOneDefaultVariant($product);
 
-                if (!empty($data['delete_image_ids'])) {
+                if (! empty($data['delete_image_ids'])) {
                     $this->deleteProductImages($product, $data['delete_image_ids']);
                 }
 
-                if (!empty($data['images'])) {
+                if (! empty($data['images'])) {
                     $this->storeProductImages($product, $data['images']);
                 }
 
@@ -201,7 +201,7 @@ class ProductService
 
                 Log::info('Product updated successfully.', [
                     'product_id' => $product->id,
-                    'name'       => $product->name,
+                    'name' => $product->name,
                 ]);
 
                 return $product->fresh([
@@ -213,9 +213,9 @@ class ProductService
             });
         } catch (\Exception $e) {
             Log::error('Product update failed.', [
-                'exception'  => $e,
+                'exception' => $e,
                 'product_id' => $product->id,
-                'data'       => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
+                'data' => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
             ]);
             throw $e;
         }
@@ -227,10 +227,10 @@ class ProductService
 
     public function delete(Product $product): bool
     {
-        if (!$product->canDelete()) {
+        if (! $product->canDelete()) {
             Log::warning('Product deletion blocked.', [
                 'product_id' => $product->id,
-                'reason'     => $product->deletion_block_reason,
+                'reason' => $product->deletion_block_reason,
             ]);
 
             throw new \Exception($product->deletion_block_reason);
@@ -262,7 +262,7 @@ class ProductService
                 $product->relatedProducts()->detach();
 
                 $productId = $product->id;
-                $result    = $product->delete();
+                $result = $product->delete();
 
                 Log::info('Product deleted successfully.', ['product_id' => $productId]);
 
@@ -270,7 +270,7 @@ class ProductService
             });
         } catch (\Exception $e) {
             Log::error('Product deletion failed.', [
-                'exception'  => $e,
+                'exception' => $e,
                 'product_id' => $product->id,
             ]);
             throw $e;
@@ -283,11 +283,11 @@ class ProductService
 
     public function toggleStatus(Product $product): Product
     {
-        $product->update(['is_active' => !$product->is_active]);
+        $product->update(['is_active' => ! $product->is_active]);
 
         Log::info('Product status toggled.', [
             'product_id' => $product->id,
-            'is_active'  => $product->is_active,
+            'is_active' => $product->is_active,
         ]);
 
         return $product->fresh();
@@ -295,7 +295,7 @@ class ProductService
 
     public function toggleFeatured(Product $product): Product
     {
-        $product->update(['is_featured' => !$product->is_featured]);
+        $product->update(['is_featured' => ! $product->is_featured]);
 
         return $product->fresh();
     }
@@ -307,46 +307,46 @@ class ProductService
     private function defaultVariantPayload(array $data): array
     {
         return [
-            'price'               => $data['price'] ?? 0,
-            'purchase_price'      => $data['purchase_price'] ?? null,
-            'discount_type'       => $data['discount_type'] ?? null,
-            'discount_value'      => $data['discount_value'] ?? null,
-            'stock_quantity'      => $data['stock_quantity'] ?? 0,
+            'price' => $data['price'] ?? 0,
+            'purchase_price' => $data['purchase_price'] ?? null,
+            'discount_type' => $data['discount_type'] ?? null,
+            'discount_value' => $data['discount_value'] ?? null,
+            'stock_quantity' => $data['stock_quantity'] ?? 0,
             'low_stock_threshold' => $data['low_stock_threshold'] ?? 5,
-            'weight'              => $data['weight'] ?? null,
-            'weight_unit'         => $data['weight_unit'] ?? null,
-            'thumbnail'           => null,
-            'is_active'           => true,
-            'option_values'       => [],
+            'weight' => $data['weight'] ?? null,
+            'weight_unit' => $data['weight_unit'] ?? null,
+            'thumbnail' => null,
+            'is_active' => true,
+            'option_values' => [],
         ];
     }
 
     private function createVariant(Product $product, array $variantData, bool $isDefault = false): ProductVariant
     {
         $thumbnailPath = null;
-        if (!empty($variantData['thumbnail'])) {
+        if (! empty($variantData['thumbnail'])) {
             $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/variants');
         }
 
         $variant = ProductVariant::create([
-            'product_id'          => $product->id,
-            'sku'                 => $variantData['sku'] ?? $this->generateUniqueVariantSku($product->category_id),
-            'price'               => $variantData['price'] ?? 0,
-            'purchase_price'      => $variantData['purchase_price'] ?? null,
-            'discount_type'       => $variantData['discount_type'] ?? null,
-            'discount_value'      => $variantData['discount_value'] ?? null,
-            'stock_quantity'      => $variantData['stock_quantity'] ?? 0,
+            'product_id' => $product->id,
+            'sku' => $variantData['sku'] ?? $this->generateUniqueVariantSku($product->category_id),
+            'price' => $variantData['price'] ?? 0,
+            'purchase_price' => $variantData['purchase_price'] ?? null,
+            'discount_type' => $variantData['discount_type'] ?? null,
+            'discount_value' => $variantData['discount_value'] ?? null,
+            'stock_quantity' => $variantData['stock_quantity'] ?? 0,
             'low_stock_threshold' => $variantData['low_stock_threshold'] ?? 5,
-            'weight'              => $variantData['weight'] ?? null,
-            'weight_unit'         => $variantData['weight_unit'] ?? null,
-            'thumbnail'           => $thumbnailPath,
-            'is_active'           => $this->resolveBoolean($variantData['is_active'] ?? true),
-            'is_default'          => $isDefault || $this->resolveBoolean($variantData['is_default'] ?? false),
+            'weight' => $variantData['weight'] ?? null,
+            'weight_unit' => $variantData['weight_unit'] ?? null,
+            'thumbnail' => $thumbnailPath,
+            'is_active' => $this->resolveBoolean($variantData['is_active'] ?? true),
+            'is_default' => $isDefault || $this->resolveBoolean($variantData['is_default'] ?? false),
         ]);
 
         $this->syncVariantOptionValues($variant, $variantData['option_values'] ?? []);
 
-        if (!empty($variantData['images'])) {
+        if (! empty($variantData['images'])) {
             $this->storeProductImages($product, $variantData['images'], $variant->id);
         }
 
@@ -358,35 +358,35 @@ class ProductService
         $variant = $product->variants()->findOrFail($variantId);
 
         $thumbnailPath = $variant->thumbnail;
-        if (!empty($variantData['thumbnail'])) {
+        if (! empty($variantData['thumbnail'])) {
             $this->deleteImage($variant->thumbnail);
             $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/variants');
         }
 
         $variant->update([
-            'sku'                 => $variantData['sku'] ?? $variant->sku,
-            'price'               => $variantData['price'] ?? $variant->price,
-            'purchase_price'      => $variantData['purchase_price'] ?? null,
-            'discount_type'       => $variantData['discount_type'] ?? null,
-            'discount_value'      => $variantData['discount_value'] ?? null,
-            'stock_quantity'      => $variantData['stock_quantity'] ?? $variant->stock_quantity,
+            'sku' => $variantData['sku'] ?? $variant->sku,
+            'price' => $variantData['price'] ?? $variant->price,
+            'purchase_price' => $variantData['purchase_price'] ?? null,
+            'discount_type' => $variantData['discount_type'] ?? null,
+            'discount_value' => $variantData['discount_value'] ?? null,
+            'stock_quantity' => $variantData['stock_quantity'] ?? $variant->stock_quantity,
             'low_stock_threshold' => $variantData['low_stock_threshold'] ?? $variant->low_stock_threshold,
-            'weight'              => $variantData['weight'] ?? null,
-            'weight_unit'         => $variantData['weight_unit'] ?? null,
-            'thumbnail'           => $thumbnailPath,
-            'is_active'           => $this->resolveBoolean($variantData['is_active'] ?? $variant->is_active),
-            'is_default'          => $this->resolveBoolean($variantData['is_default'] ?? $variant->is_default),
+            'weight' => $variantData['weight'] ?? null,
+            'weight_unit' => $variantData['weight_unit'] ?? null,
+            'thumbnail' => $thumbnailPath,
+            'is_active' => $this->resolveBoolean($variantData['is_active'] ?? $variant->is_active),
+            'is_default' => $this->resolveBoolean($variantData['is_default'] ?? $variant->is_default),
         ]);
 
         if (array_key_exists('option_values', $variantData)) {
             $this->syncVariantOptionValues($variant, $variantData['option_values']);
         }
 
-        if (!empty($variantData['delete_image_ids'])) {
+        if (! empty($variantData['delete_image_ids'])) {
             $this->deleteProductImages($product, $variantData['delete_image_ids']);
         }
 
-        if (!empty($variantData['images'])) {
+        if (! empty($variantData['images'])) {
             $this->storeProductImages($product, $variantData['images'], $variant->id);
         }
 
@@ -398,7 +398,7 @@ class ProductService
         $variants = $product->variants()->whereIn('id', $variantIds)->get();
 
         foreach ($variants as $variant) {
-            if (!$this->canDeleteVariant($variant)) {
+            if (! $this->canDeleteVariant($variant)) {
                 throw new \Exception("Cannot delete variant \"{$variant->sku}\": it has existing order or cart history.");
             }
         }
@@ -450,6 +450,7 @@ class ProductService
                 ->where('is_default', true)
                 ->where('id', '!=', $defaults->first()->id)
                 ->update(['is_default' => false]);
+
             return;
         }
 
@@ -469,7 +470,7 @@ class ProductService
 
         foreach ($optionValuePairs as $pair) {
             $optionName = trim($pair['option'] ?? '');
-            $value      = trim($pair['value'] ?? '');
+            $value = trim($pair['value'] ?? '');
 
             if ($optionName === '' || $value === '') {
                 continue;
@@ -491,10 +492,10 @@ class ProductService
         $optionValue = ProductOptionValue::firstOrCreate(
             [
                 'product_option_id' => $option->id,
-                'slug'               => Str::slug($value),
+                'slug' => Str::slug($value),
             ],
             [
-                'value'  => $value,
+                'value' => $value,
                 'swatch' => $swatch,
             ]
         );
@@ -521,8 +522,8 @@ class ProductService
         $variant->product->refreshPriceAndStockCache();
 
         Log::info('Product variant stock updated.', [
-            'variant_id'   => $variant->id,
-            'product_id'   => $variant->product_id,
+            'variant_id' => $variant->id,
+            'product_id' => $variant->product_id,
             'old_quantity' => $oldQuantity,
             'new_quantity' => $variant->stock_quantity,
         ]);
@@ -546,29 +547,29 @@ class ProductService
     {
         $existingQuery = $product->images()->when(
             $variantId,
-            fn($q) => $q->where('product_variant_id', $variantId),
-            fn($q) => $q->whereNull('product_variant_id')
+            fn ($q) => $q->where('product_variant_id', $variantId),
+            fn ($q) => $q->whereNull('product_variant_id')
         );
 
         $existingCount = $existingQuery->count();
-        $hasPrimary    = (clone $existingQuery)->where('is_primary', true)->exists();
+        $hasPrimary = (clone $existingQuery)->where('is_primary', true)->exists();
 
         foreach ($images as $index => $image) {
-            if (!$image instanceof UploadedFile) {
+            if (! $image instanceof UploadedFile) {
                 continue;
             }
 
             $path = $this->uploadImage($image, 'products/gallery');
 
             ProductImage::create([
-                'product_id'         => $product->id,
+                'product_id' => $product->id,
                 'product_variant_id' => $variantId,
-                'image_path'         => $path,
-                'is_primary'         => !$hasPrimary && $index === 0,
-                'sort_order'         => $existingCount + $index,
+                'image_path' => $path,
+                'is_primary' => ! $hasPrimary && $index === 0,
+                'sort_order' => $existingCount + $index,
             ]);
 
-            if (!$hasPrimary && $index === 0) {
+            if (! $hasPrimary && $index === 0) {
                 $hasPrimary = true;
             }
         }
@@ -581,15 +582,15 @@ class ProductService
         foreach ($images as $image) {
             $this->deleteImage($image->image_path);
             $wasPrimary = $image->is_primary;
-            $variantId  = $image->product_variant_id;
+            $variantId = $image->product_variant_id;
             $image->delete();
 
             if ($wasPrimary) {
                 $next = $product->images()
                     ->when(
                         $variantId,
-                        fn($q) => $q->where('product_variant_id', $variantId),
-                        fn($q) => $q->whereNull('product_variant_id')
+                        fn ($q) => $q->where('product_variant_id', $variantId),
+                        fn ($q) => $q->whereNull('product_variant_id')
                     )
                     ->orderBy('sort_order')
                     ->first();
@@ -600,7 +601,7 @@ class ProductService
 
         Log::info('Product gallery images deleted.', [
             'product_id' => $product->id,
-            'image_ids'  => $imageIds,
+            'image_ids' => $imageIds,
         ]);
     }
 
@@ -610,16 +611,16 @@ class ProductService
             DB::transaction(function () use ($product, $image) {
                 $this->deleteImage($image->image_path);
                 $wasPrimary = $image->is_primary;
-                $variantId  = $image->product_variant_id;
-                $imageId    = $image->id;
+                $variantId = $image->product_variant_id;
+                $imageId = $image->id;
                 $image->delete();
 
                 if ($wasPrimary) {
                     $next = $product->images()
                         ->when(
                             $variantId,
-                            fn($q) => $q->where('product_variant_id', $variantId),
-                            fn($q) => $q->whereNull('product_variant_id')
+                            fn ($q) => $q->where('product_variant_id', $variantId),
+                            fn ($q) => $q->whereNull('product_variant_id')
                         )
                         ->orderBy('sort_order')
                         ->first();
@@ -631,9 +632,9 @@ class ProductService
             });
         } catch (\Exception $e) {
             Log::error('Single product image deletion failed.', [
-                'exception'  => $e,
+                'exception' => $e,
                 'product_id' => $product->id,
-                'image_id'   => $image->id,
+                'image_id' => $image->id,
             ]);
             throw $e;
         }
@@ -648,8 +649,8 @@ class ProductService
                 $product->images()
                     ->when(
                         $image->product_variant_id,
-                        fn($q) => $q->where('product_variant_id', $image->product_variant_id),
-                        fn($q) => $q->whereNull('product_variant_id')
+                        fn ($q) => $q->where('product_variant_id', $image->product_variant_id),
+                        fn ($q) => $q->whereNull('product_variant_id')
                     )
                     ->update(['is_primary' => false]);
 
@@ -659,9 +660,9 @@ class ProductService
             Log::info('Product primary image updated.', ['product_id' => $product->id, 'image_id' => $imageId]);
         } catch (\Exception $e) {
             Log::error('Setting primary image failed.', [
-                'exception'  => $e,
+                'exception' => $e,
                 'product_id' => $product->id,
-                'image_id'   => $imageId,
+                'image_id' => $imageId,
             ]);
             throw $e;
         }
@@ -677,7 +678,7 @@ class ProductService
             });
 
             Log::info('Product gallery images reordered.', [
-                'product_id'  => $product->id,
+                'product_id' => $product->id,
                 'ordered_ids' => $orderedIds,
             ]);
         } catch (\Exception $e) {
@@ -693,8 +694,8 @@ class ProductService
     private function syncTags(Product $product, array $tagNames): void
     {
         $tagIds = collect($tagNames)
-            ->filter(fn($name) => !empty(trim($name)))
-            ->map(fn($name) => Tag::findOrCreateByName(trim($name))->id)
+            ->filter(fn ($name) => ! empty(trim($name)))
+            ->map(fn ($name) => Tag::findOrCreateByName(trim($name))->id)
             ->unique()
             ->values()
             ->toArray();
@@ -709,7 +710,7 @@ class ProductService
     private function syncRelatedProducts(Product $product, array $relatedIds): void
     {
         $relatedIds = collect($relatedIds)
-            ->filter(fn($id) => $id !== $product->id)
+            ->filter(fn ($id) => $id !== $product->id)
             ->unique()
             ->values()
             ->toArray();
@@ -737,28 +738,28 @@ class ProductService
     private function uploadImage(UploadedFile $image, string $directory): string
     {
         try {
-            $filename = Str::uuid() . '.webp';
-            $path     = $directory . '/' . $filename;
+            $filename = Str::uuid().'.webp';
+            $path = $directory.'/'.$filename;
 
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
 
             $encodedImage = $manager->decode($image->getRealPath())
                 ->encode(new WebpEncoder(quality: 70));
 
             $stored = Storage::disk('public')->put($path, (string) $encodedImage);
 
-            if (!$stored) {
+            if (! $stored) {
                 throw new \Exception('Failed to upload image.');
             }
 
             return $path;
         } catch (\Exception $e) {
             Log::error('Image upload failed.', [
-                'exception'         => $e,
-                'directory'         => $directory,
+                'exception' => $e,
+                'directory' => $directory,
                 'original_filename' => $image->getClientOriginalName(),
             ]);
-            throw new \Exception('Image upload failed: ' . $e->getMessage());
+            throw new \Exception('Image upload failed: '.$e->getMessage());
         }
     }
 
@@ -775,9 +776,16 @@ class ProductService
 
     private function resolveBoolean(mixed $value): bool
     {
-        if (is_bool($value)) return $value;
-        if (is_int($value)) return $value === 1;
-        if (is_string($value)) return in_array(strtolower($value), ['active', '1', 'true', 'on', 'yes']);
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['active', '1', 'true', 'on', 'yes']);
+        }
+
         return false;
     }
 
@@ -787,15 +795,19 @@ class ProductService
 
     private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
     {
-        $slug     = Str::slug($name);
+        $slug = Str::slug($name);
         $original = $slug;
-        $count    = 1;
+        $count = 1;
 
         while (true) {
             $query = Product::where('slug', $slug);
-            if ($ignoreId) $query->where('id', '!=', $ignoreId);
-            if (!$query->exists()) break;
-            $slug = $original . '-' . $count++;
+            if ($ignoreId) {
+                $query->where('id', '!=', $ignoreId);
+            }
+            if (! $query->exists()) {
+                break;
+            }
+            $slug = $original.'-'.$count++;
         }
 
         return $slug;
@@ -809,13 +821,13 @@ class ProductService
     {
         $category = Category::find($categoryId);
 
-        if (!$category) {
+        if (! $category) {
             Log::warning('SKU generation: category not found, using fallback prefix.', ['category_id' => $categoryId]);
         }
 
         $prefix = $this->generateSkuPrefix($category?->name ?? 'PRD');
 
-        $lastSku = ProductVariant::where('sku', 'like', $prefix . '-%')
+        $lastSku = ProductVariant::where('sku', 'like', $prefix.'-%')
             ->lockForUpdate()
             ->orderBy('sku', 'desc')
             ->value('sku');
@@ -826,12 +838,12 @@ class ProductService
             $nextNumber = $lastNumber + 1;
         }
 
-        return $prefix . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return $prefix.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function generateSkuPrefix(string $categoryName): string
     {
-        $clean  = preg_replace('/[^A-Za-z]/', '', $categoryName);
+        $clean = preg_replace('/[^A-Za-z]/', '', $categoryName);
         $prefix = strtoupper(substr($clean, 0, 3));
 
         return $prefix ?: 'PRD';
@@ -846,12 +858,18 @@ class ProductService
         $query = Product::with(['category', 'brand', 'defaultVariant'])
             ->withCount(['images', 'tags', 'variants']);
 
-        if (!empty($filters['category_id'])) $query->byCategory($filters['category_id']);
-        if (!empty($filters['brand_id']))    $query->byBrand($filters['brand_id']);
-        if (!empty($filters['status'])) {
+        if (! empty($filters['category_id'])) {
+            $query->byCategory($filters['category_id']);
+        }
+        if (! empty($filters['brand_id'])) {
+            $query->byBrand($filters['brand_id']);
+        }
+        if (! empty($filters['status'])) {
             $filters['status'] === 'active' ? $query->active() : $query->inactive();
         }
-        if (!empty($filters['search'])) $query->search($filters['search']);
+        if (! empty($filters['search'])) {
+            $query->search($filters['search']);
+        }
 
         return $query->newest()->get();
     }
@@ -862,10 +880,10 @@ class ProductService
             'category',
             'brand',
             'variants.optionValues.option',
-            'variants.images' => fn($q) => $q->orderBy('sort_order'),
-            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'variants.images' => fn ($q) => $q->orderBy('sort_order'),
+            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
         ]);
     }
 
@@ -875,11 +893,11 @@ class ProductService
             'category.parent',
             'brand',
             'variants.optionValues.option',
-            'variants.images' => fn($q) => $q->orderBy('sort_order'),
-            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'variants.images' => fn ($q) => $q->orderBy('sort_order'),
+            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
-            'reviews' => fn($q) => $q->latest()->with('user:id,name,avatar'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'reviews' => fn ($q) => $q->latest()->with('user:id,name,avatar'),
         ]);
     }
 
@@ -901,7 +919,9 @@ class ProductService
     {
         $query = Product::active()->select('id', 'name', 'min_price', 'thumbnail');
 
-        if ($excludeId) $query->where('id', '!=', $excludeId);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
 
         return $query->get();
     }

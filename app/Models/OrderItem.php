@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
@@ -25,8 +25,8 @@ class OrderItem extends Model
     protected function casts(): array
     {
         return [
-            'unit_price'  => 'decimal:2',
-            'quantity'    => 'integer',
+            'unit_price' => 'decimal:2',
+            'quantity' => 'integer',
             'total_price' => 'decimal:2',
         ];
     }

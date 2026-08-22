@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Order;
 use App\Models\Refund;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class RefundModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_create_refund_within_order_total(): void
     {
@@ -20,8 +21,8 @@ class RefundModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.refund.store'), [
                 'order_id' => $order->id,
-                'amount'   => 50,
-                'reason'   => 'Damaged item',
+                'amount' => 50,
+                'reason' => 'Damaged item',
             ])
             ->assertRedirect();
 
@@ -36,8 +37,8 @@ class RefundModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.refund.store'), [
                 'order_id' => $order->id,
-                'amount'   => 150,
-                'reason'   => 'Too much',
+                'amount' => 150,
+                'reason' => 'Too much',
             ])
             ->assertSessionHasErrors('amount');
     }
@@ -52,8 +53,8 @@ class RefundModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.refund.store'), [
                 'order_id' => $order->id,
-                'amount'   => 40, // 70 + 40 = 110 > 100
-                'reason'   => 'Second refund attempt',
+                'amount' => 40, // 70 + 40 = 110 > 100
+                'reason' => 'Second refund attempt',
             ])
             ->assertSessionHasErrors('amount');
     }
@@ -68,8 +69,8 @@ class RefundModuleTest extends TestCase
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.refund.store'), [
                 'order_id' => $order->id,
-                'amount'   => 80, // rejected refund shouldn't block this
-                'reason'   => 'New refund',
+                'amount' => 80, // rejected refund shouldn't block this
+                'reason' => 'New refund',
             ])
             ->assertRedirect();
 
@@ -78,8 +79,8 @@ class RefundModuleTest extends TestCase
 
     public function test_approving_refund_marks_order_as_refunded(): void
     {
-        $admin  = $this->createAdminWithPermissions(['refund.view', 'refund.approve']);
-        $order  = Order::factory()->withStatus('delivered')->create();
+        $admin = $this->createAdminWithPermissions(['refund.view', 'refund.approve']);
+        $order = Order::factory()->withStatus('delivered')->create();
         $refund = Refund::factory()->create(['order_id' => $order->id, 'status' => 'pending']);
 
         $this->actingAsAdmin($admin)
@@ -92,8 +93,8 @@ class RefundModuleTest extends TestCase
 
     public function test_rejecting_refund_does_not_change_order_status(): void
     {
-        $admin  = $this->createAdminWithPermissions(['refund.view', 'refund.approve']);
-        $order  = Order::factory()->withStatus('delivered')->create();
+        $admin = $this->createAdminWithPermissions(['refund.view', 'refund.approve']);
+        $order = Order::factory()->withStatus('delivered')->create();
         $refund = Refund::factory()->create(['order_id' => $order->id, 'status' => 'pending']);
 
         $this->actingAsAdmin($admin)
@@ -106,7 +107,7 @@ class RefundModuleTest extends TestCase
 
     public function test_approved_refund_cannot_be_deleted(): void
     {
-        $admin  = $this->createAdminWithPermissions(['refund.view', 'refund.delete']);
+        $admin = $this->createAdminWithPermissions(['refund.view', 'refund.delete']);
         $refund = Refund::factory()->create(['status' => 'approved']);
 
         $this->actingAsAdmin($admin)
@@ -118,32 +119,32 @@ class RefundModuleTest extends TestCase
 
     public function test_only_pending_refunds_can_be_edited(): void
     {
-        $admin  = $this->createAdminWithPermissions(['refund.view', 'refund.edit']);
+        $admin = $this->createAdminWithPermissions(['refund.view', 'refund.edit']);
         $refund = Refund::factory()->create(['status' => 'approved']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.refund.update', $refund), [
                 'order_id' => $refund->order_id,
-                'amount'   => 10,
-                'reason'   => 'Edited',
+                'amount' => 10,
+                'reason' => 'Edited',
             ])
             ->assertForbidden();
     }
 
     public function test_refund_number_uses_invoice_prefix_from_settings(): void
     {
-        \App\Models\Setting::setMany('invoice', ['invoice_prefix' => 'SODAI-']);
+        Setting::setMany('invoice', ['invoice_prefix' => 'SODAI-']);
 
         $admin = $this->createAdminWithPermissions(['refund.view', 'refund.create']);
         $order = Order::factory()->create(['total_amount' => 100]);
 
         $this->actingAsAdmin($admin)->post(route('admin.ecommerce.refund.store'), [
             'order_id' => $order->id,
-            'amount'   => 50,
-            'reason'   => 'Damaged item',
+            'amount' => 50,
+            'reason' => 'Damaged item',
         ]);
 
-        $refund = \App\Models\Refund::first();
+        $refund = Refund::first();
         $this->assertStringStartsWith('SODAI-REF-', $refund->refund_number);
     }
 }

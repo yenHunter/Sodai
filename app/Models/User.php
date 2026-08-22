@@ -1,14 +1,15 @@
 <?php
+
 // app/Models/User.php
 
 namespace App\Models;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Notifications\CustomerVerifyEmailNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -34,10 +35,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'password'              => 'hashed',
-            'email_verified_at'     => 'datetime',
-            'last_login_at'         => 'datetime',
-            'locked_until'          => 'datetime',
+            'password' => 'hashed',
+            'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
             'failed_login_attempts' => 'integer',
         ];
     }
@@ -75,10 +76,10 @@ class User extends Authenticatable implements MustVerifyEmail
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
-    
+
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+        return $this->avatar ? asset('storage/'.$this->avatar) : null;
     }
 
     // ─────────────────────────────────────────────
@@ -104,10 +105,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function updateLastLogin(string $ip): void
     {
         $this->update([
-            'last_login_at'         => now(),
-            'last_login_ip'         => $ip,
+            'last_login_at' => now(),
+            'last_login_ip' => $ip,
             'failed_login_attempts' => 0,
-            'locked_until'          => null,
+            'locked_until' => null,
         ]);
     }
 
@@ -117,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new CustomerVerifyEmailNotification());
+        $this->notify(new CustomerVerifyEmailNotification);
     }
 
     public function incrementFailedAttempts(): void

@@ -4,9 +4,9 @@ namespace App\Mail\Admin;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
 class CustomerSetPasswordMail extends Mailable
 {
@@ -15,13 +15,13 @@ class CustomerSetPasswordMail extends Mailable
     public function __construct(
         public string $setPasswordUrl,
         public string $customerName,
-        public int    $expiresInMinutes = 60,
+        public int $expiresInMinutes = 60,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Set Your Password - ' . config('app.name'),
+            subject: 'Set Your Password - '.config('app.name'),
         );
     }
 

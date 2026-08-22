@@ -14,13 +14,13 @@ class ProductVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            'product_id'          => Product::factory(),
-            'sku'                 => strtoupper(Str::random(8)),
-            'price'               => $this->faker->randomFloat(2, 10, 500),
-            'stock_quantity'      => $this->faker->numberBetween(10, 100),
+            'product_id' => Product::factory(),
+            'sku' => strtoupper(Str::random(8)),
+            'price' => $this->faker->randomFloat(2, 10, 500),
+            'stock_quantity' => $this->faker->numberBetween(10, 100),
             'low_stock_threshold' => 5,
-            'is_active'           => true,
-            'is_default'          => false,
+            'is_active' => true,
+            'is_default' => false,
         ];
     }
 

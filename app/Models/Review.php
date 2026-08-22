@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'product_id',
         'user_id',
@@ -72,7 +72,7 @@ class Review extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->whereHas('product', fn ($p) => $p->where('name', 'like', "%{$search}%"))
-              ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
         });
     }
 }

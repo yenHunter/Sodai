@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\WishlistService;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Services\Visitor\WishlistService;
+use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
 {
@@ -26,7 +26,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'success' => true,
-            'added'   => $result['added'],
+            'added' => $result['added'],
             'message' => $result['added'] ? 'Added to wishlist.' : 'Removed from wishlist.',
         ]);
     }

@@ -4,7 +4,6 @@ namespace App\Services\Visitor;
 
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +48,7 @@ class CustomerReviewService
                 ->where('status', 'delivered')
                 ->first();
 
-            if (!$order) {
+            if (! $order) {
                 throw new \Exception('You can only review products from your delivered orders.');
             }
 
@@ -57,7 +56,7 @@ class CustomerReviewService
                 ->where('product_id', $data['product_id'])
                 ->exists();
 
-            if (!$purchased) {
+            if (! $purchased) {
                 throw new \Exception('This product was not part of the selected order.');
             }
 
@@ -72,11 +71,11 @@ class CustomerReviewService
 
             $review = Review::create([
                 'product_id' => $data['product_id'],
-                'user_id'    => $customer->id,
-                'order_id'   => $order->id,
-                'rating'     => $data['rating'],
-                'comment'    => $data['comment'] ?? null,
-                'status'     => 'pending',
+                'user_id' => $customer->id,
+                'order_id' => $order->id,
+                'rating' => $data['rating'],
+                'comment' => $data['comment'] ?? null,
+                'status' => 'pending',
             ]);
 
             return $review;
@@ -90,7 +89,7 @@ class CustomerReviewService
         }
 
         $review->update([
-            'rating'  => $data['rating'],
+            'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
         ]);
 

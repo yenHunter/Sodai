@@ -19,7 +19,7 @@ class RoleService
     public function store(array $data): Role
     {
         return Role::create([
-            'name'       => Str::slug($data['name']),
+            'name' => Str::slug($data['name']),
             'guard_name' => 'admin',
         ]);
     }
@@ -73,8 +73,9 @@ class RoleService
             ->orderBy('name')
             ->get()
             ->map(function ($role) {
-                $role->admins_count  = Admin::role($role->name)->count();
-                $role->is_protected  = in_array($role->name, self::PROTECTED_ROLES);
+                $role->admins_count = Admin::role($role->name)->count();
+                $role->is_protected = in_array($role->name, self::PROTECTED_ROLES);
+
                 return $role;
             });
     }
@@ -85,8 +86,8 @@ class RoleService
         $assignedIds = $role->permissions->pluck('id')->toArray();
 
         return [
-            'role'              => $role,
-            'assigned_ids'      => $assignedIds,
+            'role' => $role,
+            'assigned_ids' => $assignedIds,
             'permissions_by_group' => $this->getPermissionsGrouped(),
         ];
     }

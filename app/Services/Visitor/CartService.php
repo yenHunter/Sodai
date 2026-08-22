@@ -3,9 +3,9 @@
 namespace App\Services\Visitor;
 
 use App\Models\Cart;
-use App\Models\User;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -38,7 +38,7 @@ class CartService
         return DB::transaction(function () use ($cart, $variantId, $quantity) {
             $variant = ProductVariant::where('id', $variantId)->lockForUpdate()->firstOrFail();
 
-            if (!$variant->is_active) {
+            if (! $variant->is_active) {
                 throw new \Exception('This product option is no longer available.');
             }
 
@@ -54,13 +54,14 @@ class CartService
 
             if ($existing) {
                 $existing->update(['quantity' => $desiredQuantity]);
+
                 return $existing->fresh();
             }
 
             return CartItem::create([
-                'cart_id'            => $cart->id,
+                'cart_id' => $cart->id,
                 'product_variant_id' => $variantId,
-                'quantity'           => $quantity,
+                'quantity' => $quantity,
             ]);
         });
     }

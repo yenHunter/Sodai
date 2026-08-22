@@ -13,7 +13,7 @@ class AddressService
         return DB::transaction(function () use ($customer, $data) {
             $isDefault = (bool) ($data['is_default'] ?? false);
 
-            if ($isDefault || !$customer->addresses()->exists()) {
+            if ($isDefault || ! $customer->addresses()->exists()) {
                 $customer->addresses()->update(['is_default' => false]);
                 $isDefault = true;
             }
@@ -47,7 +47,7 @@ class AddressService
     {
         return DB::transaction(function () use ($address) {
             $wasDefault = $address->is_default;
-            $userId     = $address->user_id;
+            $userId = $address->user_id;
 
             $deleted = $address->delete();
 

@@ -12,7 +12,7 @@ class AttributeService
     public function update(Attribute $attribute, array $data): Attribute
     {
         $attribute->update([
-            'label'  => $data['label'],
+            'label' => $data['label'],
             'status' => $data['status'],
         ]);
 

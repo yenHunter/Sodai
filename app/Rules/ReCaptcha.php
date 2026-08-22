@@ -3,9 +3,9 @@
 namespace App\Rules;
 
 use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Contracts\Validation\ValidationRule;
 
 class ReCaptcha implements ValidationRule
 {
@@ -13,18 +13,19 @@ class ReCaptcha implements ValidationRule
         // Minimum score threshold
         // 1.0 = definitely human, 0.0 = definitely bot
         // 0.5 is Google's recommended minimum
-        private float  $threshold = 0.5,
-        private string $action    = 'login',
+        private float $threshold = 0.5,
+        private string $action = 'login',
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!app()->isProduction()) {
+        if (! app()->isProduction()) {
             Log::debug('ReCaptcha response', $response ?? []);
         }
         // Remove this block once you have valid production keys
         if (config('app.env') === 'local' && config('app.debug')) {
             Log::info('reCAPTCHA: Skipped in development mode');
+
             return;
         }
         // Handle empty token
@@ -34,6 +35,7 @@ class ReCaptcha implements ValidationRule
                 'user_agent' => request()->userAgent(),
             ]);
             $fail('reCAPTCHA verification failed. Please try again.');
+
             return;
         }
 
@@ -41,7 +43,7 @@ class ReCaptcha implements ValidationRule
         try {
             $response = Http::timeout(10)
                 ->post('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret'   => config('services.recaptcha.secret_key'),
+                    'secret' => config('services.recaptcha.secret_key'),
                     'response' => $value,
                     'remoteip' => request()->ip(),
                 ])->json();
@@ -59,16 +61,18 @@ class ReCaptcha implements ValidationRule
                 'error' => $e->getMessage(),
                 'ip' => request()->ip(),
             ]);
+
             return;
         }
 
         // Check success
-        if (empty($response['success']) || !$response['success']) {
+        if (empty($response['success']) || ! $response['success']) {
             Log::warning('reCAPTCHA: Verification failed', [
                 'error_codes' => $response['error-codes'] ?? [],
                 'ip' => request()->ip(),
             ]);
             $fail('reCAPTCHA verification failed. Please try again.');
+
             return;
         }
 
@@ -82,6 +86,7 @@ class ReCaptcha implements ValidationRule
                 'ip' => request()->ip(),
             ]);
             $fail('reCAPTCHA verification failed. Suspicious activity detected.');
+
             return;
         }
 
@@ -96,6 +101,7 @@ class ReCaptcha implements ValidationRule
                 'ip' => request()->ip(),
             ]);
             $fail('reCAPTCHA verification failed. Invalid action.');
+
             return;
         }
     }

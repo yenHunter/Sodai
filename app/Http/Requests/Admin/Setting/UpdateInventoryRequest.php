@@ -16,8 +16,8 @@ class UpdateInventoryRequest extends FormRequest
     {
         return [
             'default_low_stock_threshold' => ['required', 'integer', 'min:0', 'max:1000'],
-            'hide_out_of_stock_products'  => ['nullable'],
-            'allow_backorders'            => ['nullable'],
+            'hide_out_of_stock_products' => ['nullable'],
+            'allow_backorders' => ['nullable'],
         ];
     }
 

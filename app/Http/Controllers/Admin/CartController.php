@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Cart;
-use Illuminate\Http\Request;
-use App\Services\Admin\CartService;
 use App\Http\Controllers\Controller;
+use App\Models\Cart;
+use App\Services\Admin\CartService;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -68,7 +68,7 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.cart.index')
-                ->with('error', 'Failed to send email: ' . $e->getMessage());
+                ->with('error', 'Failed to send email: '.$e->getMessage());
         }
     }
 }

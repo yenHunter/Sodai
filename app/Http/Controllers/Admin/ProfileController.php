@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Services\Admin\AdminService;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\Admin\Profile\UpdateProfileRequest;
 use App\Http\Requests\Admin\Profile\UpdatePasswordRequest;
+use App\Http\Requests\Admin\Profile\UpdateProfileRequest;
+use App\Services\Admin\AdminService;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
@@ -39,7 +39,7 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.profile.edit')
-                ->with('error', 'Failed to update profile: ' . $e->getMessage());
+                ->with('error', 'Failed to update profile: '.$e->getMessage());
         }
     }
 

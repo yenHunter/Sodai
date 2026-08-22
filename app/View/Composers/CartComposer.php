@@ -2,9 +2,9 @@
 
 namespace App\View\Composers;
 
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
 use App\Services\Visitor\CartService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class CartComposer
 {
@@ -12,7 +12,7 @@ class CartComposer
 
     public function compose(View $view): void
     {
-        $customer  = Auth::guard('customer')->user();
+        $customer = Auth::guard('customer')->user();
         $sessionId = session()->getId();
 
         $cart = $this->cartService->getExistingCart($customer, $sessionId);

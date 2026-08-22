@@ -16,8 +16,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'token'    => ['required', 'string'],
-            'email'    => ['required', 'string', 'email', 'max:255'],
+            'token' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => [
                 'required',
                 'string',
@@ -41,10 +41,10 @@ class ResetPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'token.required'                => 'Invalid reset link.',
-            'email.required'                => 'Email address is required.',
-            'password.required'             => 'New password is required.',
-            'password.confirmed'            => 'Passwords do not match.',
+            'token.required' => 'Invalid reset link.',
+            'email.required' => 'Email address is required.',
+            'password.required' => 'New password is required.',
+            'password.confirmed' => 'Passwords do not match.',
             'g-recaptcha-response.required' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }

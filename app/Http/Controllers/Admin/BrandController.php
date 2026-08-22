@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Brand;
-use Illuminate\Http\Request;
-use App\Services\Admin\BrandService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Brand\StoreBrandRequest;
 use App\Http\Requests\Admin\Brand\UpdateBrandRequest;
+use App\Models\Brand;
+use App\Services\Admin\BrandService;
+use Illuminate\Http\Request;
 
 class BrandController extends Controller
 {
@@ -41,7 +41,7 @@ class BrandController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.brand.index')
-                ->with('error', 'Failed to create brand: ' . $e->getMessage());
+                ->with('error', 'Failed to create brand: '.$e->getMessage());
         }
     }
 
@@ -60,7 +60,7 @@ class BrandController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.brand.index')
-                ->with('error', 'Failed to update brand: ' . $e->getMessage());
+                ->with('error', 'Failed to update brand: '.$e->getMessage());
         }
     }
 
@@ -91,7 +91,7 @@ class BrandController extends Controller
 
         $ids = array_filter(
             explode(',', $request->input('ids')),
-            fn($id) => is_numeric($id)
+            fn ($id) => is_numeric($id)
         );
 
         if (empty($ids)) {
@@ -101,11 +101,13 @@ class BrandController extends Controller
         }
 
         $successCount = 0;
-        $failedNames  = [];
+        $failedNames = [];
 
         foreach ($ids as $id) {
             $brand = Brand::find($id);
-            if (!$brand) continue;
+            if (! $brand) {
+                continue;
+            }
 
             try {
                 $this->brandService->delete($brand);
@@ -115,12 +117,13 @@ class BrandController extends Controller
             }
         }
 
-        $message = "{$successCount} brand" .
-            ($successCount === 1 ? '' : 's') .
-            " deleted successfully.";
+        $message = "{$successCount} brand".
+            ($successCount === 1 ? '' : 's').
+            ' deleted successfully.';
 
-        if (!empty($failedNames)) {
-            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
+        if (! empty($failedNames)) {
+            $message .= ' Failed: '.implode(', ', $failedNames).'.';
+
             return redirect()
                 ->route('admin.ecommerce.brand.index')
                 ->with('error', $message);
@@ -139,7 +142,7 @@ class BrandController extends Controller
     {
         try {
             $updated = $this->brandService->toggleStatus($brand);
-            $status  = $updated->is_active ? 'activated' : 'deactivated';
+            $status = $updated->is_active ? 'activated' : 'deactivated';
 
             return redirect()
                 ->route('admin.ecommerce.brand.index')

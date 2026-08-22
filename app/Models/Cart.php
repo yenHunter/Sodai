@@ -35,7 +35,7 @@ class Cart extends Model
     {
         return $query->whereHas('user', function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%");
         });
     }
 }

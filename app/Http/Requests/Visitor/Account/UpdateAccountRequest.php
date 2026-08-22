@@ -18,9 +18,9 @@ class UpdateAccountRequest extends FormRequest
         $customerId = Auth::guard('customer')->id();
 
         return [
-            'name'   => ['required', 'string', 'max:255'],
-            'email'  => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customerId)],
-            'phone'  => ['nullable', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($customerId)],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customerId)],
+            'phone' => ['nullable', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($customerId)],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ];
     }
@@ -28,10 +28,10 @@ class UpdateAccountRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'  => 'Full name is required.',
+            'name.required' => 'Full name is required.',
             'email.required' => 'Email is required.',
-            'email.unique'   => 'This email is already in use.',
-            'phone.unique'   => 'This phone number is already in use.',
+            'email.unique' => 'This email is already in use.',
+            'phone.unique' => 'This phone number is already in use.',
         ];
     }
 }

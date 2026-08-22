@@ -2,11 +2,11 @@
 
 namespace App\Services\Visitor;
 
-use App\Models\Product;
 use App\Models\Category;
-use Illuminate\Support\Str;
+use App\Models\Product;
 use App\Models\ProductOptionValue;
 use App\Services\Admin\AttributeService;
+use Illuminate\Support\Str;
 
 class ProductCatalogService
 {
@@ -22,8 +22,7 @@ class ProductCatalogService
     }
 
     /**
-     * @param array         $filters       ['category' => [], 'color' => [], 'size' => [], 'price_min' => ?, 'price_max' => ?, 'sort' => ?]
-     * @param Category|null $scopeCategory
+     * @param  array  $filters  ['category' => [], 'color' => [], 'size' => [], 'price_min' => ?, 'price_max' => ?, 'sort' => ?]
      */
     public function getFilteredProducts(array $filters, ?Category $scopeCategory = null)
     {
@@ -35,26 +34,26 @@ class ProductCatalogService
                 'brand',
                 'primaryImage',
                 'defaultVariant',
-                'variants' => fn($v) => $v->active(),
+                'variants' => fn ($v) => $v->active(),
             ]);
 
         if ($scopeCategory) {
             $query->whereIn('category_id', $this->scopedCategoryIds($scopeCategory));
         }
 
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->whereIn('category_id', (array) $filters['category']);
         }
 
-        if (!empty($filters['color'])) {
+        if (! empty($filters['color'])) {
             $this->filterByOptionValue($query, 'color', (array) $filters['color']);
         }
 
-        if (!empty($filters['size'])) {
+        if (! empty($filters['size'])) {
             $this->filterByOptionValue($query, 'size', (array) $filters['size']);
         }
 
-        if (!empty($filters['price_min']) || !empty($filters['price_max'])) {
+        if (! empty($filters['price_min']) || ! empty($filters['price_max'])) {
             $bounds = $this->getPriceBounds($scopeCategory);
             $min = $filters['price_min'] ?? $bounds['min'];
             $max = $filters['price_max'] ?? $bounds['max'];
@@ -68,12 +67,12 @@ class ProductCatalogService
 
     private function filterByOptionValue($query, string $optionSlug, array $values): void
     {
-        $slugs = array_map(fn($v) => Str::slug($v), $values);
+        $slugs = array_map(fn ($v) => Str::slug($v), $values);
 
         $query->whereHas('variants', function ($v) use ($optionSlug, $slugs) {
             $v->active()->whereHas('optionValues', function ($ov) use ($optionSlug, $slugs) {
                 $ov->whereIn('slug', $slugs)
-                    ->whereHas('option', fn($o) => $o->where('slug', $optionSlug));
+                    ->whereHas('option', fn ($o) => $o->where('slug', $optionSlug));
             });
         });
     }
@@ -81,11 +80,11 @@ class ProductCatalogService
     private function applySort($query, string $sort): void
     {
         match ($sort) {
-            'name_asc'   => $query->orderBy('name', 'asc'),
-            'name_desc'  => $query->orderBy('name', 'desc'),
-            'price_asc'  => $query->orderBy('min_price', 'asc'),
+            'name_asc' => $query->orderBy('name', 'asc'),
+            'name_desc' => $query->orderBy('name', 'desc'),
+            'price_asc' => $query->orderBy('min_price', 'asc'),
             'price_desc' => $query->orderBy('max_price', 'desc'),
-            default      => $query->latest(),
+            default => $query->latest(),
         };
     }
 
@@ -97,9 +96,9 @@ class ProductCatalogService
         return Category::active()
             ->childOnly()
             ->ordered()
-            ->withCount(['products' => fn($q) => $q->active()->inStock()])
+            ->withCount(['products' => fn ($q) => $q->active()->inStock()])
             ->get()
-            ->filter(fn($category) => $category->products_count > 0)
+            ->filter(fn ($category) => $category->products_count > 0)
             ->values();
     }
 
@@ -121,8 +120,8 @@ class ProductCatalogService
     {
         $productIds = $this->baseAttributeQuery($scopeCategory)->pluck('id');
 
-        return ProductOptionValue::whereHas('option', fn($o) => $o->where('slug', $optionSlug))
-            ->whereHas('variants', fn($v) => $v->active()->inStock()->whereIn('product_id', $productIds))
+        return ProductOptionValue::whereHas('option', fn ($o) => $o->where('slug', $optionSlug))
+            ->whereHas('variants', fn ($v) => $v->active()->inStock()->whereIn('product_id', $productIds))
             ->orderBy('sort_order')
             ->pluck('value')
             ->unique()
@@ -166,12 +165,12 @@ class ProductCatalogService
         return $product->load([
             'category.parent',
             'brand',
-            'variants' => fn($v) => $v->active()->with('optionValues.option'),
-            'variants.images' => fn($q) => $q->orderBy('sort_order'),
-            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'variants' => fn ($v) => $v->active()->with('optionValues.option'),
+            'variants.images' => fn ($q) => $q->orderBy('sort_order'),
+            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
-            'reviews' => fn($q) => $q->approved()->latest()->with('user:id,name,avatar'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'reviews' => fn ($q) => $q->approved()->latest()->with('user:id,name,avatar'),
         ]);
     }
 
@@ -187,14 +186,14 @@ class ProductCatalogService
         $variants = $product->variants;
 
         $optionGroups = $variants
-            ->flatMap(fn($v) => $v->optionValues)
-            ->groupBy(fn($ov) => $ov->option->name)
+            ->flatMap(fn ($v) => $v->optionValues)
+            ->groupBy(fn ($ov) => $ov->option->name)
             ->map(function ($values, $optionName) {
                 return [
-                    'name'   => $optionName,
-                    'values' => $values->unique('id')->values()->map(fn($ov) => [
-                        'id'     => $ov->id,
-                        'value'  => $ov->value,
+                    'name' => $optionName,
+                    'values' => $values->unique('id')->values()->map(fn ($ov) => [
+                        'id' => $ov->id,
+                        'value' => $ov->value,
                         'swatch' => $ov->swatch,
                     ]),
                 ];
@@ -205,22 +204,22 @@ class ProductCatalogService
             $key = $variant->optionValues->pluck('id')->sort()->implode('-');
 
             return [$key => [
-                'variant_id'      => $variant->id,
-                'sku'             => $variant->sku,
-                'price'           => (float) $variant->price,
-                'final_price'     => (float) $variant->final_price,
-                'stock_quantity'  => $variant->stock_quantity,
-                'is_in_stock'     => $variant->is_in_stock,
-                'is_low_stock'    => $variant->is_low_stock,
-                'thumbnail_url'   => $variant->thumbnail ? asset('storage/' . $variant->thumbnail) : null,
-                'is_default'      => $variant->is_default,
+                'variant_id' => $variant->id,
+                'sku' => $variant->sku,
+                'price' => (float) $variant->price,
+                'final_price' => (float) $variant->final_price,
+                'stock_quantity' => $variant->stock_quantity,
+                'is_in_stock' => $variant->is_in_stock,
+                'is_low_stock' => $variant->is_low_stock,
+                'thumbnail_url' => $variant->thumbnail ? asset('storage/'.$variant->thumbnail) : null,
+                'is_default' => $variant->is_default,
             ]];
         });
 
         return [
             'option_groups' => $optionGroups,
-            'combinations'  => $combinations,
-            'default_key'   => optional($variants->firstWhere('is_default', true))
+            'combinations' => $combinations,
+            'default_key' => optional($variants->firstWhere('is_default', true))
                 ?->optionValues->pluck('id')->sort()->implode('-') ?? '',
         ];
     }

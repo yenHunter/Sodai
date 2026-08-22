@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProductVariant extends Model
 {
@@ -29,14 +29,14 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
-            'price'                => 'decimal:2',
-            'purchase_price'       => 'decimal:2',
-            'discount_value'       => 'decimal:2',
-            'stock_quantity'       => 'integer',
-            'low_stock_threshold'  => 'integer',
-            'weight'               => 'decimal:2',
-            'is_default'           => 'boolean',
-            'is_active'            => 'boolean',
+            'price' => 'decimal:2',
+            'purchase_price' => 'decimal:2',
+            'discount_value' => 'decimal:2',
+            'stock_quantity' => 'integer',
+            'low_stock_threshold' => 'integer',
+            'weight' => 'decimal:2',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -68,7 +68,7 @@ class ProductVariant extends Model
 
     public function getFinalPriceAttribute(): float
     {
-        if (!$this->discount_type || !$this->discount_value) {
+        if (! $this->discount_type || ! $this->discount_value) {
             return (float) $this->price;
         }
 
@@ -116,6 +116,7 @@ class ProductVariant extends Model
         }
 
         $this->decrement('stock_quantity', $quantity);
+
         return true;
     }
 

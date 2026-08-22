@@ -16,15 +16,15 @@ class AccountService
         return DB::transaction(function () use ($customer, $data) {
             $avatarPath = $customer->avatar;
 
-            if (!empty($data['avatar'])) {
+            if (! empty($data['avatar'])) {
                 $this->deleteAvatar($customer->avatar);
                 $avatarPath = $this->uploadAvatar($data['avatar']);
             }
 
             $customer->update([
-                'name'   => $data['name'],
-                'email'  => $data['email'],
-                'phone'  => $data['phone'] ?? null,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
                 'avatar' => $avatarPath,
             ]);
 
@@ -39,10 +39,10 @@ class AccountService
 
     private function uploadAvatar(UploadedFile $image): string
     {
-        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-        $path     = $image->storeAs('customers/avatars', $filename, 'public');
+        $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+        $path = $image->storeAs('customers/avatars', $filename, 'public');
 
-        if (!$path) {
+        if (! $path) {
             throw new \Exception('Failed to upload avatar.');
         }
 

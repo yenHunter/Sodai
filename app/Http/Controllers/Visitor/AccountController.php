@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Visitor;
 
-use Illuminate\Support\Facades\Auth;
-use App\Services\Visitor\AccountService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Visitor\Account\UpdateAccountRequest;
 use App\Http\Requests\Visitor\Account\UpdatePasswordRequest;
+use App\Services\Visitor\AccountService;
+use Illuminate\Support\Facades\Auth;
 
 class AccountController extends Controller
 {
@@ -32,7 +32,7 @@ class AccountController extends Controller
 
             return redirect()->back()->with('success', 'Profile updated successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update profile: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update profile: '.$e->getMessage());
         }
     }
 

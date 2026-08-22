@@ -24,7 +24,7 @@ class UpdateCouponRequest extends FormRequest
                 'max:50',
                 Rule::unique('coupons', 'code')->ignore($couponId),
             ],
-            'type'  => ['required', 'in:percentage,fixed'],
+            'type' => ['required', 'in:percentage,fixed'],
             'value' => [
                 'required',
                 'numeric',
@@ -36,24 +36,24 @@ class UpdateCouponRequest extends FormRequest
                 },
             ],
             'minimum_order_amount' => ['nullable', 'numeric', 'min:0'],
-            'maximum_discount'     => ['nullable', 'numeric', 'min:0'],
-            'usage_limit'          => ['nullable', 'integer', 'min:1'],
-            'usage_per_user'       => ['nullable', 'integer', 'min:1'],
-            'is_active'            => ['required'],
-            'starts_at'            => ['nullable', 'date'],
-            'expires_at'           => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'maximum_discount' => ['nullable', 'numeric', 'min:0'],
+            'usage_limit' => ['nullable', 'integer', 'min:1'],
+            'usage_per_user' => ['nullable', 'integer', 'min:1'],
+            'is_active' => ['required'],
+            'starts_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'code.required'              => 'Coupon code is required.',
-            'code.unique'                => 'This coupon code already exists.',
-            'type.required'              => 'Discount type is required.',
-            'value.required'             => 'Discount value is required.',
-            'is_active.required'         => 'Status is required.',
-            'expires_at.after_or_equal'  => 'Expiry date must be after or equal to the start date.',
+            'code.required' => 'Coupon code is required.',
+            'code.unique' => 'This coupon code already exists.',
+            'type.required' => 'Discount type is required.',
+            'value.required' => 'Discount value is required.',
+            'is_active.required' => 'Status is required.',
+            'expires_at.after_or_equal' => 'Expiry date must be after or equal to the start date.',
         ];
     }
 

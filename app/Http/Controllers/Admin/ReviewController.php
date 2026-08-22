@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Review;
-use Illuminate\Http\Request;
-use App\Services\Admin\ReviewService;
 use App\Http\Controllers\Controller;
+use App\Models\Review;
+use App\Services\Admin\ReviewService;
+use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
@@ -16,7 +16,7 @@ class ReviewController extends Controller
     public function index(Request $request)
     {
         $reviews = $this->reviewService->getReviewsList($request->only(['search', 'status', 'rating']));
-        $stats   = $this->reviewService->getReviewStats();
+        $stats = $this->reviewService->getReviewStats();
 
         return view('admin.ecommerce.review.index', compact('reviews', 'stats'));
     }

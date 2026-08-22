@@ -14,15 +14,15 @@ class CartReminderMail extends Mailable
 
     public function __construct(
         public string $customerName,
-        public array  $items,
-        public float  $total,
+        public array $items,
+        public float $total,
         public string $cartUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'You left something in your cart at ' . config('app.name'),
+            subject: 'You left something in your cart at '.config('app.name'),
         );
     }
 

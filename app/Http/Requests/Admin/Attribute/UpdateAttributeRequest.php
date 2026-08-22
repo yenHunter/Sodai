@@ -15,7 +15,7 @@ class UpdateAttributeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'label'  => ['required', 'string', 'max:100'],
+            'label' => ['required', 'string', 'max:100'],
             'status' => ['required', 'in:active,inactive'],
         ];
     }
@@ -23,7 +23,7 @@ class UpdateAttributeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'label.required'  => 'Attribute label is required.',
+            'label.required' => 'Attribute label is required.',
             'status.required' => 'Status is required.',
         ];
     }

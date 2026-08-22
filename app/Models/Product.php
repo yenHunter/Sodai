@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Product extends Model
 {
@@ -36,15 +35,15 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'min_price'            => 'decimal:2',
-            'max_price'            => 'decimal:2',
-            'total_stock'          => 'integer',
-            'is_active'            => 'boolean',
-            'is_featured'          => 'boolean',
-            'average_rating'       => 'decimal:2',
-            'review_count'         => 'integer',
-            'total_sales'          => 'integer',
-            'meta'                 => 'array',
+            'min_price' => 'decimal:2',
+            'max_price' => 'decimal:2',
+            'total_stock' => 'integer',
+            'is_active' => 'boolean',
+            'is_featured' => 'boolean',
+            'average_rating' => 'decimal:2',
+            'review_count' => 'integer',
+            'total_sales' => 'integer',
+            'meta' => 'array',
         ];
     }
 
@@ -121,7 +120,10 @@ class Product extends Model
 
     public function getDiscountPercentageAttribute(): float
     {
-        if ($this->price <= 0) return 0;
+        if ($this->price <= 0) {
+            return 0;
+        }
+
         return (float) (($this->discount_amount / $this->price) * 100);
     }
 
@@ -149,11 +151,11 @@ class Product extends Model
     public function getThumbnailUrlAttribute(): ?string
     {
         if ($this->thumbnail) {
-            return asset('storage/' . $this->thumbnail);
+            return asset('storage/'.$this->thumbnail);
         }
 
         if ($this->primaryImage) {
-            return asset('storage/' . $this->primaryImage->image_path);
+            return asset('storage/'.$this->primaryImage->image_path);
         }
 
         return null;
@@ -161,8 +163,13 @@ class Product extends Model
 
     public function getStockStatusAttribute(): string
     {
-        if ($this->is_out_of_stock) return 'Out of Stock';
-        if ($this->is_low_stock) return 'Low Stock';
+        if ($this->is_out_of_stock) {
+            return 'Out of Stock';
+        }
+        if ($this->is_low_stock) {
+            return 'Low Stock';
+        }
+
         return 'In Stock';
     }
 
@@ -176,11 +183,11 @@ class Product extends Model
     public function getPriceRangeLabelAttribute(): string
     {
         if ((float) $this->min_price === (float) $this->max_price) {
-            return '$' . number_format((float) $this->min_price, 2);
+            return '$'.number_format((float) $this->min_price, 2);
         }
 
-        return '$' . number_format((float) $this->min_price, 2)
-            . ' – $' . number_format((float) $this->max_price, 2);
+        return '$'.number_format((float) $this->min_price, 2)
+            .' – $'.number_format((float) $this->max_price, 2);
     }
 
     /**
@@ -216,8 +223,8 @@ class Product extends Model
         $variants = $this->variants()->active()->get();
 
         $this->update([
-            'min_price'   => $variants->min('price') ?? 0,
-            'max_price'   => $variants->max('price') ?? 0,
+            'min_price' => $variants->min('price') ?? 0,
+            'max_price' => $variants->max('price') ?? 0,
             'total_stock' => $variants->sum('stock_quantity'),
         ]);
     }
@@ -249,6 +256,7 @@ class Product extends Model
         }
 
         $this->decrement('stock_quantity', $quantity);
+
         return true;
     }
 

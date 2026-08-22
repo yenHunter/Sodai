@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Tag extends Model
 {
@@ -22,7 +22,7 @@ class Tag extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_tag')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // ─────────────────────────────────────────────
@@ -32,7 +32,7 @@ class Tag extends Model
     public static function findOrCreateByName(string $name): self
     {
         $slug = Str::slug($name);
-        
+
         return static::firstOrCreate(
             ['slug' => $slug],
             ['name' => $name]
@@ -51,7 +51,7 @@ class Tag extends Model
     public function scopePopular($query, $limit = 10)
     {
         return $query->withCount('products')
-                    ->orderBy('products_count', 'desc')
-                    ->limit($limit);
+            ->orderBy('products_count', 'desc')
+            ->limit($limit);
     }
 }

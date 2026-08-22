@@ -15,9 +15,9 @@ class BrandFactory extends Factory
         $name = $this->faker->unique()->company();
 
         return [
-            'name'       => $name,
-            'slug'       => Str::slug($name),
-            'is_active'  => true,
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'is_active' => true,
             'sort_order' => 0,
         ];
     }

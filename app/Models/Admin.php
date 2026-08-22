@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; 
+use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles; 
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $guard = 'admin';
 
@@ -31,8 +31,8 @@ class Admin extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password'      => 'hashed',
-            'is_active'     => 'boolean',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }
@@ -43,7 +43,7 @@ class Admin extends Authenticatable
 
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+        return $this->avatar ? asset('storage/'.$this->avatar) : null;
     }
 
     // ─────────────────────────────────────────────

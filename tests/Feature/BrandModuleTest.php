@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class BrandModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_view_brand_index(): void
     {
@@ -28,7 +28,7 @@ class BrandModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.brand.store'), [
-                'name'      => 'Nike',
+                'name' => 'Nike',
                 'is_active' => 'active',
                 'sort_order' => 1,
             ])
@@ -74,7 +74,7 @@ class BrandModuleTest extends TestCase
 
     public function test_admin_can_bulk_delete_brands(): void
     {
-        $admin  = $this->createAdminWithPermissions(['brand.view', 'brand.delete']);
+        $admin = $this->createAdminWithPermissions(['brand.view', 'brand.delete']);
         $brands = Brand::factory()->count(3)->create();
 
         $this->actingAsAdmin($admin)

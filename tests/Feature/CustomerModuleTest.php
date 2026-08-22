@@ -2,19 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Order;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
 use App\Mail\Admin\CustomerSetPasswordMail;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class CustomerModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     public function test_admin_can_create_customer_with_temporary_password_and_email_sent(): void
     {
@@ -23,8 +23,8 @@ class CustomerModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.ecommerce.customer.store'), [
-                'name'   => 'Jane Customer',
-                'email'  => 'jane@customer.com',
+                'name' => 'Jane Customer',
+                'email' => 'jane@customer.com',
                 'status' => 'active',
             ])
             ->assertRedirect();
@@ -38,7 +38,7 @@ class CustomerModuleTest extends TestCase
 
     public function test_customer_with_orders_cannot_be_deleted(): void
     {
-        $admin    = $this->createAdminWithPermissions(['customer.view', 'customer.delete']);
+        $admin = $this->createAdminWithPermissions(['customer.view', 'customer.delete']);
         $customer = User::factory()->create();
         Order::factory()->create(['user_id' => $customer->id]);
 
@@ -51,7 +51,7 @@ class CustomerModuleTest extends TestCase
 
     public function test_admin_can_delete_customer_without_orders(): void
     {
-        $admin    = $this->createAdminWithPermissions(['customer.view', 'customer.delete']);
+        $admin = $this->createAdminWithPermissions(['customer.view', 'customer.delete']);
         $customer = User::factory()->create();
 
         $this->actingAsAdmin($admin)
@@ -63,7 +63,7 @@ class CustomerModuleTest extends TestCase
 
     public function test_banned_customer_status_cannot_be_toggled(): void
     {
-        $admin    = $this->createAdminWithPermissions(['customer.view', 'customer.edit']);
+        $admin = $this->createAdminWithPermissions(['customer.view', 'customer.edit']);
         $customer = User::factory()->create(['status' => 'banned']);
 
         $this->actingAsAdmin($admin)
@@ -76,7 +76,7 @@ class CustomerModuleTest extends TestCase
     public function test_resend_set_password_email(): void
     {
         Mail::fake();
-        $admin    = $this->createAdminWithPermissions(['customer.view', 'customer.edit']);
+        $admin = $this->createAdminWithPermissions(['customer.view', 'customer.edit']);
         $customer = User::factory()->create();
 
         $this->actingAsAdmin($admin)
@@ -92,15 +92,15 @@ class CustomerModuleTest extends TestCase
 
         $token = 'plain-token-value';
         DB::table('password_reset_tokens')->insert([
-            'email'      => $customer->email,
-            'token'      => bcrypt($token),
+            'email' => $customer->email,
+            'token' => bcrypt($token),
             'created_at' => now(),
         ]);
 
         $this->post(route('visitor.set-password.attempt'), [
-            'token'                 => $token,
-            'email'                 => $customer->email,
-            'password'              => 'NewPass123',
+            'token' => $token,
+            'email' => $customer->email,
+            'password' => 'NewPass123',
             'password_confirmation' => 'NewPass123',
         ])->assertRedirect(route('visitor.login'));
 
@@ -111,18 +111,18 @@ class CustomerModuleTest extends TestCase
     public function test_expired_set_password_token_is_rejected(): void
     {
         $customer = User::factory()->create(['email' => 'expired@test.com']);
-        $token    = 'expired-token';
+        $token = 'expired-token';
 
         DB::table('password_reset_tokens')->insert([
-            'email'      => $customer->email,
-            'token'      => bcrypt($token),
+            'email' => $customer->email,
+            'token' => bcrypt($token),
             'created_at' => now()->subHours(2), // beyond 60-minute expiry
         ]);
 
         $this->post(route('visitor.set-password.attempt'), [
-            'token'                 => $token,
-            'email'                 => $customer->email,
-            'password'              => 'NewPass123',
+            'token' => $token,
+            'email' => $customer->email,
+            'password' => 'NewPass123',
             'password_confirmation' => 'NewPass123',
         ])->assertSessionHasErrors('email');
     }

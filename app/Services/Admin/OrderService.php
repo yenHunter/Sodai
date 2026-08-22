@@ -2,17 +2,18 @@
 
 namespace App\Services\Admin;
 
-use App\Models\User;
-use App\Models\Order;
 use App\Models\Coupon;
-use App\Models\Product;
+use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\Support\Str;
 use App\Models\OrderStatusHistory;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OrderService
 {
@@ -28,40 +29,40 @@ class OrderService
         try {
             return DB::transaction(function () use ($data) {
 
-                $items    = $this->buildItemsWithStockLock($data['items']);
+                $items = $this->buildItemsWithStockLock($data['items']);
                 $subtotal = collect($items)->sum('total_price');
 
                 $shippingCharge = $this->resolveShippingCharge($data, $subtotal);
-                $taxAmount      = $this->resolveTaxAmount($data, $subtotal);
+                $taxAmount = $this->resolveTaxAmount($data, $subtotal);
 
-                $coupon         = null;
+                $coupon = null;
                 $discountAmount = (float) ($data['discount_amount'] ?? 0);
 
-                if (!empty($data['coupon_code'])) {
-                    $coupon         = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal);
+                if (! empty($data['coupon_code'])) {
+                    $coupon = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal);
                     $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
                 }
 
                 $order = Order::create([
-                    'order_number'     => $this->generateUniqueOrderNumber(),
-                    'user_id'          => $data['user_id'],
-                    'status'           => 'pending',
-                    'subtotal'         => $subtotal,
-                    'discount_amount'  => $discountAmount,
-                    'shipping_charge'  => $shippingCharge,
-                    'tax_amount'       => $taxAmount,
-                    'total_amount'     => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
-                    'coupon_code'      => $coupon?->code,
-                    'coupon_id'        => $coupon?->id,
-                    'shipping_name'    => $data['shipping_name'],
-                    'shipping_email'   => $data['shipping_email'],
-                    'shipping_phone'   => $data['shipping_phone'],
+                    'order_number' => $this->generateUniqueOrderNumber(),
+                    'user_id' => $data['user_id'],
+                    'status' => 'pending',
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'shipping_charge' => $shippingCharge,
+                    'tax_amount' => $taxAmount,
+                    'total_amount' => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
+                    'coupon_code' => $coupon?->code,
+                    'coupon_id' => $coupon?->id,
+                    'shipping_name' => $data['shipping_name'],
+                    'shipping_email' => $data['shipping_email'],
+                    'shipping_phone' => $data['shipping_phone'],
                     'shipping_address' => $data['shipping_address'],
-                    'shipping_city'    => $data['shipping_city'],
-                    'shipping_state'   => $data['shipping_state'],
-                    'shipping_zip'     => $data['shipping_zip'],
+                    'shipping_city' => $data['shipping_city'],
+                    'shipping_state' => $data['shipping_state'],
+                    'shipping_zip' => $data['shipping_zip'],
                     'shipping_country' => $data['shipping_country'],
-                    'notes'            => $data['notes'] ?? null,
+                    'notes' => $data['notes'] ?? null,
                 ]);
 
                 $this->persistItemsAndAdjustStock($order, $items, decrement: true);
@@ -73,7 +74,7 @@ class OrderService
                 $this->recordStatusHistory($order, null, 'pending', 'Order placed.');
 
                 Log::info('Order created successfully.', [
-                    'order_id'     => $order->id,
+                    'order_id' => $order->id,
                     'order_number' => $order->order_number,
                 ]);
 
@@ -91,7 +92,7 @@ class OrderService
 
     public function update(Order $order, array $data): Order
     {
-        if (!$order->isEditable()) {
+        if (! $order->isEditable()) {
             throw new \Exception('This order can no longer be edited because of its current status.');
         }
 
@@ -101,18 +102,18 @@ class OrderService
                 $this->restoreStockForItems($order->items);
                 $order->items()->delete();
 
-                $items    = $this->buildItemsWithStockLock($data['items']);
+                $items = $this->buildItemsWithStockLock($data['items']);
                 $subtotal = collect($items)->sum('total_price');
 
                 $shippingCharge = $this->resolveShippingCharge($data, $subtotal);
-                $taxAmount      = $this->resolveTaxAmount($data, $subtotal);
+                $taxAmount = $this->resolveTaxAmount($data, $subtotal);
 
                 $previousCouponId = $order->coupon_id;
-                $coupon           = null;
-                $discountAmount   = (float) ($data['discount_amount'] ?? 0);
+                $coupon = null;
+                $discountAmount = (float) ($data['discount_amount'] ?? 0);
 
-                if (!empty($data['coupon_code'])) {
-                    $coupon         = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal, ignoreOrderId: $order->id);
+                if (! empty($data['coupon_code'])) {
+                    $coupon = $this->validateAndLockCoupon($data['coupon_code'], $data['user_id'], $subtotal, ignoreOrderId: $order->id);
                     $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
                 }
 
@@ -125,23 +126,23 @@ class OrderService
                 }
 
                 $order->update([
-                    'user_id'          => $data['user_id'],
-                    'subtotal'         => $subtotal,
-                    'discount_amount'  => $discountAmount,
-                    'shipping_charge'  => $shippingCharge,
-                    'tax_amount'       => $taxAmount,
-                    'total_amount'     => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
-                    'coupon_code'      => $coupon?->code,
-                    'coupon_id'        => $coupon?->id,
-                    'shipping_name'    => $data['shipping_name'],
-                    'shipping_email'   => $data['shipping_email'],
-                    'shipping_phone'   => $data['shipping_phone'],
+                    'user_id' => $data['user_id'],
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'shipping_charge' => $shippingCharge,
+                    'tax_amount' => $taxAmount,
+                    'total_amount' => $this->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount),
+                    'coupon_code' => $coupon?->code,
+                    'coupon_id' => $coupon?->id,
+                    'shipping_name' => $data['shipping_name'],
+                    'shipping_email' => $data['shipping_email'],
+                    'shipping_phone' => $data['shipping_phone'],
                     'shipping_address' => $data['shipping_address'],
-                    'shipping_city'    => $data['shipping_city'],
-                    'shipping_state'   => $data['shipping_state'],
-                    'shipping_zip'     => $data['shipping_zip'],
+                    'shipping_city' => $data['shipping_city'],
+                    'shipping_state' => $data['shipping_state'],
+                    'shipping_zip' => $data['shipping_zip'],
                     'shipping_country' => $data['shipping_country'],
-                    'notes'            => $data['notes'] ?? null,
+                    'notes' => $data['notes'] ?? null,
                 ]);
 
                 $this->persistItemsAndAdjustStock($order, $items, decrement: true);
@@ -162,7 +163,7 @@ class OrderService
 
     public function updateStatus(Order $order, string $status, ?string $note = null): Order
     {
-        if (!in_array($status, Order::STATUSES)) {
+        if (! in_array($status, Order::STATUSES)) {
             throw new \Exception('Invalid order status.');
         }
 
@@ -178,8 +179,12 @@ class OrderService
             $previousStatus = $order->status;
             $update = ['status' => $status];
 
-            if ($status === 'shipped')   $update['shipped_at']   = now();
-            if ($status === 'delivered') $update['delivered_at'] = now();
+            if ($status === 'shipped') {
+                $update['shipped_at'] = now();
+            }
+            if ($status === 'delivered') {
+                $update['delivered_at'] = now();
+            }
 
             if ($status === 'refunded' && $order->isCancellable()) {
                 $this->restoreStockForItems($order->items);
@@ -197,7 +202,7 @@ class OrderService
 
     public function cancel(Order $order, ?string $reason): Order
     {
-        if (!$order->isCancellable()) {
+        if (! $order->isCancellable()) {
             throw new \Exception('This order cannot be cancelled from its current status.');
         }
 
@@ -207,8 +212,8 @@ class OrderService
             $this->restoreStockForItems($order->items);
 
             $order->update([
-                'status'        => 'cancelled',
-                'cancelled_at'  => now(),
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
                 'cancel_reason' => $reason,
             ]);
 
@@ -226,7 +231,7 @@ class OrderService
 
     public function delete(Order $order): bool
     {
-        if (!$order->isDeletable()) {
+        if (! $order->isDeletable()) {
             throw new \Exception('Only cancelled or refunded orders can be deleted.');
         }
 
@@ -241,11 +246,11 @@ class OrderService
     public function quickCreateCustomer(array $data): User
     {
         return User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'phone'    => $data['phone'] ?? null,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
             'password' => Hash::make(Str::random(24)),
-            'status'   => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -271,14 +276,14 @@ class OrderService
         foreach ($merged as $productId => $quantity) {
             $product = Product::where('id', $productId)->lockForUpdate()->first();
 
-            if (!$product) {
+            if (! $product) {
                 throw new \Exception("Product #{$productId} no longer exists.");
             }
 
             $variant = $product->variants()->where('is_default', true)->lockForUpdate()->first()
                 ?? $product->variants()->lockForUpdate()->first();
 
-            if (!$variant) {
+            if (! $variant) {
                 throw new \Exception("\"{$product->name}\" has no purchasable variant.");
             }
 
@@ -289,17 +294,17 @@ class OrderService
             $unitPrice = $variant->final_price;
 
             $items[] = [
-                'product'             => $product,
-                'variant'             => $variant,
-                'product_id'          => $product->id,
-                'product_variant_id'  => $variant->id,
-                'product_name'        => $product->name,
-                'product_sku'         => $variant->sku,
-                'product_image'       => $variant->thumbnail ?? $product->thumbnail,
-                'variant_options'     => $variant->options_label,
-                'unit_price'          => $unitPrice,
-                'quantity'            => $quantity,
-                'total_price'         => round($unitPrice * $quantity, 2),
+                'product' => $product,
+                'variant' => $variant,
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+                'product_name' => $product->name,
+                'product_sku' => $variant->sku,
+                'product_image' => $variant->thumbnail ?? $product->thumbnail,
+                'variant_options' => $variant->options_label,
+                'unit_price' => $unitPrice,
+                'quantity' => $quantity,
+                'total_price' => round($unitPrice * $quantity, 2),
             ];
         }
 
@@ -337,7 +342,7 @@ class OrderService
             return 0.0;
         }
 
-        $rate             = (float) ($taxSettings['tax_rate'] ?? 0);
+        $rate = (float) ($taxSettings['tax_rate'] ?? 0);
         $pricesIncludeTax = ($taxSettings['prices_include_tax'] ?? '0') === '1';
 
         if ($rate <= 0) {
@@ -361,11 +366,11 @@ class OrderService
     {
         $coupon = Coupon::where('code', strtoupper(trim($code)))->lockForUpdate()->first();
 
-        if (!$coupon) {
+        if (! $coupon) {
             throw new \Exception("Coupon \"{$code}\" does not exist.");
         }
 
-        if (!$coupon->isCurrentlyValid()) {
+        if (! $coupon->isCurrentlyValid()) {
             throw new \Exception("Coupon \"{$coupon->code}\" is not currently valid (inactive, expired, not yet started, or usage limit reached).");
         }
 
@@ -375,7 +380,7 @@ class OrderService
 
         $usedByCustomer = Order::where('user_id', $userId)
             ->where('coupon_id', $coupon->id)
-            ->when($ignoreOrderId, fn($q) => $q->where('id', '!=', $ignoreOrderId))
+            ->when($ignoreOrderId, fn ($q) => $q->where('id', '!=', $ignoreOrderId))
             ->whereNotIn('status', ['cancelled'])
             ->count();
 
@@ -406,20 +411,20 @@ class OrderService
     {
         foreach ($items as $item) {
             OrderItem::create([
-                'order_id'           => $order->id,
-                'product_id'         => $item['product_id'],
+                'order_id' => $order->id,
+                'product_id' => $item['product_id'],
                 'product_variant_id' => $item['product_variant_id'],
-                'product_name'       => $item['product_name'],
-                'product_sku'        => $item['product_sku'],
-                'product_image'      => $item['product_image'],
-                'variant_options'    => $item['variant_options'],
-                'unit_price'         => $item['unit_price'],
-                'quantity'           => $item['quantity'],
-                'total_price'        => $item['total_price'],
+                'product_name' => $item['product_name'],
+                'product_sku' => $item['product_sku'],
+                'product_image' => $item['product_image'],
+                'variant_options' => $item['variant_options'],
+                'unit_price' => $item['unit_price'],
+                'quantity' => $item['quantity'],
+                'total_price' => $item['total_price'],
             ]);
 
             if ($decrement) {
-                /** @var \App\Models\ProductVariant $variant */
+                /** @var ProductVariant $variant */
                 $variant = $item['variant'];
                 $variant->decrementStock($item['quantity']);
 
@@ -434,7 +439,7 @@ class OrderService
     private function restoreStockForItems($items): void
     {
         foreach ($items as $item) {
-            $variant = \App\Models\ProductVariant::where('id', $item->product_variant_id)->lockForUpdate()->first();
+            $variant = ProductVariant::where('id', $item->product_variant_id)->lockForUpdate()->first();
 
             if ($variant) {
                 $variant->incrementStock($item->quantity);
@@ -449,11 +454,11 @@ class OrderService
     private function recordStatusHistory(Order $order, ?string $fromStatus, string $toStatus, ?string $note = null): void
     {
         OrderStatusHistory::create([
-            'order_id'    => $order->id,
+            'order_id' => $order->id,
             'from_status' => $fromStatus,
-            'to_status'   => $toStatus,
-            'changed_by'  => Auth::guard('admin')->id(),
-            'note'        => $note,
+            'to_status' => $toStatus,
+            'changed_by' => Auth::guard('admin')->id(),
+            'note' => $note,
         ]);
     }
 
@@ -472,7 +477,7 @@ class OrderService
     {
         $prefix = $this->settingService->getGroup('order')['order_number_prefix'] ?? 'ORD-';
 
-        $lastNumber = Order::where('order_number', 'like', $prefix . '%')
+        $lastNumber = Order::where('order_number', 'like', $prefix.'%')
             ->lockForUpdate()
             ->orderBy('order_number', 'desc')
             ->value('order_number');
@@ -482,7 +487,7 @@ class OrderService
             $next = (int) substr($lastNumber, strrpos($lastNumber, '-') !== false ? strrpos($lastNumber, '-') + 1 : strlen($prefix)) + 1;
         }
 
-        return $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     // ─────────────────────────────────────────────
@@ -493,19 +498,19 @@ class OrderService
     {
         $query = Order::with('user')->withCount('items');
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->ofStatus($filters['status']);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
@@ -519,11 +524,11 @@ class OrderService
             ->pluck('count', 'status');
 
         return [
-            'total'     => (int) $counts->sum(),
-            'pending'   => (int) ($counts->get('pending') ?? 0),
+            'total' => (int) $counts->sum(),
+            'pending' => (int) ($counts->get('pending') ?? 0),
             'completed' => (int) ($counts->get('delivered') ?? 0),
             'cancelled' => (int) ($counts->get('cancelled') ?? 0),
-            'returned'  => (int) ($counts->get('refunded') ?? 0),
+            'returned' => (int) ($counts->get('refunded') ?? 0),
         ];
     }
 

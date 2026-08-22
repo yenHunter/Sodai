@@ -13,10 +13,10 @@ class AdminFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'      => $this->faker->name(),
-            'email'     => $this->faker->unique()->safeEmail(),
-            'phone'     => $this->faker->phoneNumber(),
-            'password'  => Hash::make('password123'),
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
+            'password' => Hash::make('password123'),
             'is_active' => true,
         ];
     }

@@ -1,14 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Visitor\AuthController;
-use App\Http\Controllers\Visitor\ProductController;
 use App\Http\Controllers\Visitor\AccountController;
 use App\Http\Controllers\Visitor\AddressController;
-use App\Http\Controllers\Visitor\OrderController;
-use App\Http\Controllers\Visitor\WishlistController;
-use App\Http\Controllers\Visitor\ReviewController;
+use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\CartController;
+use App\Http\Controllers\Visitor\OrderController;
+use App\Http\Controllers\Visitor\ProductController;
+use App\Http\Controllers\Visitor\ReviewController;
+use App\Http\Controllers\Visitor\WishlistController;
+use Illuminate\Support\Facades\Route;
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

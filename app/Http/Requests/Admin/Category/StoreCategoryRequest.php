@@ -16,7 +16,7 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => [
+            'name' => [
                 'required',
                 'string',
                 'max:100',
@@ -27,7 +27,7 @@ class StoreCategoryRequest extends FormRequest
                 'string',
                 'max:500',
             ],
-            'parent_id'   => [
+            'parent_id' => [
                 'nullable',
                 'integer',
                 'exists:categories,id',
@@ -40,17 +40,17 @@ class StoreCategoryRequest extends FormRequest
                     }
                 },
             ],
-            'image'       => [
+            'image' => [
                 'nullable',
                 'image',
                 'mimes:jpeg,jpg,png,webp',
                 'max:2048',
             ],
             // ✅ Accept string 'active'/'inactive' OR boolean
-            'is_active'   => [
+            'is_active' => [
                 'required',
             ],
-            'sort_order'  => [
+            'sort_order' => [
                 'nullable',
                 'integer',
                 'min:0',
@@ -62,13 +62,13 @@ class StoreCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'      => 'Category name is required.',
-            'name.unique'        => 'This category name already exists.',
-            'name.max'           => 'Category name cannot exceed 100 characters.',
-            'parent_id.exists'   => 'Selected parent category does not exist.',
-            'image.image'        => 'File must be an image.',
-            'image.mimes'        => 'Image must be jpeg, jpg, png or webp.',
-            'image.max'          => 'Image size cannot exceed 2MB.',
+            'name.required' => 'Category name is required.',
+            'name.unique' => 'This category name already exists.',
+            'name.max' => 'Category name cannot exceed 100 characters.',
+            'parent_id.exists' => 'Selected parent category does not exist.',
+            'image.image' => 'File must be an image.',
+            'image.mimes' => 'Image must be jpeg, jpg, png or webp.',
+            'image.max' => 'Image size cannot exceed 2MB.',
             'is_active.required' => 'Status is required.',
         ];
     }
@@ -78,7 +78,7 @@ class StoreCategoryRequest extends FormRequest
     {
         $this->merge([
             'sort_order' => $this->input('sort_order') ?? 0,
-            'parent_id'  => $this->input('parent_id') ?: null,
+            'parent_id' => $this->input('parent_id') ?: null,
         ]);
     }
 }

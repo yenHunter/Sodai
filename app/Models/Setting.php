@@ -21,7 +21,7 @@ class Setting extends Model
      */
     public static function group(string $group): array
     {
-        return Cache::rememberForever(self::CACHE_PREFIX . $group, function () use ($group) {
+        return Cache::rememberForever(self::CACHE_PREFIX.$group, function () use ($group) {
             return static::where('group', $group)->pluck('value', 'key')->toArray();
         });
     }
@@ -44,11 +44,11 @@ class Setting extends Model
             );
         }
 
-        Cache::forget(self::CACHE_PREFIX . $group);
+        Cache::forget(self::CACHE_PREFIX.$group);
     }
 
     public static function forgetGroupCache(string $group): void
     {
-        Cache::forget(self::CACHE_PREFIX . $group);
+        Cache::forget(self::CACHE_PREFIX.$group);
     }
 }

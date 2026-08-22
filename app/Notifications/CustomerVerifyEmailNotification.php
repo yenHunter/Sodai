@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Auth\Notifications\VerifyEmail as BaseVerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class CustomerVerifyEmailNotification extends BaseVerifyEmail
 {
@@ -12,10 +12,10 @@ class CustomerVerifyEmailNotification extends BaseVerifyEmail
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify Your Email Address - ' . config('app.name'))
+            ->subject('Verify Your Email Address - '.config('app.name'))
             ->view('visitor.emails.verify-email', [
-                'customerName'     => $notifiable->name,
-                'verificationUrl'  => $verificationUrl,
+                'customerName' => $notifiable->name,
+                'verificationUrl' => $verificationUrl,
                 'expiresInMinutes' => (int) config('auth.verification.expire', 60),
             ]);
     }

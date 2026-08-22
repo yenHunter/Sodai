@@ -2,7 +2,7 @@
 
 use App\Models\Setting;
 
-if (!function_exists('setting')) {
+if (! function_exists('setting')) {
     /**
      * Fetch a stored setting value. Usage: setting('company', 'name', 'Sodai')
      */

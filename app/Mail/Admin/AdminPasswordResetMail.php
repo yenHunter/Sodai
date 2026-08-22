@@ -15,13 +15,13 @@ class AdminPasswordResetMail extends Mailable
     public function __construct(
         public string $resetUrl,
         public string $adminName,
-        public int    $expiresInMinutes = 30,
+        public int $expiresInMinutes = 30,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Admin Password Reset Request - ' . config('app.name'),
+            subject: 'Admin Password Reset Request - '.config('app.name'),
         );
     }
 

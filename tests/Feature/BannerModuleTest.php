@@ -2,16 +2,16 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Banner;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
 class BannerModuleTest extends TestCase
 {
-    use RefreshDatabase, AdminTestHelpers;
+    use AdminTestHelpers, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -35,13 +35,13 @@ class BannerModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.cms.banner.store'), [
-                'title'       => 'New Fashion Collection',
-                'subtitle'    => 'Sale Offer',
+                'title' => 'New Fashion Collection',
+                'subtitle' => 'Sale Offer',
                 'button_text' => 'Order Now',
-                'button_url'  => '/products',
-                'position'    => 'home_slider',
-                'is_active'   => 'active',
-                'image'       => UploadedFile::fake()->image('slide.jpg'),
+                'button_url' => '/products',
+                'position' => 'home_slider',
+                'is_active' => 'active',
+                'image' => UploadedFile::fake()->image('slide.jpg'),
             ])
             ->assertRedirect(route('admin.cms.banner.index'));
 
@@ -57,7 +57,7 @@ class BannerModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.cms.banner.store'), [
-                'position'  => 'home_slider',
+                'position' => 'home_slider',
                 'is_active' => 'active',
             ])
             ->assertSessionHasErrors('image');
@@ -69,9 +69,9 @@ class BannerModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.cms.banner.store'), [
-                'position'  => 'invalid_position',
+                'position' => 'invalid_position',
                 'is_active' => 'active',
-                'image'     => UploadedFile::fake()->image('slide.jpg'),
+                'image' => UploadedFile::fake()->image('slide.jpg'),
             ])
             ->assertSessionHasErrors('position');
     }
@@ -82,10 +82,10 @@ class BannerModuleTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.cms.banner.store'), [
-                'position'   => 'home_slider',
-                'is_active'  => 'active',
-                'image'      => UploadedFile::fake()->image('slide.jpg'),
-                'starts_at'  => now()->addDays(5)->format('Y-m-d H:i:s'),
+                'position' => 'home_slider',
+                'is_active' => 'active',
+                'image' => UploadedFile::fake()->image('slide.jpg'),
+                'starts_at' => now()->addDays(5)->format('Y-m-d H:i:s'),
                 'expires_at' => now()->addDays(1)->format('Y-m-d H:i:s'),
             ])
             ->assertSessionHasErrors('expires_at');
@@ -93,19 +93,19 @@ class BannerModuleTest extends TestCase
 
     public function test_admin_can_update_banner_without_replacing_image(): void
     {
-        $admin  = $this->createAdminWithPermissions(['banner.view', 'banner.edit']);
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.edit']);
         $banner = Banner::factory()->create(['title' => 'Old Title', 'image' => 'banners/existing.jpg']);
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.cms.banner.update', $banner), [
-                'title'     => 'Updated Title',
-                'position'  => 'home_slider',
+                'title' => 'Updated Title',
+                'position' => 'home_slider',
                 'is_active' => 'active',
             ])
             ->assertRedirect(route('admin.cms.banner.index'));
 
         $this->assertDatabaseHas('banners', [
-            'id'    => $banner->id,
+            'id' => $banner->id,
             'title' => 'Updated Title',
             'image' => 'banners/existing.jpg',
         ]);
@@ -113,7 +113,7 @@ class BannerModuleTest extends TestCase
 
     public function test_admin_can_toggle_banner_status(): void
     {
-        $admin  = $this->createAdminWithPermissions(['banner.view', 'banner.edit']);
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.edit']);
         $banner = Banner::factory()->create(['is_active' => true]);
 
         $this->actingAsAdmin($admin)
@@ -125,7 +125,7 @@ class BannerModuleTest extends TestCase
 
     public function test_admin_can_delete_banner(): void
     {
-        $admin  = $this->createAdminWithPermissions(['banner.view', 'banner.delete']);
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.delete']);
         $banner = Banner::factory()->create();
 
         $this->actingAsAdmin($admin)
@@ -137,7 +137,7 @@ class BannerModuleTest extends TestCase
 
     public function test_admin_can_bulk_delete_banners(): void
     {
-        $admin   = $this->createAdminWithPermissions(['banner.view', 'banner.delete']);
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.delete']);
         $banners = Banner::factory()->count(3)->create();
 
         $this->actingAsAdmin($admin)

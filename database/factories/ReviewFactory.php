@@ -2,8 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Review;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,11 +16,11 @@ class ReviewFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
-            'order_id'   => \App\Models\Order::factory(),
-            'user_id'    => User::factory(),
-            'rating'     => $this->faker->numberBetween(1, 5),
-            'comment'    => $this->faker->sentence(),
-            'status'     => 'pending',
+            'order_id' => Order::factory(),
+            'user_id' => User::factory(),
+            'rating' => $this->faker->numberBetween(1, 5),
+            'comment' => $this->faker->sentence(),
+            'status' => 'pending',
         ];
     }
 }

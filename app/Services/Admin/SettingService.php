@@ -24,17 +24,16 @@ class SettingService
     // ─────────────────────────────────────────────
 
     /**
-     * @param string $group
-     * @param array  $data        Validated request data (may include UploadedFile instances)
-     * @param array  $fileKeys    Keys in $data that are file uploads
-     * @param array  $booleanKeys Keys in $data that should be normalized to '1'/'0'
+     * @param  array  $data  Validated request data (may include UploadedFile instances)
+     * @param  array  $fileKeys  Keys in $data that are file uploads
+     * @param  array  $booleanKeys  Keys in $data that should be normalized to '1'/'0'
      */
     public function updateGroup(string $group, array $data, array $fileKeys = [], array $booleanKeys = []): array
     {
         return DB::transaction(function () use ($group, $data, $fileKeys, $booleanKeys) {
 
             foreach ($fileKeys as $fileKey) {
-                if (!empty($data[$fileKey]) && $data[$fileKey] instanceof UploadedFile) {
+                if (! empty($data[$fileKey]) && $data[$fileKey] instanceof UploadedFile) {
                     $this->deleteFile(Setting::get($group, $fileKey));
                     $data[$fileKey] = $this->uploadFile($data[$fileKey], $group);
                 } else {
@@ -49,15 +48,19 @@ class SettingService
             }
 
             $types = [];
-            foreach ($fileKeys as $fileKey)    $types[$fileKey] = 'image';
-            foreach ($booleanKeys as $boolKey) $types[$boolKey] = 'boolean';
+            foreach ($fileKeys as $fileKey) {
+                $types[$fileKey] = 'image';
+            }
+            foreach ($booleanKeys as $boolKey) {
+                $types[$boolKey] = 'boolean';
+            }
 
             // Any array value (e.g. a multi-select like operation_areas) is
             // stored as JSON automatically — no per-field handling needed
             // in the controller.
             foreach ($data as $key => $value) {
                 if (is_array($value)) {
-                    $data[$key] = json_encode(array_values(array_filter($value, fn($v) => trim((string) $v) !== '')));
+                    $data[$key] = json_encode(array_values(array_filter($value, fn ($v) => trim((string) $v) !== '')));
                     $types[$key] = 'json';
                 }
             }
@@ -80,10 +83,10 @@ class SettingService
 
     private function uploadFile(UploadedFile $file, string $group): string
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $path     = $file->storeAs("settings/{$group}", $filename, 'public');
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $path = $file->storeAs("settings/{$group}", $filename, 'public');
 
-        if (!$path) {
+        if (! $path) {
             throw new \Exception('Failed to upload file.');
         }
 
@@ -103,13 +106,20 @@ class SettingService
 
     private function resolveBoolean(mixed $value): bool
     {
-        if (is_bool($value)) return $value;
-        if (is_int($value)) return $value === 1;
-        if (is_string($value)) return in_array(strtolower($value), ['1', 'true', 'on', 'yes', 'active']);
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['1', 'true', 'on', 'yes', 'active']);
+        }
+
         return false;
     }
 
-        // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────
     // SHIPPING CHARGE RESOLUTION
     // The admin defines which district(s) their business operates in
     // (`operation_areas`). If the customer's shipping city/district
@@ -121,7 +131,7 @@ class SettingService
 
     public function getOperationAreas(): array
     {
-        $raw     = Setting::get('shipping', 'operation_areas', '[]');
+        $raw = Setting::get('shipping', 'operation_areas', '[]');
         $decoded = json_decode((string) $raw, true);
 
         return is_array($decoded) ? $decoded : [];
@@ -129,16 +139,22 @@ class SettingService
 
     public function isWithinOperationArea(?string $city): bool
     {
-        if (!$city) return false;
+        if (! $city) {
+            return false;
+        }
 
         $areas = $this->getOperationAreas();
-        if (empty($areas)) return false;
+        if (empty($areas)) {
+            return false;
+        }
 
         $city = strtolower(trim($city));
 
         foreach ($areas as $area) {
             $area = strtolower(trim((string) $area));
-            if ($area === '') continue;
+            if ($area === '') {
+                continue;
+            }
 
             // Matches "Dhaka" against "Uttara, Dhaka" as well as an exact match.
             if (str_contains($city, $area) || str_contains($area, $city)) {
@@ -157,14 +173,14 @@ class SettingService
     {
         $settings = $this->getGroup('shipping');
 
-        $freeShippingEnabled   = ($settings['enable_free_shipping'] ?? '0') === '1';
+        $freeShippingEnabled = ($settings['enable_free_shipping'] ?? '0') === '1';
         $freeShippingThreshold = (float) ($settings['free_shipping_threshold'] ?? 0);
 
         if ($freeShippingEnabled && $freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
             return 0.0;
         }
 
-        $insideCharge  = (float) ($settings['inside_area_charge'] ?? 0);
+        $insideCharge = (float) ($settings['inside_area_charge'] ?? 0);
         $outsideCharge = (float) ($settings['outside_area_charge'] ?? 0);
 
         return $this->isWithinOperationArea($city) ? $insideCharge : $outsideCharge;

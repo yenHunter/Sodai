@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Setting;
-use App\Support\BangladeshDistricts;
 use App\Http\Controllers\Controller;
-use App\Services\Admin\SettingService;
-use App\Http\Requests\Admin\Setting\UpdateTaxRequest;
-use App\Http\Requests\Admin\Setting\UpdateDesignRequest;
 use App\Http\Requests\Admin\Setting\UpdateCompanyRequest;
-use App\Http\Requests\Admin\Setting\UpdatePaymentRequest;
-use App\Http\Requests\Admin\Setting\UpdateInvoiceRequest;
-use App\Http\Requests\Admin\Setting\UpdateShippingRequest;
+use App\Http\Requests\Admin\Setting\UpdateDesignRequest;
 use App\Http\Requests\Admin\Setting\UpdateInventoryRequest;
+use App\Http\Requests\Admin\Setting\UpdateInvoiceRequest;
 use App\Http\Requests\Admin\Setting\UpdateMarketingRequest;
-use App\Http\Requests\Admin\Setting\UpdateOrderSettingRequest;
 use App\Http\Requests\Admin\Setting\UpdateNotificationRequest;
+use App\Http\Requests\Admin\Setting\UpdateOrderSettingRequest;
+use App\Http\Requests\Admin\Setting\UpdatePaymentRequest;
+use App\Http\Requests\Admin\Setting\UpdateShippingRequest;
+use App\Http\Requests\Admin\Setting\UpdateTaxRequest;
+use App\Services\Admin\SettingService;
+use App\Support\BangladeshDistricts;
 
 class SettingController extends Controller
 {
@@ -54,7 +53,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.company')
-                ->with('error', 'Failed to update company information: ' . $e->getMessage());
+                ->with('error', 'Failed to update company information: '.$e->getMessage());
         }
     }
 
@@ -94,7 +93,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.design')
-                ->with('error', 'Failed to update design settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update design settings: '.$e->getMessage());
         }
     }
 
@@ -130,7 +129,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.shipping')
-                ->with('error', 'Failed to update shipping settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update shipping settings: '.$e->getMessage());
         }
     }
 
@@ -149,8 +148,8 @@ class SettingController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['cod_enabled']            = $request->boolean('cod_enabled');
-            $data['bank_transfer_enabled']  = $request->boolean('bank_transfer_enabled');
+            $data['cod_enabled'] = $request->boolean('cod_enabled');
+            $data['bank_transfer_enabled'] = $request->boolean('bank_transfer_enabled');
             $data['online_payment_enabled'] = $request->boolean('online_payment_enabled');
 
             $this->settingService->updateGroup(
@@ -165,7 +164,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.payment')
-                ->with('error', 'Failed to update payment settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update payment settings: '.$e->getMessage());
         }
     }
 
@@ -185,7 +184,7 @@ class SettingController extends Controller
         try {
             $data = $request->validated();
             $data['hide_out_of_stock_products'] = $request->boolean('hide_out_of_stock_products');
-            $data['allow_backorders']           = $request->boolean('allow_backorders');
+            $data['allow_backorders'] = $request->boolean('allow_backorders');
 
             $this->settingService->updateGroup(
                 'inventory',
@@ -199,7 +198,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.inventory')
-                ->with('error', 'Failed to update inventory settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update inventory settings: '.$e->getMessage());
         }
     }
 
@@ -232,7 +231,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.invoice')
-                ->with('error', 'Failed to update invoice settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update invoice settings: '.$e->getMessage());
         }
     }
 
@@ -265,7 +264,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.order')
-                ->with('error', 'Failed to update order settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update order settings: '.$e->getMessage());
         }
     }
 
@@ -284,7 +283,7 @@ class SettingController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['tax_enabled']        = $request->boolean('tax_enabled');
+            $data['tax_enabled'] = $request->boolean('tax_enabled');
             $data['prices_include_tax'] = $request->boolean('prices_include_tax');
 
             $this->settingService->updateGroup(
@@ -299,7 +298,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.tax')
-                ->with('error', 'Failed to update tax settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update tax settings: '.$e->getMessage());
         }
     }
 
@@ -318,8 +317,8 @@ class SettingController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['notify_new_order']  = $request->boolean('notify_new_order');
-            $data['notify_low_stock']  = $request->boolean('notify_low_stock');
+            $data['notify_new_order'] = $request->boolean('notify_new_order');
+            $data['notify_low_stock'] = $request->boolean('notify_low_stock');
             $data['notify_new_review'] = $request->boolean('notify_new_review');
 
             $this->settingService->updateGroup(
@@ -334,7 +333,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.notification')
-                ->with('error', 'Failed to update notification settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update notification settings: '.$e->getMessage());
         }
     }
 
@@ -344,7 +343,7 @@ class SettingController extends Controller
 
     public function marketing()
     {
-        $seoSettings    = $this->settingService->getGroup('seo');
+        $seoSettings = $this->settingService->getGroup('seo');
         $socialSettings = $this->settingService->getGroup('social');
 
         return view('admin.settings.configuration.marketing', compact('seoSettings', 'socialSettings'));
@@ -380,7 +379,7 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.settings.marketing')
-                ->with('error', 'Failed to update marketing settings: ' . $e->getMessage());
+                ->with('error', 'Failed to update marketing settings: '.$e->getMessage());
         }
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Attribute;
-use App\Services\Admin\AttributeService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Attribute\UpdateAttributeRequest;
+use App\Models\Attribute;
+use App\Services\Admin\AttributeService;
 
 class AttributeController extends Controller
 {
@@ -31,7 +31,7 @@ class AttributeController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.ecommerce.attribute.index')
-                ->with('error', 'Failed to update attribute: ' . $e->getMessage());
+                ->with('error', 'Failed to update attribute: '.$e->getMessage());
         }
     }
 
@@ -39,7 +39,7 @@ class AttributeController extends Controller
     {
         try {
             $updated = $this->attributeService->toggleStatus($attribute);
-            $status  = $updated->status === 'active' ? 'enabled' : 'disabled';
+            $status = $updated->status === 'active' ? 'enabled' : 'disabled';
 
             return redirect()
                 ->route('admin.ecommerce.attribute.index')
