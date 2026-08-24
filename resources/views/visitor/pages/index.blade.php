@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'Sodai', 'bodyClass' => ''])
+@extends('visitor.layout.app', ['title' => 'Home', 'bodyClass' => ''])
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('visitor/css/demo1.css') }}" />
