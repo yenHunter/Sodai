@@ -395,5 +395,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/admin-ecommerce-banner.js'])
+    @vite(['resources/js/pages/admin-cms-banner.js'])
 @endsection

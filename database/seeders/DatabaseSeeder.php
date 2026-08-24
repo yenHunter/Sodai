@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             CustomerSeeder::class,
             AttributeSeeder::class,
+            CmsPageSeeder::class,
         ]);
     }
 }

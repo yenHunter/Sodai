@@ -159,6 +159,12 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.cms.pages.index') }}">
+                        <span class="menu-icon"><i data-lucide="book"></i></span>
+                        <span class="menu-text">Static Pages</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a aria-controls="pages" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
                         href="#pages">
                         <span class="menu-icon"><i data-lucide="book"></i></span>
@@ -184,7 +190,8 @@
                             </li>
                             <li class="side-nav-item">
                                 <a class="side-nav-link" href="#">
-                                    <span class="menu-text" data-lang="apps-email-compose">Return & Refund Policy</span>
+                                    <span class="menu-text" data-lang="apps-email-compose">Return & Refund
+                                        Policy</span>
                                 </a>
                             </li>
                         </ul>

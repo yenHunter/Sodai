@@ -107,6 +107,10 @@ class RolePermissionSeeder extends Seeder
             'role.create',
             'role.edit',
             'role.delete',
+
+            // CMS Management
+            'cms.view',
+            'cms.edit',
         ];
 
         // Create all permissions for admin guard
@@ -185,6 +189,9 @@ class RolePermissionSeeder extends Seeder
             'banner.edit',
             'banner.delete',
 
+            'cms.view',
+            'cms.edit',
+
             'review.view',
             'review.approve',
             'review.delete',
@@ -233,6 +240,9 @@ class RolePermissionSeeder extends Seeder
             'banner.view',
             'banner.create',
             'banner.edit',
+
+            'cms.view',
+            'cms.edit',
         ]);
 
         // ── Support: View orders, handle reviews & customers ──

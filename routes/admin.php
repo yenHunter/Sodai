@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CartController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CmsPageController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Models\CmsPage;
 use Illuminate\Support\Facades\Route;
 
 // Guest
@@ -175,6 +177,13 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{banner}', [BannerController::class, 'destroy'])->name('destroy')->middleware('permission:banner.delete');
             Route::delete('/', [BannerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:banner.delete');
             Route::patch('/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:banner.edit');
+        });
+
+        // ── CMS Static Pages: only roles with cms permissions ──
+        Route::middleware('permission:cms.view')->prefix('pages')->name('pages.')->group(function () {
+            Route::get('/', [CmsPageController::class, 'index'])->name('index');
+            Route::get('/{slug}/edit', [CmsPageController::class, 'edit'])->name('edit')->whereIn('slug', CmsPage::SLUGS);
+            Route::post('/{slug}/update', [CmsPageController::class, 'update'])->name('update')->middleware('permission:cms.edit')->whereIn('slug', CmsPage::SLUGS);
         });
     });
 
