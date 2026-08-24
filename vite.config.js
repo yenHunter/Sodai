@@ -46,7 +46,10 @@ export default defineConfig({
                 'resources/js/pages/admin-ecommerce-attribute.js',
                 'resources/js/pages/admin-ecommerce-review.js',
                 'resources/js/pages/admin-ecommerce-coupon.js',
-                'resources/js/pages/admin-ecommerce-banner.js',
+
+                // ───────────── CMS Pages ─────────────
+                'resources/js/pages/admin-cms-banner.js',
+                'resources/js/pages/admin-cms-page-edit.js',
 
                 // ───────────── Settings Pages ─────────────
                 'resources/js/pages/admin-settings-users-index.js',
