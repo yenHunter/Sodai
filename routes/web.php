@@ -14,10 +14,6 @@ Route::get('/email/verify', [AuthController::class, 'verificationNotice'])
 Route::post('/email/verify/resend', [AuthController::class, 'resendVerificationEmail'])
     ->name('verification.send');
 
-Route::get('/', function () {
-    return view('visitor.pages.index');
-})->name('visitor.index');
-
 Route::get('about', function () {
     return view('visitor.pages.about');
 })->name('visitor.about');

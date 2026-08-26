@@ -8,7 +8,11 @@ use App\Http\Controllers\Visitor\OrderController;
 use App\Http\Controllers\Visitor\ProductController;
 use App\Http\Controllers\Visitor\ReviewController;
 use App\Http\Controllers\Visitor\WishlistController;
+use App\Http\Controllers\Visitor\HomeController;
 use Illuminate\Support\Facades\Route;
+
+// ── Landing Page ──
+Route::get('/', [HomeController::class, 'index'])->name('index');
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

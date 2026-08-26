@@ -10,36 +10,46 @@
     <!-- Main Slider Start -->
     <div class="sticky-header-next-sec ec-main-slider section section-space-pb">
         <div class="ec-slider swiper-container main-slider-nav main-slider-dot">
-            <!-- Main slider -->
             <div class="swiper-wrapper">
-                <div class="ec-slide-item swiper-slide d-flex ec-slide-1">
-                    <div class="container align-self-center">
-                        <div class="row">
-                            <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
-                                <div class="ec-slide-content slider-animation">
-                                    <h1 class="ec-slide-title">New Fashion Collection</h1>
-                                    <h2 class="ec-slide-stitle">Sale Offer</h2>
-                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do</p>
-                                    <a href="#" class="btn btn-lg btn-secondary">Order Now</a>
+                @forelse ($sliderBanners as $banner)
+                    <div class="ec-slide-item swiper-slide d-flex"
+                        style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center;">
+                        <div class="container align-self-center">
+                            <div class="row">
+                                <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
+                                    <div class="ec-slide-content slider-animation">
+                                        @if ($banner->title)
+                                            <h1 class="ec-slide-title">{{ $banner->title }}</h1>
+                                        @endif
+                                        @if ($banner->subtitle)
+                                            <h2 class="ec-slide-stitle">{{ $banner->subtitle }}</h2>
+                                        @endif
+                                        @if ($banner->description)
+                                            <p>{{ $banner->description }}</p>
+                                        @endif
+                                        @if ($banner->button_text && $banner->button_url)
+                                            <a href="{{ $banner->button_url }}" target="{{ $banner->button_target }}"
+                                                class="btn btn-lg btn-secondary">{{ $banner->button_text }}</a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="ec-slide-item swiper-slide d-flex ec-slide-2">
-                    <div class="container align-self-center">
-                        <div class="row">
-                            <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
-                                <div class="ec-slide-content slider-animation">
-                                    <h1 class="ec-slide-title">Boat Headphone Sets</h1>
-                                    <h2 class="ec-slide-stitle">Sale Offer</h2>
-                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do</p>
-                                    <a href="#" class="btn btn-lg btn-secondary">Order Now</a>
+                @empty
+                    <div class="ec-slide-item swiper-slide d-flex ec-slide-1">
+                        <div class="container align-self-center">
+                            <div class="row">
+                                <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
+                                    <div class="ec-slide-content slider-animation">
+                                        <h1 class="ec-slide-title">Welcome to {{ config('app.name') }}</h1>
+                                        <a href="{{ route('visitor.products.index') }}" class="btn btn-lg btn-secondary">Shop Now</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                @endforelse
             </div>
             <div class="swiper-pagination swiper-pagination-white"></div>
             <div class="swiper-buttons">
@@ -63,607 +73,203 @@
                 </div>
             </div>
             <div class="row">
-                <!-- New Product Content -->
-                <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6  ec-product-content" data-animation="flipInY">
-                    <div class="ec-product-inner">
-                        <div class="ec-pro-image-outer">
-                            <div class="ec-pro-image">
-                                <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/9_1.jpg') }}"
-                                        alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/9_2.jpg') }}"
-                                        alt="Product" />
-                                </a>
-                                <span class="flags">
-                                    <span class="sale">Sale</span>
+                @forelse ($newArrivals as $product)
+                    <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6 ec-product-content" data-animation="flipInY">
+                        <div class="ec-product-inner">
+                            <div class="ec-pro-image-outer">
+                                <div class="ec-pro-image">
+                                    <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
+                                        <img class="main-image"
+                                            src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}"
+                                            alt="{{ $product->name }}" />
+                                    </a>
+                                    @if ($product->has_discount)
+                                        <span class="percentage">{{ round($product->discount_percentage) }}%</span>
+                                    @endif
+                                    @if ($product->is_out_of_stock)
+                                        <span class="flags"><span class="sale">Sold Out</span></span>
+                                    @endif
+                                    <a href="{{ route('visitor.products.show', $product->slug) }}" class="quickview" title="Quick view">
+                                        <i class="fi-rr-eye"></i>
+                                    </a>
+                                    <div class="ec-pro-actions">
+                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="ec-btn-group compare" title="View Details">
+                                            <i class="fi-rr-shopping-basket"></i>
+                                        </a>
+                                        @auth('customer')
+                                            <a href="#" class="ec-btn-group wishlist toggle-wishlist" data-product-id="{{ $product->id }}" title="Wishlist">
+                                                <i class="fi-rr-heart"></i>
+                                            </a>
+                                        @else
+                                            <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist" title="Login to add to wishlist">
+                                                <i class="fi-rr-heart"></i>
+                                            </a>
+                                        @endauth
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ec-pro-content">
+                                <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                <div class="ec-pro-rating">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                    @endfor
+                                </div>
+                                <span class="ec-price">
+                                    @if ($product->has_variants)
+                                        <span class="new-price">{{ $product->price_range_label }}</span>
+                                    @elseif ($product->has_discount)
+                                        <span class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                        <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                    @else
+                                        <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                    @endif
                                 </span>
-                                <a href="#" class="quickview" data-link-action="quickview" title="Quick view"
-                                    data-bs-toggle="modal" data-bs-target="#ec_quickview_modal"><i
-                                        class="fi-rr-eye"></i></a>
-                                <div class="ec-pro-actions">
-                                    <a href="compare.html" class="ec-btn-group compare" title="Compare"><i
-                                            class="fi fi-rr-arrows-repeat"></i></a>
-                                    <button title="Add To Cart" class="add-to-cart"><i class="fi-rr-shopping-basket"></i>
-                                        Add To Cart</button>
-                                    <a class="ec-btn-group wishlist" title="Wishlist"><i class="fi-rr-heart"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ec-pro-content">
-                            <h5 class="ec-pro-title"><a href="product-left-sidebar.html">Full Sleeve Cap T-Shirt</a>
-                            </h5>
-                            <div class="ec-pro-rating">
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star"></i>
-                            </div>
-                            <span class="ec-price">
-                                <span class="old-price">$20.00</span>
-                                <span class="new-price">$15.00</span>
-                            </span>
-                            <div class="ec-pro-option">
-                                <div class="ec-pro-color">
-                                    <span class="ec-pro-opt-label">Color</span>
-                                    <ul class="ec-opt-swatch ec-change-img">
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/9_1.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/9_1.jpg') }}"
-                                                data-tooltip="Orange"><span style="background-color:#74c7ff;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/9_2.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/9_2.jpg') }}"
-                                                data-tooltip="Green"><span style="background-color:#7af6ff;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/9_3.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/9_3.jpg') }}"
-                                                data-tooltip="Sky Blue"><span
-                                                    style="background-color:#85ffeb;"></span></a></li>
-                                    </ul>
-                                </div>
-                                <div class="ec-pro-size">
-                                    <span class="ec-pro-opt-label">Size</span>
-                                    <ul class="ec-opt-size">
-                                        <li class="active"><a href="#" class="ec-opt-sz" data-old="$20.00"
-                                                data-new="$15.00" data-tooltip="Small">S</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$22.00" data-new="$17.00"
-                                                data-tooltip="Medium">M</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$25.00" data-new="$20.00"
-                                                data-tooltip="Large">X</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$27.00" data-new="$22.00"
-                                                data-tooltip="Extra Large">XL</a></li>
-                                    </ul>
-                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6  ec-product-content" data-animation="flipInY">
-                    <div class="ec-product-inner">
-                        <div class="ec-pro-image-outer">
-                            <div class="ec-pro-image">
-                                <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/11_1.jpg') }}"
-                                        alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/11_2.jpg') }}"
-                                        alt="Product" />
-                                </a>
-                                <span class="flags">
-                                    <span class="new">New</span>
-                                </span>
-                                <a href="#" class="quickview" data-link-action="quickview" title="Quick view"
-                                    data-bs-toggle="modal" data-bs-target="#ec_quickview_modal"><i
-                                        class="fi-rr-eye"></i></a>
-                                <div class="ec-pro-actions">
-                                    <a href="compare.html" class="ec-btn-group compare" title="Compare"><i
-                                            class="fi fi-rr-arrows-repeat"></i></a>
-                                    <button title="Add To Cart" class="add-to-cart"><i class="fi-rr-shopping-basket"></i>
-                                        Add To Cart</button>
-                                    <a class="ec-btn-group wishlist" title="Wishlist"><i class="fi-rr-heart"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ec-pro-content">
-                            <h5 class="ec-pro-title"><a href="product-left-sidebar.html">Classic Leather purse</a></h5>
-                            <div class="ec-pro-rating">
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star"></i>
-                            </div>
-                            <span class="ec-price">
-                                <span class="old-price">$100.00</span>
-                                <span class="new-price">$80.00</span>
-                            </span>
-                            <div class="ec-pro-option">
-                                <div class="ec-pro-color">
-                                    <span class="ec-pro-opt-label">Color</span>
-                                    <ul class="ec-opt-swatch ec-change-img">
-                                        <li class="active"><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/11_1.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/11_1.jpg') }}"
-                                                data-tooltip="Gray"><span style="background-color:#dba4ff;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/11_2.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/11_2.jpg') }}"
-                                                data-tooltip="Orange"><span style="background-color:#ff4a77;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/11_3.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/11_3.jpg') }}"
-                                                data-tooltip="Green"><span style="background-color:#c9ff55;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/11_4.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/11_4.jpg') }}"
-                                                data-tooltip="Sky Blue"><span
-                                                    style="background-color:#ffcc5e;"></span></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                @empty
+                    <div class="col-12 text-center py-5">
+                        <p class="mb-0">No products available yet.</p>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6  ec-product-content" data-animation="flipInY">
-                    <div class="ec-product-inner">
-                        <div class="ec-pro-image-outer">
-                            <div class="ec-pro-image">
-                                <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/12_1.jpg') }}"
-                                        alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/12_2.jpg') }}"
-                                        alt="Product" />
-                                </a>
-                                <span class="percentage">5%</span>
-                                <a href="#" class="quickview" data-link-action="quickview" title="Quick view"
-                                    data-bs-toggle="modal" data-bs-target="#ec_quickview_modal"><i
-                                        class="fi-rr-eye"></i></a>
-                                <div class="ec-pro-actions">
-                                    <a href="compare.html" class="ec-btn-group compare" title="Compare"><i
-                                            class="fi fi-rr-arrows-repeat"></i></a>
-                                    <button title="Add To Cart" class="add-to-cart"><i class="fi-rr-shopping-basket"></i>
-                                        Add To Cart</button>
-                                    <a class="ec-btn-group wishlist" title="Wishlist"><i class="fi-rr-heart"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ec-pro-content">
-                            <h5 class="ec-pro-title"><a href="product-left-sidebar.html">Fancy Ladies Sandal</a></h5>
-                            <div class="ec-pro-rating">
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star"></i>
-                            </div>
-                            <span class="ec-price">
-                                <span class="old-price">$100.00</span>
-                                <span class="new-price">$80.00</span>
-                            </span>
-                            <div class="ec-pro-option">
-                                <div class="ec-pro-color">
-                                    <span class="ec-pro-opt-label">Color</span>
-                                    <ul class="ec-opt-swatch ec-change-img">
-                                        <li class="active"><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/12_1.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/12_1.jpg') }}"
-                                                data-tooltip="Gray"><span style="background-color:#db9dff;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/12_2.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/12_2.jpg') }}"
-                                                data-tooltip="Orange"><span style="background-color:#00ffff;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/12_3.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/12_3.jpg') }}"
-                                                data-tooltip="Green"><span style="background-color:#ffa7f3;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/12_4.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/12_4.jpg') }}"
-                                                data-tooltip="Sky Blue"><span
-                                                    style="background-color:#89ff7e;"></span></a></li>
-                                    </ul>
-                                </div>
-                                <div class="ec-pro-size">
-                                    <span class="ec-pro-opt-label">Size</span>
-                                    <ul class="ec-opt-size">
-                                        <li class="active"><a href="#" class="ec-opt-sz" data-old="$50.00"
-                                                data-new="$40.00" data-tooltip="Small">6</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$60.00" data-new="$50.00"
-                                                data-tooltip="Medium">7</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$70.00" data-new="$60.00"
-                                                data-tooltip="Large">8</a></li>
-                                        <li><a href="#" class="ec-opt-sz" data-old="$80.00" data-new="$70.00"
-                                                data-tooltip="Extra Large">9</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6  ec-product-content" data-animation="flipInY">
-                    <div class="ec-product-inner">
-                        <div class="ec-pro-image-outer">
-                            <div class="ec-pro-image">
-                                <a href="product-left-sidebar.html" class="image">
-                                    <img class="main-image" src="{{ asset('visitor/images/product-image/13_1.jpg') }}"
-                                        alt="Product" />
-                                    <img class="hover-image" src="{{ asset('visitor/images/product-image/13_2.jpg') }}"
-                                        alt="Product" />
-                                </a>
-                                <a href="#" class="quickview" data-link-action="quickview" title="Quick view"
-                                    data-bs-toggle="modal" data-bs-target="#ec_quickview_modal"><i
-                                        class="fi-rr-eye"></i></a>
-                                <div class="ec-pro-actions">
-                                    <a href="compare.html" class="ec-btn-group compare" title="Compare"><i
-                                            class="fi fi-rr-arrows-repeat"></i></a>
-                                    <button title="Add To Cart" class="add-to-cart"><i class="fi-rr-shopping-basket"></i>
-                                        Add To Cart</button>
-                                    <a class="ec-btn-group wishlist" title="Wishlist"><i class="fi-rr-heart"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ec-pro-content">
-                            <h5 class="ec-pro-title"><a href="product-left-sidebar.html">Womens Leather Backpack</a>
-                            </h5>
-                            <div class="ec-pro-rating">
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star fill"></i>
-                                <i class="ecicon eci-star"></i>
-                            </div>
-                            <span class="ec-price">
-                                <span class="old-price">$100.00</span>
-                                <span class="new-price">$80.00</span>
-                            </span>
-                            <div class="ec-pro-option">
-                                <div class="ec-pro-color">
-                                    <span class="ec-pro-opt-label">Color</span>
-                                    <ul class="ec-opt-swatch ec-change-img">
-                                        <li class="active"><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/13_1.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/13_1.jpg') }}"
-                                                data-tooltip="Gray"><span style="background-color:#deffa4;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/13_2.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/13_2.jpg') }}"
-                                                data-tooltip="Orange"><span style="background-color:#ffcdbe;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/13_3.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/13_3.jpg') }}"
-                                                data-tooltip="Green"><span style="background-color:#ff94df;"></span></a>
-                                        </li>
-                                        <li><a href="#" class="ec-opt-clr-img"
-                                                data-src="{{ asset('visitor/images/product-image/13_4.jpg') }}"
-                                                data-src-hover="{{ asset('visitor/images/product-image/13_4.jpg') }}"
-                                                data-tooltip="Sky Blue"><span
-                                                    style="background-color:#dd9bfc;"></span></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-12 shop-all-btn"><a href="shop-left-sidebar-col-3.html">Shop All Collection</a>
-                </div>
+                @endforelse
+                <div class="col-sm-12 shop-all-btn"><a href="{{ route('visitor.products.index') }}">Shop All Collection</a></div>
             </div>
         </div>
     </section>
     <!-- New Product end -->
 
-    <!--  Category Section Start -->
-    <section class="section ec-category-section section-space-p" id="categories">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <div class="section-title">
-                        <h2 class="ec-bg-title">Our Top Collection</h2>
-                        <h2 class="ec-title">Top Categories</h2>
-                        <p class="sub-title">Browse The Collection of Top Categories</p>
+    <!-- Category Section Start -->
+    @if ($categories->isNotEmpty())
+        <section class="section ec-category-section section-space-p" id="categories">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <div class="section-title">
+                            <h2 class="ec-bg-title">Our Top Collection</h2>
+                            <h2 class="ec-title">Top Categories</h2>
+                            <p class="sub-title">Browse The Collection of Top Categories</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3">
+                        <ul class="ec-cat-tab-nav nav">
+                            @foreach ($categories as $index => $category)
+                                <li class="cat-item">
+                                    <a class="cat-link {{ $index === 0 ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-cat-{{ $category->id }}">
+                                        <div class="cat-icons">
+                                            <img class="cat-icon" src="{{ $category->image_url }}" alt="{{ $category->name }}">
+                                        </div>
+                                        <div class="cat-desc"><span>{{ $category->name }}</span><span>{{ $category->products_count }} Products</span></div>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="tab-content">
+                            @foreach ($categories as $index => $category)
+                                <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="tab-cat-{{ $category->id }}">
+                                    <div class="row">
+                                        <img src="{{ $category->image_url }}" alt="{{ $category->name }}" />
+                                    </div>
+                                    <span class="panel-overlay">
+                                        <a href="{{ route('visitor.products.category', $category->slug) }}" class="btn btn-primary">View All</a>
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="row">
-                <!--Category Nav Start -->
-                <div class="col-lg-3">
-                    <ul class="ec-cat-tab-nav nav">
-                        <li class="cat-item"><a class="cat-link active" data-bs-toggle="tab" href="#tab-cat-1">
-                                <div class="cat-icons"><img class="cat-icon"
-                                        src="{{ asset('visitor/images/icons/cat_1.png') }}" alt="cat-icon"><img
-                                        class="cat-icon-hover" src="{{ asset('visitor/images/icons/cat_1_1.png') }}"
-                                        alt="cat-icon"></div>
-                                <div class="cat-desc"><span>Clothes</span><span>440 Products</span></div>
-                            </a></li>
-                        <li class="cat-item"><a class="cat-link" data-bs-toggle="tab" href="#tab-cat-2">
-                                <div class="cat-icons"><img class="cat-icon"
-                                        src="{{ asset('visitor/images/icons/cat_2.png') }}" alt="cat-icon"><img
-                                        class="cat-icon-hover" src="{{ asset('visitor/images/icons/cat_2_1.png') }}"
-                                        alt="cat-icon"></div>
-                                <div class="cat-desc"><span>Watches</span><span>510 Products</span></div>
-                            </a></li>
-                        <li class="cat-item"><a class="cat-link" data-bs-toggle="tab" href="#tab-cat-3">
-                                <div class="cat-icons"><img class="cat-icon"
-                                        src="{{ asset('visitor/images/icons/cat_3.png') }}" alt="cat-icon"><img
-                                        class="cat-icon-hover" src="{{ asset('visitor/images/icons/cat_3_1.png') }}"
-                                        alt="cat-icon"></div>
-                                <div class="cat-desc"><span>Bags</span><span>620 Products</span></div>
-                            </a></li>
-                        <li class="cat-item"><a class="cat-link" data-bs-toggle="tab" href="#tab-cat-4">
-                                <div class="cat-icons"><img class="cat-icon"
-                                        src="{{ asset('visitor/images/icons/cat_4.png') }}" alt="cat-icon"><img
-                                        class="cat-icon-hover" src="{{ asset('visitor/images/icons/cat_4_1.png') }}"
-                                        alt="cat-icon"></div>
-                                <div class="cat-desc"><span>Shoes</span><span>320 Products</span></div>
-                            </a></li>
-                    </ul>
-
-                </div>
-                <!-- Category Nav End -->
-                <!--Category Tab Start -->
-                <div class="col-lg-9">
-                    <div class="tab-content">
-                        <!-- 1st Category tab end -->
-                        <div class="tab-pane fade show active" id="tab-cat-1">
-                            <div class="row">
-                                <img src="{{ asset('visitor/images/cat-banner/1.jpg') }}" alt="" />
-                            </div>
-                            <span class="panel-overlay">
-                                <a href="shop-left-sidebar-col-3.html" class="btn btn-primary">View All</a>
-                            </span>
-                        </div>
-                        <!-- 1st Category tab end -->
-                        <div class="tab-pane fade" id="tab-cat-2">
-                            <div class="row">
-                                <img src="{{ asset('visitor/images/cat-banner/2.jpg') }}" alt="" />
-                            </div>
-                            <span class="panel-overlay">
-                                <a href="shop-left-sidebar-col-3.html" class="btn btn-primary">View All</a>
-                            </span>
-                        </div>
-                        <!-- 2nd Category tab end -->
-                        <!-- 3rd Category tab start -->
-                        <div class="tab-pane fade" id="tab-cat-3">
-                            <div class="row">
-                                <img src="{{ asset('visitor/images/cat-banner/3.jpg') }}" alt="" />
-                            </div>
-                            <span class="panel-overlay">
-                                <a href="shop-left-sidebar-col-3.html" class="btn btn-primary">View All</a>
-                            </span>
-                        </div>
-                        <!-- 3rd Category tab end -->
-                        <!-- 4th Category tab start -->
-                        <div class="tab-pane fade" id="tab-cat-4">
-                            <div class="row">
-                                <img src="{{ asset('visitor/images/cat-banner/4.jpg') }}" alt="" />
-                            </div>
-                            <span class="panel-overlay">
-                                <a href="shop-left-sidebar-col-3.html" class="btn btn-primary">View All</a>
-                            </span>
-                        </div>
-                        <!-- 4th Category tab end -->
-                    </div>
-                    <!-- Category Tab End -->
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
+    @endif
     <!-- Category Section End -->
 
-    <!--  Feature & Special Section Start -->
-    <section class="section ec-fre-spe-section section-space-p" id="offers">
-        <div class="container">
-            <div class="row">
-                <!--  Feature Section Start -->
-                <div class="ec-fre-section col-lg-6 col-md-6 col-sm-6 margin-b-30" data-animation="slideInRight">
+    <!-- Featured Products Start -->
+    @if ($featuredProducts->isNotEmpty())
+        <section class="section ec-fre-spe-section section-space-p" id="offers">
+            <div class="container">
+                <div class="row">
                     <div class="col-md-12 text-left">
                         <div class="section-title">
                             <h2 class="ec-bg-title">Feature Items</h2>
                             <h2 class="ec-title">Feature Items</h2>
                         </div>
                     </div>
-
-                    <div class="ec-fre-products">
-                        <div class="ec-fs-product">
-                            <div class="ec-fs-pro-inner">
-                                <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
-                                    <div class="ec-fs-pro-image">
-                                        <a href="product-left-sidebar.html" class="image"><img class="main-image"
-                                                src="{{ asset('visitor/images/product-image/1_1.jpg') }}"
-                                                alt="Product" /></a>
-                                        <a href="#" class="quickview" data-link-action="quickview"
-                                            title="Quick view" data-bs-toggle="modal"
-                                            data-bs-target="#ec_quickview_modal"><i class="fi-rr-eye"></i></a>
-                                    </div>
-                                </div>
-                                <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
-                                    <h5 class="ec-fs-pro-title"><a href="product-left-sidebar.html">Baby Toy
-                                            Teddybear</a>
-                                    </h5>
-                                    <div class="ec-fs-pro-rating">
-                                        <span class="ec-fs-rating-icon">
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star"></i>
-                                        </span>
-                                        <span class="ec-fs-rating-text">4 Review</span>
-                                    </div>
-                                    <div class="ec-fs-price">
-                                        <span class="old-price">$549.00</span>
-                                        <span class="new-price">$480.00</span>
-                                    </div>
-
-                                    <div class="countdowntimer"><span id="ec-fs-count-1"></span></div>
-                                    <div class="ec-fs-pro-desc">Lorem Ipsum is simply dummy text the printing and
-                                        typesetting.
-                                    </div>
-                                    <div class="ec-fs-pro-book">Total Booking: <span>25</span></div>
-                                    <div class="ec-fs-pro-btn">
-                                        <a href="#" class="btn btn-lg btn-secondary">Remind Me</a>
-                                        <a href="#" class="btn btn-lg btn-primary">Book Now</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ec-fs-product">
-                            <div class="ec-fs-pro-inner">
-                                <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
-                                    <div class="ec-fs-pro-image">
-                                        <a href="product-left-sidebar.html" class="image"><img class="main-image"
-                                                src="{{ asset('visitor/images/product-image/3_1.jpg') }}"
-                                                alt="Product" /></a>
-                                        <a href="#" class="quickview" data-link-action="quickview"
-                                            title="Quick view" data-bs-toggle="modal"
-                                            data-bs-target="#ec_quickview_modal"><i class="fi-rr-eye"></i></a>
-                                    </div>
-                                </div>
-                                <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
-                                    <h5 class="ec-fs-pro-title"><a href="product-left-sidebar.html">Leather Purse For
-                                            Women</a>
-                                    </h5>
-                                    <div class="ec-fs-pro-rating">
-                                        <span class="ec-fs-rating-icon">
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                        </span>
-                                        <span class="ec-fs-rating-text">4 Review</span>
-                                    </div>
-                                    <div class="ec-fs-price">
-                                        <span class="old-price">$300.00</span>
-                                        <span class="new-price">$250.00</span>
-                                    </div>
-
-                                    <div class="countdowntimer"><span id="ec-fs-count-2"></span></div>
-                                    <div class="ec-fs-pro-desc">Lorem Ipsum is simply dummy text the printing and
-                                        typesetting.
-                                    </div>
-                                    <div class="ec-fs-pro-book">Total Booking: <span>25</span></div>
-                                    <div class="ec-fs-pro-btn">
-                                        <a href="#" class="btn btn-lg btn-secondary">Remind Me</a>
-                                        <a href="#" class="btn btn-lg btn-primary">Book Now</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-                <!--  Feature Section End -->
-                <!--  Special Section Start -->
-                <div class="ec-spe-section col-lg-6 col-md-6 col-sm-6" data-animation="slideInLeft">
-                    <div class="col-md-12 text-left">
-                        <div class="section-title">
-                            <h2 class="ec-bg-title">Limited Time Offer</h2>
-                            <h2 class="ec-title">Limited Time Offer</h2>
-                        </div>
-                    </div>
-
-                    <div class="ec-spe-products">
-                        <div class="ec-fs-product">
-                            <div class="ec-fs-pro-inner">
-                                <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
-                                    <div class="ec-fs-pro-image">
-                                        <a href="product-left-sidebar.html" class="image"><img class="main-image"
-                                                src="{{ asset('visitor/images/product-image/8_1.jpg') }}"
-                                                alt="Product" /></a>
-                                        <a href="#" class="quickview" data-link-action="quickview"
-                                            title="Quick view" data-bs-toggle="modal"
-                                            data-bs-target="#ec_quickview_modal"><i class="fi-rr-eye"></i></a>
+                <div class="row">
+                    @foreach ($featuredProducts->take(4) as $product)
+                        <div class="col-lg-3 col-md-6 col-sm-6 mb-6">
+                            <div class="ec-product-inner">
+                                <div class="ec-pro-image-outer">
+                                    <div class="ec-pro-image">
+                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
+                                            <img class="main-image"
+                                                src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}"
+                                                alt="{{ $product->name }}" />
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
-                                    <h5 class="ec-fs-pro-title"><a href="product-left-sidebar.html">Smart watch
-                                            Firebolt</a>
-                                    </h5>
-                                    <div class="ec-fs-pro-rating">
-                                        <span class="ec-fs-rating-icon">
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star"></i>
-                                        </span>
-                                        <span class="ec-fs-rating-text">4 Review</span>
-                                    </div>
-                                    <div class="ec-fs-price">
-                                        <span class="old-price">$200.00</span>
-                                        <span class="new-price">$180.00</span>
-                                    </div>
-                                    <div class="countdowntimer"><span id="ec-fs-count-3"></span></div>
-                                    <div class="ec-fs-pro-desc">Lorem Ipsum is simply dummy text the printing and
-                                        typesetting.
-                                    </div>
-                                    <div class="ec-fs-pro-book">Total Booking: <span>25</span></div>
-                                    <div class="ec-fs-pro-btn">
-                                        <a href="#" class="btn btn-lg btn-secondary">Remind Me</a>
-                                        <a href="#" class="btn btn-lg btn-primary">Book Now</a>
-                                    </div>
+                                <div class="ec-pro-content">
+                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                    <span class="ec-price">
+                                        <span class="new-price">{{ $product->price_range_label }}</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="ec-fs-product">
-                            <div class="ec-fs-pro-inner">
-                                <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
-                                    <div class="ec-fs-pro-image">
-                                        <a href="product-left-sidebar.html" class="image"><img class="main-image"
-                                                src="{{ asset('visitor/images/product-image/10_1.jpg') }}"
-                                                alt="Product" /></a>
-                                        <a href="#" class="quickview" data-link-action="quickview"
-                                            title="Quick view" data-bs-toggle="modal"
-                                            data-bs-target="#ec_quickview_modal"><i class="fi-rr-eye"></i></a>
-                                    </div>
-                                </div>
-                                <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
-                                    <h5 class="ec-fs-pro-title"><a href="product-left-sidebar.html">Casual Shoes Men</a>
-                                    </h5>
-                                    <div class="ec-fs-pro-rating">
-                                        <span class="ec-fs-rating-icon">
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                            <i class="ecicon eci-star fill"></i>
-                                        </span>
-                                        <span class="ec-fs-rating-text">4 Review</span>
-                                    </div>
-                                    <div class="ec-fs-price">
-                                        <span class="old-price">$120.00</span>
-                                        <span class="new-price">$95.00</span>
-                                    </div>
-
-                                    <div class="countdowntimer"><span id="ec-fs-count-4"></span></div>
-                                    <div class="ec-fs-pro-desc">Lorem Ipsum is simply dummy text the printing and
-                                        typesetting.
-                                    </div>
-                                    <div class="ec-fs-pro-book">Total Booking: <span>25</span></div>
-                                    <div class="ec-fs-pro-btn">
-                                        <a href="#" class="btn btn-lg btn-secondary">Remind Me</a>
-                                        <a href="#" class="btn btn-lg btn-primary">Book Now</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-                <!--  Special Section End -->
             </div>
-        </div>
-    </section>
-    <!-- Feature & Special Section End -->
+        </section>
+    @endif
+    <!-- Featured Products End -->
+
+    <!-- Top Rated Start -->
+    @if ($topRatedProducts->isNotEmpty())
+        <section class="section ec-new-product section-space-p">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <div class="section-title">
+                            <h2 class="ec-bg-title">Top Rated</h2>
+                            <h2 class="ec-title">Top Rated Products</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    @foreach ($topRatedProducts as $product)
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-6">
+                            <div class="ec-product-inner">
+                                <div class="ec-pro-image-outer">
+                                    <div class="ec-pro-image">
+                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
+                                            <img class="main-image"
+                                                src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/2_1.jpg') }}"
+                                                alt="{{ $product->name }}" />
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="ec-pro-content">
+                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                    <div class="ec-pro-rating">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                        @endfor
+                                    </div>
+                                    <span class="ec-price"><span class="new-price">${{ number_format($product->final_price, 2) }}</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+    <!-- Top Rated End -->
 
     <!--  services Section Start -->
     <section class="section ec-services-section section-space-p" id="services">
@@ -672,45 +278,37 @@
             <div class="row">
                 <div class="ec_ser_content ec_ser_content_1 col-sm-12 col-md-6 col-lg-3" data-animation="zoomIn">
                     <div class="ec_ser_inner">
-                        <div class="ec-service-image">
-                            <i class="fi fi-ts-truck-moving"></i>
-                        </div>
+                        <div class="ec-service-image"><i class="fi fi-ts-truck-moving"></i></div>
                         <div class="ec-service-desc">
                             <h2>Free Shipping</h2>
-                            <p>Free shipping on all US order or order above $200</p>
+                            <p>{{ setting('shipping', 'shipping_note', 'Free shipping on eligible orders') }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="ec_ser_content ec_ser_content_2 col-sm-12 col-md-6 col-lg-3" data-animation="zoomIn">
                     <div class="ec_ser_inner">
-                        <div class="ec-service-image">
-                            <i class="fi fi-ts-hand-holding-seeding"></i>
-                        </div>
+                        <div class="ec-service-image"><i class="fi fi-ts-hand-holding-seeding"></i></div>
                         <div class="ec-service-desc">
                             <h2>24X7 Support</h2>
-                            <p>Contact us 24 hours a day, 7 days a week</p>
+                            <p>Contact us anytime, we're here to help</p>
                         </div>
                     </div>
                 </div>
                 <div class="ec_ser_content ec_ser_content_3 col-sm-12 col-md-6 col-lg-3" data-animation="zoomIn">
                     <div class="ec_ser_inner">
-                        <div class="ec-service-image">
-                            <i class="fi fi-ts-badge-percent"></i>
-                        </div>
+                        <div class="ec-service-image"><i class="fi fi-ts-badge-percent"></i></div>
                         <div class="ec-service-desc">
-                            <h2>30 Days Return</h2>
-                            <p>Simply return it within 30 days for an exchange</p>
+                            <h2>Easy Returns</h2>
+                            <p>Read our <a href="{{ route('visitor.return-refund-policy') }}">Return Policy</a></p>
                         </div>
                     </div>
                 </div>
                 <div class="ec_ser_content ec_ser_content_4 col-sm-12 col-md-6 col-lg-3" data-animation="zoomIn">
                     <div class="ec_ser_inner">
-                        <div class="ec-service-image">
-                            <i class="fi fi-ts-donate"></i>
-                        </div>
+                        <div class="ec-service-image"><i class="fi fi-ts-donate"></i></div>
                         <div class="ec-service-desc">
-                            <h2>Payment Secure</h2>
-                            <p>Contact us 24 hours a day, 7 days a week</p>
+                            <h2>Secure Payment</h2>
+                            <p>Cash on delivery and more, safely handled</p>
                         </div>
                     </div>
                 </div>
@@ -718,143 +316,6 @@
         </div>
     </section>
     <!--services Section End -->
-
-    <!-- ec testmonial Start -->
-    <section class="section ec-test-section section-space-ptb-100 section-space-m" id="reviews">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <div class="section-title mb-0">
-                        <h2 class="ec-bg-title">Testimonial</h2>
-                        <h2 class="ec-title">Client Review</h2>
-                        <p class="sub-title mb-3">What say client about us</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="ec-test-outer">
-                    <ul id="ec-testimonial-slider">
-                        <li class="ec-test-item">
-                            <i class="fi-rr-quote-right top"></i>
-                            <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="{{ asset('visitor/images/testimonial/1.jpg') }}" /></div>
-                                <div class="ec-test-content">
-                                    <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
-                                        typesetting industry. Lorem Ipsum has been the industry's standard dummy text
-                                        ever since the 1500s, when an unknown printer took a galley of type and
-                                        scrambled it to make a type specimen</div>
-                                    <div class="ec-test-name">John Doe</div>
-                                    <div class="ec-test-designation">General Manager</div>
-                                    <div class="ec-test-rating">
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <i class="fi-rr-quote-right bottom"></i>
-                        </li>
-                        <li class="ec-test-item ">
-                            <i class="fi-rr-quote-right top"></i>
-                            <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="{{ asset('visitor/images/testimonial/2.jpg') }}" /></div>
-                                <div class="ec-test-content">
-                                    <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
-                                        typesetting industry. Lorem Ipsum has been the industry's standard dummy text
-                                        ever since the 1500s, when an unknown printer took a galley of type and
-                                        scrambled it to make a type specimen</div>
-                                    <div class="ec-test-name">John Doe</div>
-                                    <div class="ec-test-designation">General Manager</div>
-                                    <div class="ec-test-rating">
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <i class="fi-rr-quote-right bottom"></i>
-                        </li>
-                        <li class="ec-test-item">
-                            <i class="fi-rr-quote-right top"></i>
-                            <div class="ec-test-inner">
-                                <div class="ec-test-img"><img alt="testimonial" title="testimonial"
-                                        src="{{ asset('visitor/images/testimonial/3.jpg') }}" /></div>
-                                <div class="ec-test-content">
-                                    <div class="ec-test-desc">Lorem Ipsum is simply dummy text of the printing and
-                                        typesetting industry. Lorem Ipsum has been the industry's standard dummy text
-                                        ever since the 1500s, when an unknown printer took a galley of type and
-                                        scrambled it to make a type specimen</div>
-                                    <div class="ec-test-name">John Doe</div>
-                                    <div class="ec-test-designation">General Manager</div>
-                                    <div class="ec-test-rating">
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                        <i class="ecicon eci-star fill"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <i class="fi-rr-quote-right bottom"></i>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- ec testmonial end -->
-
-    <!-- Ec Brand Section Start -->
-    <section class="section ec-brand-area section-space-p">
-        <h2 class="d-none">Brand</h2>
-        <div class="container">
-            <div class="row">
-                <div class="ec-brand-outer">
-                    <ul id="ec-brand-slider">
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/1.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/2.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/3.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/4.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/5.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/6.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/7.png') }}" /></a></div>
-                        </li>
-                        <li class="ec-brand-item" data-animation="zoomIn">
-                            <div class="ec-brand-img"><a href="#"><img alt="brand" title="brand"
-                                        src="{{ asset('visitor/images/brand-image/8.png') }}" /></a></div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Ec Brand Section End -->
 @endsection
 
 @section('scripts')
