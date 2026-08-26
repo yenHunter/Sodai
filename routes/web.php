@@ -22,22 +22,6 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
-Route::get('privacy-policy', function () {
-    return view('visitor.pages.privacy-policy');
-})->name('visitor.privacy-policy');
-
-Route::get('shipping-policy', function () {
-    return view('visitor.pages.shipping-policy');
-})->name('visitor.shipping-policy');
-
-Route::get('terms-conditions', function () {
-    return view('visitor.pages.terms-conditions');
-})->name('visitor.terms-conditions');
-
-Route::get('return-refund-policy', function () {
-    return view('visitor.pages.return-refund-policy');
-})->name('visitor.return-refund-policy');
-
 Route::get('faq', function () {
     return view('visitor.pages.faq');
 })->name('visitor.faq');
