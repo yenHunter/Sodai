@@ -5,6 +5,7 @@ use App\Http\Controllers\Visitor\AddressController;
 use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\CartController;
 use App\Http\Controllers\Visitor\CheckoutController;
+use App\Http\Controllers\Visitor\CmsPageController;
 use App\Http\Controllers\Visitor\HomeController;
 use App\Http\Controllers\Visitor\OrderConfirmController;
 use App\Http\Controllers\Visitor\OrderController;
@@ -27,6 +28,12 @@ Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.s
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
 
 Route::get('/order-confirm', [OrderConfirmController::class, 'show'])->name('order-confirm');
+
+// ── CMS Static Pages (public) ──
+Route::get('/privacy-policy', [CmsPageController::class, 'show'])->name('privacy-policy')->defaults('slug', 'privacy-policy');
+Route::get('/terms-conditions', [CmsPageController::class, 'show'])->name('terms-conditions')->defaults('slug', 'terms-conditions');
+Route::get('/shipping-policy', [CmsPageController::class, 'show'])->name('shipping-policy')->defaults('slug', 'shipping-policy');
+Route::get('/return-refund-policy', [CmsPageController::class, 'show'])->name('return-refund-policy')->defaults('slug', 'return-refund-policy');
 
 // ── Cart (guest or authenticated — uses session_id for guests) ──
 Route::prefix('cart')->name('cart.')->group(function () {

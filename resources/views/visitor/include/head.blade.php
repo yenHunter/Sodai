@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
 <title>Sodai - {{ $title }}</title>
+@if (isset($page) && $page->meta_description)
+    <meta name="description" content="{{ $page->meta_description }}">
+@endif
 <meta name="keywords"
     content="apparel, catalog, clean, ecommerce, ecommerce HTML, electronics, fashion, html eCommerce, html store, minimal, multipurpose, multipurpose ecommerce, online store, responsive ecommerce template, shops" />
 <meta name="description" content="Best ecommerce html template for single and multi vendor store.">
