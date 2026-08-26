@@ -22,10 +22,6 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
-Route::get('order-confirm', function () {
-    return view('visitor.pages.order-confirm');
-})->name('visitor.order-confirm');
-
 Route::get('privacy-policy', function () {
     return view('visitor.pages.privacy-policy');
 })->name('visitor.privacy-policy');
@@ -49,10 +45,6 @@ Route::get('faq', function () {
 Route::get('offers', function () {
     return view('visitor.pages.offers');
 })->name('visitor.offers');
-
-Route::get('checkout', function () {
-    return view('visitor.pages.checkout');
-})->name('visitor.checkout');
 
 Route::get('/widgets', function () {
     return view('admin.widgets');

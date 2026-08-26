@@ -4,11 +4,13 @@ use App\Http\Controllers\Visitor\AccountController;
 use App\Http\Controllers\Visitor\AddressController;
 use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\CartController;
+use App\Http\Controllers\Visitor\CheckoutController;
+use App\Http\Controllers\Visitor\HomeController;
+use App\Http\Controllers\Visitor\OrderConfirmController;
 use App\Http\Controllers\Visitor\OrderController;
 use App\Http\Controllers\Visitor\ProductController;
 use App\Http\Controllers\Visitor\ReviewController;
 use App\Http\Controllers\Visitor\WishlistController;
-use App\Http\Controllers\Visitor\HomeController;
 use Illuminate\Support\Facades\Route;
 
 // ── Landing Page ──
@@ -18,6 +20,13 @@ Route::get('/', [HomeController::class, 'index'])->name('index');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/category/{category:slug}', [ProductController::class, 'byCategory'])->name('products.category');
+
+// ── Checkout (guest or authenticated, gated by allow_guest_checkout setting) ──
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
+
+Route::get('/order-confirm', [OrderConfirmController::class, 'show'])->name('order-confirm');
 
 // ── Cart (guest or authenticated — uses session_id for guests) ──
 Route::prefix('cart')->name('cart.')->group(function () {
