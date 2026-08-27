@@ -1,7 +1,10 @@
 @extends('admin.include.vertical', ['title' => 'Company Settings'])
 
 @section('content')
-    @include('admin.include.partials.page-title', ['subtitle' => 'Settings', 'title' => 'Company Information'])
+    @include('admin.include.partials.page-title', [
+        'subtitle' => 'Settings',
+        'title' => 'Company Information',
+    ])
 
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-3">
@@ -50,7 +53,9 @@
                                 <input type="text" class="form-control @error('name') is-invalid @enderror"
                                     id="name" name="name" value="{{ old('name', $settings['name'] ?? '') }}"
                                     required>
-                                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold" for="tagline">
@@ -68,7 +73,9 @@
                                 <input type="email" class="form-control @error('email') is-invalid @enderror"
                                     id="email" name="email" value="{{ old('email', $settings['email'] ?? '') }}"
                                     required>
-                                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold" for="phone">
@@ -77,7 +84,9 @@
                                 <input type="text" class="form-control @error('phone') is-invalid @enderror"
                                     id="phone" name="phone" value="{{ old('phone', $settings['phone'] ?? '') }}"
                                     required>
-                                @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @error('phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold" for="whatsapp">
@@ -91,9 +100,11 @@
                                 <label class="form-label fw-semibold" for="address">
                                     Address <span class="text-danger">*</span>
                                 </label>
-                                <textarea class="form-control @error('address') is-invalid @enderror" id="address"
-                                    name="address" rows="2" required>{{ old('address', $settings['address'] ?? '') }}</textarea>
-                                @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2"
+                                    required>{{ old('address', $settings['address'] ?? '') }}</textarea>
+                                @error('address')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" for="city">
@@ -108,6 +119,39 @@
                                 </label>
                                 <input type="text" class="form-control" id="country" name="country"
                                     value="{{ old('country', $settings['country'] ?? 'Bangladesh') }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Location Map</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="map_embed_url">
+                                Google Maps Embed URL <small class="text-muted fw-normal">(Optional)</small>
+                            </label>
+                            <input type="url" class="form-control @error('map_embed_url') is-invalid @enderror"
+                                id="map_embed_url" name="map_embed_url"
+                                value="{{ old('map_embed_url', $settings['map_embed_url'] ?? '') }}"
+                                placeholder="https://www.google.com/maps/embed?pb=...">
+                            @error('map_embed_url')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                In Google Maps: search your location → Share → Embed a map → copy only the
+                                <code>src="..."</code> value from the iframe code and paste it here.
+                            </div>
+                        </div>
+
+                        <div id="mapPreviewWrapper"
+                            class="{{ empty($settings['map_embed_url'] ?? null) ? 'd-none' : '' }}">
+                            <label class="form-label fw-semibold">Preview</label>
+                            <div class="ratio ratio-16x9 border rounded overflow-hidden">
+                                <iframe id="mapPreviewFrame" src="{{ $settings['map_embed_url'] ?? '' }}"
+                                    style="border:0;" loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"></iframe>
                             </div>
                         </div>
                     </div>
@@ -133,7 +177,9 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('currency')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @error('currency')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">
@@ -167,7 +213,9 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('timezone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @error('timezone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                 </div>

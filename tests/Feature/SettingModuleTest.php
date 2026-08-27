@@ -389,4 +389,45 @@ class SettingModuleTest extends TestCase
 
         $this->assertNull(Setting::get('seo', 'og_image'));
     }
+
+    public function test_admin_can_save_google_maps_embed_url(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.company.update'), [
+                'name' => 'Sodai',
+                'email' => 'hello@sodai.com',
+                'phone' => '+8801700000000',
+                'address' => 'Dhaka, Bangladesh',
+                'currency' => 'BDT',
+                'currency_symbol_position' => 'before',
+                'timezone' => 'Asia/Dhaka',
+                'map_embed_url' => 'https://www.google.com/maps/embed?pb=!1m14!1m12',
+            ])
+            ->assertRedirect(route('admin.settings.company'));
+
+        $this->assertEquals(
+            'https://www.google.com/maps/embed?pb=!1m14!1m12',
+            Setting::get('company', 'map_embed_url')
+        );
+    }
+
+    public function test_map_embed_url_must_be_a_google_maps_embed_link(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.company.update'), [
+                'name' => 'Sodai',
+                'email' => 'hello@sodai.com',
+                'phone' => '+8801700000000',
+                'address' => 'Dhaka, Bangladesh',
+                'currency' => 'BDT',
+                'currency_symbol_position' => 'before',
+                'timezone' => 'Asia/Dhaka',
+                'map_embed_url' => 'https://evil.example.com/not-a-map',
+            ])
+            ->assertSessionHasErrors('map_embed_url');
+    }
 }

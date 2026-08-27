@@ -26,6 +26,7 @@ class UpdateCompanyRequest extends FormRequest
             'currency' => ['required', 'string', 'max:5'],
             'currency_symbol_position' => ['required', 'in:before,after'],
             'timezone' => ['required', 'string', 'max:50'],
+            'map_embed_url' => ['nullable', 'url', 'max:1000', 'starts_with:https://www.google.com/maps/embed'],
         ];
     }
 
@@ -37,6 +38,7 @@ class UpdateCompanyRequest extends FormRequest
             'phone.required' => 'Support phone is required.',
             'address.required' => 'Company address is required.',
             'currency.required' => 'Currency code is required.',
+            'map_embed_url.starts_with' => 'Paste a valid Google Maps embed URL (starts with https://www.google.com/maps/embed).',
         ];
     }
 }

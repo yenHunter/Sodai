@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFormSubmitStates();
     initOperationAreaControls();
     initShippingPreview();
+    initMapEmbedPreview();
 });
 
 // ─────────────────────────────────────────────
@@ -112,8 +113,8 @@ function initOperationAreaControls() {
     if (!grid) return;
 
     const selectAllBtn = document.getElementById('selectAllAreas');
-    const clearAllBtn  = document.getElementById('clearAllAreas');
-    const searchInput  = document.getElementById('areaSearchInput');
+    const clearAllBtn = document.getElementById('clearAllAreas');
+    const searchInput = document.getElementById('areaSearchInput');
 
     if (selectAllBtn) {
         selectAllBtn.addEventListener('click', () => {
@@ -148,9 +149,9 @@ function initOperationAreaControls() {
 // ─────────────────────────────────────────────
 
 function initShippingPreview() {
-    const cityInput     = document.getElementById('previewCity');
+    const cityInput = document.getElementById('previewCity');
     const subtotalInput = document.getElementById('previewSubtotal');
-    const resultBox      = document.getElementById('previewResult');
+    const resultBox = document.getElementById('previewResult');
 
     if (!cityInput || !resultBox || typeof window.__shippingSettingsInitial === 'undefined') return;
 
@@ -165,14 +166,14 @@ function initShippingPreview() {
     const recalculate = () => {
         const initial = window.__shippingSettingsInitial;
 
-        const insideCharge  = parseFloat(document.getElementById('inside_area_charge')?.value) || initial.insideCharge;
+        const insideCharge = parseFloat(document.getElementById('inside_area_charge')?.value) || initial.insideCharge;
         const outsideCharge = parseFloat(document.getElementById('outside_area_charge')?.value) || initial.outsideCharge;
-        const freeEnabled    = document.getElementById('enable_free_shipping')?.checked ?? initial.freeShippingEnabled;
-        const freeThreshold  = parseFloat(document.getElementById('free_shipping_threshold')?.value) || initial.freeShippingThreshold;
+        const freeEnabled = document.getElementById('enable_free_shipping')?.checked ?? initial.freeShippingEnabled;
+        const freeThreshold = parseFloat(document.getElementById('free_shipping_threshold')?.value) || initial.freeShippingThreshold;
 
-        const city     = cityInput.value.trim();
+        const city = cityInput.value.trim();
         const subtotal = parseFloat(subtotalInput.value) || 0;
-        const areas    = getCheckedAreas();
+        const areas = getCheckedAreas();
 
         if (!city) {
             resultBox.className = 'alert alert-secondary mb-0';
@@ -207,4 +208,37 @@ function initShippingPreview() {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', recalculate);
     });
+}
+
+// ─────────────────────────────────────────────
+// GOOGLE MAP EMBED LIVE PREVIEW (Company page)
+// ─────────────────────────────────────────────
+
+function initMapEmbedPreview() {
+    const input = document.getElementById('map_embed_url');
+    const wrapper = document.getElementById('mapPreviewWrapper');
+    const frame = document.getElementById('mapPreviewFrame');
+
+    if (!input || !wrapper || !frame) return;
+
+    const debounced = debounce(() => {
+        const url = input.value.trim();
+
+        if (url.startsWith('https://www.google.com/maps/embed')) {
+            frame.src = url;
+            wrapper.classList.remove('d-none');
+        } else {
+            wrapper.classList.add('d-none');
+        }
+    }, 400);
+
+    input.addEventListener('input', debounced);
+}
+
+function debounce(fn, wait) {
+    let t;
+    return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+    };
 }
