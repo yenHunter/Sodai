@@ -10,16 +10,23 @@ class CmsPage extends Model
     use HasFactory;
 
     public const SLUGS = [
+        'about',
         'privacy-policy',
         'terms-conditions',
         'shipping-policy',
         'return-refund-policy',
     ];
 
+    // Pages that show an image field on the admin edit screen.
+    // Policy pages don't need one; keeping this explicit avoids an
+    // unused upload control cluttering those forms.
+    public const SLUGS_WITH_IMAGE = ['about'];
+
     protected $fillable = [
         'slug',
         'title',
         'content',
+        'image',
         'meta_title',
         'meta_description',
         'updated_by',
@@ -35,12 +42,27 @@ class CmsPage extends Model
     }
 
     // ─────────────────────────────────────────────
+    // ACCESSORS
+    // ─────────────────────────────────────────────
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset('storage/'.$this->image) : null;
+    }
+
+    public function supportsImage(): bool
+    {
+        return in_array($this->slug, self::SLUGS_WITH_IMAGE, true);
+    }
+
+    // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
 
     public static function defaultTitleFor(string $slug): string
     {
         return match ($slug) {
+            'about' => 'About Us',
             'privacy-policy' => 'Privacy Policy',
             'terms-conditions' => 'Terms & Conditions',
             'shipping-policy' => 'Shipping Policy',

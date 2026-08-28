@@ -1,4 +1,4 @@
-@extends('visitor.layout.app', ['title' => 'About Us', 'bodyClass' => 'aboutus_page'])
+@extends('visitor.layout.app', ['title' => $page->meta_title ?: $page->title, 'bodyClass' => 'aboutus_page'])
 
 @section('styles')
 @endsection
@@ -11,13 +11,13 @@
                 <div class="col-12">
                     <div class="row ec_breadcrumb_inner">
                         <div class="col-md-6 col-sm-12">
-                            <h2 class="ec-breadcrumb-title">About Us</h2>
+                            <h2 class="ec-breadcrumb-title">{{ $page->title }}</h2>
                         </div>
                         <div class="col-md-6 col-sm-12">
                             <!-- ec-breadcrumb-list start -->
                             <ul class="ec-breadcrumb-list">
-                                <li class="ec-breadcrumb-item"><a href="index.html">Home</a></li>
-                                <li class="ec-breadcrumb-item active">About Us</li>
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
+                                <li class="ec-breadcrumb-item active">{{ $page->title }}</li>
                             </ul>
                             <!-- ec-breadcrumb-list end -->
                         </div>
@@ -33,8 +33,8 @@
             <div class="row">
                 <div class="col-md-12 text-center">
                     <div class="section-title">
-                        <h2 class="ec-bg-title">About Us</h2>
-                        <h2 class="ec-title">About Us</h2>
+                        <h2 class="ec-bg-title">{{ $page->title }}</h2>
+                        <h2 class="ec-title">{{ $page->title }}</h2>
                         <p class="sub-title mb-3">About our business Firm</p>
                     </div>
                 </div>
@@ -42,27 +42,31 @@
                     <div class="row">
                         <div class="col-md-6 ec-cms-block ec-abcms-block text-center">
                             <div class="ec-cms-block-inner">
-                                <img class="a-img" src="{{ asset('visitor/images/offer-image/1.jpg') }}" alt="about">
+                                <img class="a-img"
+                                    src="{{ $page->image_url ?: asset('visitor/images/offer-image/1.jpg') }}"
+                                    alt="{{ $page->title }}">
                             </div>
                         </div>
                         <div class="col-md-6 ec-cms-block ec-abcms-block text-center">
                             <div class="ec-cms-block-inner">
-                                <h3 class="ec-cms-block-title">What is the ekka?</h3>
-                                <p>Electronic typesetting text of the printing and typesetting industry. when an unknown
-                                    printer took a galley of type
-                                    and scrambled it to make a type specimen book. Lorem Ipsum is
-                                    simply dutmmy text ever since the 1500s, It has survived not only,
-                                    but also the leap into electronic typesetting.</p>
-                                <p>Lorem Ipsum is simply dummy text of the printing. It has survived not only five
-                                    centuries,
-                                    but also the leap into electronic typesetting.</p>
-                                <p>Also the leap into electronic typesetting printing and typesetting industry. It has
-                                    survived not only five centuries,
-                                    but also the leap into electronic typesetting, when an unknown printer took a galley
-                                    of type
-                                    and scrambled it to make a type specimen book. It has survived not only five
-                                    centuries,
-                                    but also the leap into electronic typesetting, remaining essentially unchanged.</p>
+                                @if ($page->content)
+                                    {!! $page->content !!}
+                                @else
+                                    <h3 class="ec-cms-block-title">What is the ekka?</h3>
+                                    <p>
+                                        Electronic typesetting text of the printing and typesetting industry. when an
+                                        unknown printer took a galley of type and scrambled it to make a type specimen book.
+                                        Lorem Ipsum is simply dutmmy text ever since the 1500s, It has survived not only,
+                                        but also the leap into electronic typesetting.</p>
+                                    <p>Lorem Ipsum is simply dummy text of the printing. It has survived not only five
+                                        centuries, but also the leap into electronic typesetting.</p>
+                                    <p>Also the leap into electronic typesetting printing and typesetting industry. It has
+                                        survived not only five centuries, but also the leap into electronic typesetting,
+                                        when an unknown printer took a galley of type and scrambled it to make a type
+                                        specimen book. It has survived not only five centuries, but also the leap into
+                                        electronic typesetting, remaining essentially unchanged.
+                                    </p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -71,6 +75,7 @@
         </div>
     </section>
 
+    {{-- Testimonial / Services / Brands sections unchanged — static template content --}}
     <!-- ec testmonial Start -->
     <section class="section ec-test-section section-space-ptb-100 section-space-m" id="reviews">
         <div class="container">
@@ -228,9 +233,9 @@
             <div class="row">
                 <div class="col-md-12 text-center">
                     <div class="section-title">
-                        <h2 class="ec-bg-title">Instagram Feed</h2>
-                        <h2 class="ec-title">Instagram Feed</h2>
-                        <p class="sub-title">Share your store with us</p>
+                        <h2 class="ec-bg-title">Brands</h2>
+                        <h2 class="ec-title">Brands</h2>
+                        <p class="sub-title">Browse Our Top Brands</p>
                     </div>
                 </div>
             </div>
@@ -239,7 +244,6 @@
             <div class="ec-insta-outer">
                 <div class="container">
                     <div class="insta-auto">
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -247,7 +251,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -255,7 +258,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -263,7 +265,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -271,8 +272,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -280,8 +279,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -289,8 +286,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
-                        <!-- instagram item -->
                         <div class="ec-insta-item">
                             <div class="ec-insta-inner">
                                 <a href="#" target="_blank">
@@ -298,8 +293,6 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- instagram item -->
-
                     </div>
                 </div>
             </div>

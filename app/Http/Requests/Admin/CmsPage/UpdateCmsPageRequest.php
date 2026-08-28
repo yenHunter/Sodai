@@ -17,6 +17,8 @@ class UpdateCmsPageRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'remove_image' => ['nullable'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
@@ -26,6 +28,9 @@ class UpdateCmsPageRequest extends FormRequest
     {
         return [
             'title.required' => 'Page title is required.',
+            'image.image' => 'File must be an image.',
+            'image.mimes' => 'Image must be jpeg, jpg, png or webp.',
+            'image.max' => 'Image size cannot exceed 2MB.',
         ];
     }
 }

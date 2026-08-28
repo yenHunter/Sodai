@@ -22,8 +22,6 @@ function initLoginForm() {
         return;
     }
 
-    console.log('reCAPTCHA: Form initialized with site key:', siteKey);
-
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -32,19 +30,15 @@ function initLoginForm() {
 
         // Execute reCAPTCHA v3
         grecaptcha.ready(function () {
-            console.log('reCAPTCHA: grecaptcha ready, executing...');
             grecaptcha.execute(siteKey, { action: 'admin_login' })
                 .then(function (token) {
-                    console.log('reCAPTCHA: Token received, length:', token.length);
                     // Inject token into hidden field
                     document.getElementById('g-recaptcha-response').value = token;
-                    console.log('reCAPTCHA: Token injected into form');
 
                     // Submit form
                     form.submit();
                 })
                 .catch(function (error) {
-                    console.error('reCAPTCHA: Error executing', error);
                     setLoadingState(submitBtn, false);
                     showAlert('reCAPTCHA failed to load. Please refresh the page.');
                 });

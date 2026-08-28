@@ -165,39 +165,6 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a aria-controls="pages" aria-expanded="false" class="side-nav-link" data-bs-toggle="collapse"
-                        href="#pages">
-                        <span class="menu-icon"><i data-lucide="book"></i></span>
-                        <span class="menu-text" data-lang="pages">Pages</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse" id="pages">
-                        <ul class="sub-menu">
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="#">
-                                    <span class="menu-text" data-lang="apps-email-inbox">Privacy Policy</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="#">
-                                    <span class="menu-text" data-lang="apps-email-details">Terms & Conditions</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="#">
-                                    <span class="menu-text" data-lang="apps-email-compose">Shipping Policy</span>
-                                </a>
-                            </li>
-                            <li class="side-nav-item">
-                                <a class="side-nav-link" href="#">
-                                    <span class="menu-text" data-lang="apps-email-compose">Return & Refund
-                                        Policy</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                <li class="side-nav-item">
                     <a class="side-nav-link" href="#">
                         <span class="menu-icon"><i data-lucide="shield-question-mark"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-banners">FAQ</span>

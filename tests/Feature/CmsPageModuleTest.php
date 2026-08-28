@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\CmsPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
@@ -21,18 +23,18 @@ class CmsPageModuleTest extends TestCase
             ->assertViewIs('admin.cms.pages.index');
     }
 
-    public function test_index_lists_all_four_canonical_pages_even_if_never_edited(): void
+    public function test_index_lists_all_canonical_pages_even_if_never_edited(): void
     {
         $admin = $this->createAdminWithPermissions(['cms.view']);
 
         $response = $this->actingAsAdmin($admin)->get(route('admin.cms.pages.index'));
 
         $response->assertViewHas('pages', function ($pages) {
-            return $pages->count() === 4
+            return $pages->count() === count(CmsPage::SLUGS)
                 && $pages->pluck('slug')->diff(CmsPage::SLUGS)->isEmpty();
         });
 
-        $this->assertDatabaseCount('cms_pages', 4);
+        $this->assertDatabaseCount('cms_pages', count(CmsPage::SLUGS));
     }
 
     public function test_admin_without_permission_cannot_view_cms_pages(): void
@@ -137,5 +139,44 @@ class CmsPageModuleTest extends TestCase
     {
         $this->get(route('admin.cms.pages.index'))
             ->assertRedirect(route('admin.login.view'));
+    }
+
+    public function test_admin_can_upload_image_for_about_page(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdminWithPermissions(['cms.view', 'cms.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.cms.pages.update', 'about'), [
+                'title' => 'About Us',
+                'content' => '<p>We are Sodai.</p>',
+                'image' => UploadedFile::fake()->image('about.jpg'),
+            ])
+            ->assertRedirect(route('admin.cms.pages.edit', 'about'));
+
+        $page = CmsPage::where('slug', 'about')->first();
+        $this->assertNotNull($page->image);
+        Storage::disk('public')->assertExists($page->image);
+    }
+
+    public function test_policy_pages_do_not_expose_image_field_in_edit_view(): void
+    {
+        $admin = $this->createAdminWithPermissions(['cms.view']);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.cms.pages.edit', 'privacy-policy'))
+            ->assertOk()
+            ->assertDontSee('Page Image');
+    }
+
+    public function test_index_now_lists_five_canonical_pages_including_about(): void
+    {
+        $admin = $this->createAdminWithPermissions(['cms.view']);
+
+        $response = $this->actingAsAdmin($admin)->get(route('admin.cms.pages.index'));
+
+        $response->assertViewHas('pages', function ($pages) {
+            return $pages->count() === 5 && $pages->pluck('slug')->contains('about');
+        });
     }
 }

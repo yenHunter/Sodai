@@ -27,10 +27,39 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.cms.pages.update', $page->slug) }}" method="POST" id="cmsPageForm">
+    <form action="{{ route('admin.cms.pages.update', $page->slug) }}" method="POST" id="cmsPageForm"
+        enctype="multipart/form-data">
         @csrf
         <div class="row">
             <div class="col-xxl-8">
+                @if ($page->supportsImage())
+                    <div class="card">
+                        <div class="card-header d-block p-3">
+                            <h4 class="card-title mb-1">Page Image</h4>
+                            <p class="text-muted mb-0">Shown alongside the intro text on the storefront.</p>
+                        </div>
+                        <div class="card-body">
+                            @if ($page->image)
+                                <div class="mb-3 d-flex align-items-center gap-3">
+                                    <img src="{{ $page->image_url }}" alt="{{ $page->title }}" class="rounded border"
+                                        style="width:120px;height:90px;object-fit:cover">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="removeImage" name="remove_image"
+                                            value="1">
+                                        <label class="form-check-label" for="removeImage">Remove current image</label>
+                                    </div>
+                                </div>
+                            @endif
+                            <input type="file" class="form-control @error('image') is-invalid @enderror" id="pageImage"
+                                name="image" accept="image/jpeg,image/jpg,image/png,image/webp">
+                            <div class="form-text">jpeg, jpg, png, webp. Max 2MB.</div>
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                @endif
+
                 <div class="card">
                     <div class="card-header d-block p-3">
                         <h4 class="card-title mb-1">Page Content</h4>
