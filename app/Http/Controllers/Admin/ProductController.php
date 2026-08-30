@@ -49,7 +49,7 @@ class ProductController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', "%{$search}%"));
+                    ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', "%{$search}%"));
             });
         }
 
@@ -116,18 +116,29 @@ class ProductController extends Controller
         try {
             $product = $this->productService->store($request->validated());
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'redirect' => route('admin.ecommerce.product.index'),
+                    'message'  => "Product \"{$product->name}\" created successfully.",
+                ]);
+            }
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product \"{$product->name}\" created successfully with {$product->variants()->count()} variant(s).");
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {          // ← was \Exception — broadened so real PHP errors are also caught & logged
             Log::error('Admin failed to create product.', [
                 'exception' => $e,
-                'admin_id' => Auth::guard('admin')->id(),
+                'admin_id'  => Auth::guard('admin')->id(),
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Failed to create product: ' . $e->getMessage()], 500);
+            }
 
             return redirect()
                 ->route('admin.ecommerce.product.create')
-                ->with('error', 'Failed to create product: '.$e->getMessage())
+                ->with('error', 'Failed to create product: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -172,7 +183,7 @@ class ProductController extends Controller
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
-                ->with('error', 'Failed to update product: '.$e->getMessage())
+                ->with('error', 'Failed to update product: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -238,10 +249,10 @@ class ProductController extends Controller
             }
         }
 
-        $message = "{$successCount} product".($successCount === 1 ? '' : 's').' deleted successfully.';
+        $message = "{$successCount} product" . ($successCount === 1 ? '' : 's') . ' deleted successfully.';
 
         if (! empty($failedNames)) {
-            $message .= ' Failed: '.implode(', ', $failedNames).'.';
+            $message .= ' Failed: ' . implode(', ', $failedNames) . '.';
 
             return redirect()->route('admin.ecommerce.product.index')->with('error', $message);
         }
@@ -314,8 +325,10 @@ class ProductController extends Controller
             return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
         } catch (\Exception $e) {
             Log::error('Failed to delete product image via AJAX.', [
-                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
-                'product_id' => $product->id, 'image_id' => $image->id,
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+                'image_id' => $image->id,
             ]);
 
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -334,8 +347,10 @@ class ProductController extends Controller
             return response()->json(['success' => true, 'message' => 'Primary image updated.']);
         } catch (\Exception $e) {
             Log::error('Failed to set primary product image via AJAX.', [
-                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
-                'product_id' => $product->id, 'image_id' => $image->id,
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+                'image_id' => $image->id,
             ]);
 
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -355,7 +370,9 @@ class ProductController extends Controller
             return response()->json(['success' => true, 'message' => 'Image order updated.']);
         } catch (\Exception $e) {
             Log::error('Failed to reorder product images via AJAX.', [
-                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(), 'product_id' => $product->id,
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
             ]);
 
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -388,7 +405,7 @@ class ProductController extends Controller
             ->select('id', 'name', 'min_price')
             ->with(['defaultVariant:id,product_id,sku'])
             ->where('name', 'like', "%{$search}%")
-            ->when($exclude, fn ($query) => $query->where('id', '!=', $exclude))
+            ->when($exclude, fn($query) => $query->where('id', '!=', $exclude))
             ->limit(20)
             ->get();
 
@@ -439,8 +456,10 @@ class ProductController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to update variant stock via AJAX.', [
-                'exception' => $e, 'admin_id' => Auth::guard('admin')->id(),
-                'product_id' => $product->id, 'variant_id' => $variant->id,
+                'exception' => $e,
+                'admin_id' => Auth::guard('admin')->id(),
+                'product_id' => $product->id,
+                'variant_id' => $variant->id,
             ]);
 
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

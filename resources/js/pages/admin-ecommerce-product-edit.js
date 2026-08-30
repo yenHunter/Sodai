@@ -511,6 +511,37 @@ function escapeHtml(text) {
     return div.innerHTML
 }
 
+// Maps Laravel's dot-notation error keys (e.g. "variants.0.price") to actual
+// form field names (e.g. "variants[0][price]") and marks them invalid.
+function renderValidationErrors(errors) {
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'))
+    document.querySelectorAll('.js-server-error').forEach(el => el.remove())
+
+    let firstInvalid = null
+
+    Object.entries(errors).forEach(([key, messages]) => {
+        const fieldName = key.replace(/\.(\d+)\./g, '[$1][').replace(/\.(\w+)$/, '[$1]').replace(/^([^[]+)/, '$1')
+        const input = document.querySelector(`[name="${cssEscapeAttr(fieldName)}"]`)
+
+        if (input) {
+            input.classList.add('is-invalid')
+            const feedback = document.createElement('div')
+            feedback.className = 'invalid-feedback d-block js-server-error'
+            feedback.textContent = messages[0]
+            input.closest('.mb-3, .col-md-3, .col-md-4, .col-md-6, .col-12')?.appendChild(feedback)
+            firstInvalid = firstInvalid || input
+        }
+    })
+
+    if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+}
+
+function cssEscapeAttr(value) {
+    return value.replace(/(["\\])/g, '\\$1')
+}
+
 // ═══════════════════════════════════════════════
 // FORM SUBMISSION
 // ═══════════════════════════════════════════════
@@ -568,36 +599,40 @@ function initFormSubmission() {
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+            },
         })
             .then(async response => {
-                if (response.redirected) {
-                    window.location.href = response.url
-                    return
-                }
-
                 const text = await response.text()
                 let data
                 try {
-                    data = JSON.parse(text)
+                    data = text ? JSON.parse(text) : {}
                 } catch (parseError) {
-                    console.error('Response was not valid JSON:', parseError)
-                    throw new Error(`Server returned status ${response.status} with non-JSON response.`)
+                    throw new Error(`Server returned status ${response.status} with a non-JSON response.`)
+                }
+
+                if (response.status === 422) {
+                    renderValidationErrors(data.errors || {})
+                    throw new Error(data.message || 'Please fix the highlighted fields and try again.')
                 }
 
                 if (!response.ok) {
-                    console.error('Server returned error:', data)
-                    throw new Error(data.message || `Server error (status ${response.status})`)
+                    throw new Error(data.message || `Server error (status ${response.status}).`)
                 }
 
-                return data
+                if (data.redirect) {
+                    window.location.href = data.redirect
+                    return
+                }
+
+                window.location.reload()
             })
             .catch(error => {
-                console.error('Full error details:', error)
+                console.error('Product creation failed:', error)
                 submitBtn.disabled = false
-                submitBtn.innerHTML = '<i data-lucide="save" class="me-1" style="width:16px;height:16px;"></i> Update Product'
-                alert('Error: ' + error.message)
+                submitBtn.innerHTML = '<i data-lucide="save" class="me-1" style="width:16px;height:16px;"></i> Publish Product'
+                alert(error.message)
+                refreshLucideIcons()
             })
     })
 }

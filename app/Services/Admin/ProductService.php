@@ -547,8 +547,8 @@ class ProductService
     {
         $existingQuery = $product->images()->when(
             $variantId,
-            fn ($q) => $q->where('product_variant_id', $variantId),
-            fn ($q) => $q->whereNull('product_variant_id')
+            fn($q) => $q->where('product_variant_id', $variantId),
+            fn($q) => $q->whereNull('product_variant_id')
         );
 
         $existingCount = $existingQuery->count();
@@ -589,8 +589,8 @@ class ProductService
                 $next = $product->images()
                     ->when(
                         $variantId,
-                        fn ($q) => $q->where('product_variant_id', $variantId),
-                        fn ($q) => $q->whereNull('product_variant_id')
+                        fn($q) => $q->where('product_variant_id', $variantId),
+                        fn($q) => $q->whereNull('product_variant_id')
                     )
                     ->orderBy('sort_order')
                     ->first();
@@ -619,8 +619,8 @@ class ProductService
                     $next = $product->images()
                         ->when(
                             $variantId,
-                            fn ($q) => $q->where('product_variant_id', $variantId),
-                            fn ($q) => $q->whereNull('product_variant_id')
+                            fn($q) => $q->where('product_variant_id', $variantId),
+                            fn($q) => $q->whereNull('product_variant_id')
                         )
                         ->orderBy('sort_order')
                         ->first();
@@ -649,8 +649,8 @@ class ProductService
                 $product->images()
                     ->when(
                         $image->product_variant_id,
-                        fn ($q) => $q->where('product_variant_id', $image->product_variant_id),
-                        fn ($q) => $q->whereNull('product_variant_id')
+                        fn($q) => $q->where('product_variant_id', $image->product_variant_id),
+                        fn($q) => $q->whereNull('product_variant_id')
                     )
                     ->update(['is_primary' => false]);
 
@@ -694,8 +694,8 @@ class ProductService
     private function syncTags(Product $product, array $tagNames): void
     {
         $tagIds = collect($tagNames)
-            ->filter(fn ($name) => ! empty(trim($name)))
-            ->map(fn ($name) => Tag::findOrCreateByName(trim($name))->id)
+            ->filter(fn($name) => ! empty(trim($name)))
+            ->map(fn($name) => Tag::findOrCreateByName(trim($name))->id)
             ->unique()
             ->values()
             ->toArray();
@@ -710,7 +710,7 @@ class ProductService
     private function syncRelatedProducts(Product $product, array $relatedIds): void
     {
         $relatedIds = collect($relatedIds)
-            ->filter(fn ($id) => $id !== $product->id)
+            ->filter(fn($id) => $id !== $product->id)
             ->unique()
             ->values()
             ->toArray();
@@ -738,8 +738,8 @@ class ProductService
     private function uploadImage(UploadedFile $image, string $directory): string
     {
         try {
-            $filename = Str::uuid().'.webp';
-            $path = $directory.'/'.$filename;
+            $filename = Str::uuid() . '.webp';
+            $path = $directory . '/' . $filename;
 
             $manager = new ImageManager(new Driver);
 
@@ -759,7 +759,7 @@ class ProductService
                 'directory' => $directory,
                 'original_filename' => $image->getClientOriginalName(),
             ]);
-            throw new \Exception('Image upload failed: '.$e->getMessage());
+            throw new \Exception('Image upload failed: ' . $e->getMessage());
         }
     }
 
@@ -807,7 +807,7 @@ class ProductService
             if (! $query->exists()) {
                 break;
             }
-            $slug = $original.'-'.$count++;
+            $slug = $original . '-' . $count++;
         }
 
         return $slug;
@@ -827,18 +827,33 @@ class ProductService
 
         $prefix = $this->generateSkuPrefix($category?->name ?? 'PRD');
 
-        $lastSku = ProductVariant::where('sku', 'like', $prefix.'-%')
-            ->lockForUpdate()
-            ->orderBy('sku', 'desc')
-            ->value('sku');
+        return DB::transaction(function () use ($prefix) {
+            // withTrashed() is essential: a soft-deleted variant's SKU is still
+            // physically present and enforced by the DB unique index, so it
+            // must count as "already used" even though normal queries skip it.
+            $lastSku = ProductVariant::withTrashed()
+                ->where('sku', 'like', $prefix . '-%')
+                ->lockForUpdate()
+                ->orderBy('sku', 'desc')
+                ->value('sku');
 
-        $nextNumber = 1;
-        if ($lastSku) {
-            $lastNumber = (int) substr($lastSku, strrpos($lastSku, '-') + 1);
-            $nextNumber = $lastNumber + 1;
-        }
+            $nextNumber = 1;
+            if ($lastSku) {
+                $lastNumber = (int) substr($lastSku, strrpos($lastSku, '-') + 1);
+                $nextNumber = $lastNumber + 1;
+            }
 
-        return $prefix.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $sku = $prefix . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+            // Belt-and-suspenders: guarantees uniqueness even if the sequential
+            // numbering above ever produces a gap-related collision.
+            while (ProductVariant::withTrashed()->where('sku', $sku)->exists()) {
+                $nextNumber++;
+                $sku = $prefix . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            }
+
+            return $sku;
+        });
     }
 
     private function generateSkuPrefix(string $categoryName): string
@@ -880,10 +895,10 @@ class ProductService
             'category',
             'brand',
             'variants.optionValues.option',
-            'variants.images' => fn ($q) => $q->orderBy('sort_order'),
-            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'variants.images' => fn($q) => $q->orderBy('sort_order'),
+            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
         ]);
     }
 
@@ -893,11 +908,11 @@ class ProductService
             'category.parent',
             'brand',
             'variants.optionValues.option',
-            'variants.images' => fn ($q) => $q->orderBy('sort_order'),
-            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
+            'variants.images' => fn($q) => $q->orderBy('sort_order'),
+            'images' => fn($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
-            'reviews' => fn ($q) => $q->latest()->with('user:id,name,avatar'),
+            'relatedProducts' => fn($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'reviews' => fn($q) => $q->latest()->with('user:id,name,avatar'),
         ]);
     }
 
