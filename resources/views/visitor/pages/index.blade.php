@@ -43,7 +43,8 @@
                                 <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
                                     <div class="ec-slide-content slider-animation">
                                         <h1 class="ec-slide-title">Welcome to {{ config('app.name') }}</h1>
-                                        <a href="{{ route('visitor.products.index') }}" class="btn btn-lg btn-secondary">Shop Now</a>
+                                        <a href="{{ route('visitor.products.index') }}"
+                                            class="btn btn-lg btn-secondary">Shop Now</a>
                                     </div>
                                 </div>
                             </div>
@@ -89,19 +90,23 @@
                                     @if ($product->is_out_of_stock)
                                         <span class="flags"><span class="sale">Sold Out</span></span>
                                     @endif
-                                    <a href="{{ route('visitor.products.show', $product->slug) }}" class="quickview" title="Quick view">
+                                    <a href="{{ route('visitor.products.show', $product->slug) }}" class="quickview"
+                                        title="Quick view">
                                         <i class="fi-rr-eye"></i>
                                     </a>
                                     <div class="ec-pro-actions">
-                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="ec-btn-group compare" title="View Details">
+                                        <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                            class="ec-btn-group compare" title="View Details">
                                             <i class="fi-rr-shopping-basket"></i>
                                         </a>
                                         @auth('customer')
-                                            <a href="#" class="ec-btn-group wishlist toggle-wishlist" data-product-id="{{ $product->id }}" title="Wishlist">
+                                            <a href="#" class="ec-btn-group wishlist toggle-wishlist"
+                                                data-product-id="{{ $product->id }}" title="Wishlist">
                                                 <i class="fi-rr-heart"></i>
                                             </a>
                                         @else
-                                            <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist" title="Login to add to wishlist">
+                                            <a href="{{ route('visitor.login') }}" class="ec-btn-group wishlist"
+                                                title="Login to add to wishlist">
                                                 <i class="fi-rr-heart"></i>
                                             </a>
                                         @endauth
@@ -109,10 +114,13 @@
                                 </div>
                             </div>
                             <div class="ec-pro-content">
-                                <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                <h5 class="ec-pro-title"><a
+                                        href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
+                                </h5>
                                 <div class="ec-pro-rating">
                                     @for ($i = 1; $i <= 5; $i++)
-                                        <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                        <i
+                                            class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
                                     @endfor
                                 </div>
                                 <span class="ec-price">
@@ -133,7 +141,8 @@
                         <p class="mb-0">No products available yet.</p>
                     </div>
                 @endforelse
-                <div class="col-sm-12 shop-all-btn"><a href="{{ route('visitor.products.index') }}">Shop All Collection</a></div>
+                <div class="col-sm-12 shop-all-btn"><a href="{{ route('visitor.products.index') }}">Shop All Collection</a>
+                </div>
             </div>
         </div>
     </section>
@@ -158,11 +167,15 @@
                         <ul class="ec-cat-tab-nav nav">
                             @foreach ($categories as $index => $category)
                                 <li class="cat-item">
-                                    <a class="cat-link {{ $index === 0 ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-cat-{{ $category->id }}">
+                                    <a class="cat-link {{ $index === 0 ? 'active' : '' }}" data-bs-toggle="tab"
+                                        href="#tab-cat-{{ $category->id }}">
                                         <div class="cat-icons">
-                                            <img class="cat-icon" src="{{ $category->image_url }}" alt="{{ $category->name }}">
+                                            <img class="cat-icon" src="{{ $category->image_url }}"
+                                                alt="{{ $category->name }}">
                                         </div>
-                                        <div class="cat-desc"><span>{{ $category->name }}</span><span>{{ $category->products_count }} Products</span></div>
+                                        <div class="cat-desc">
+                                            <span>{{ $category->name }}</span><span>{{ $category->products_count }}
+                                                Products</span></div>
                                     </a>
                                 </li>
                             @endforeach
@@ -171,12 +184,14 @@
                     <div class="col-lg-9">
                         <div class="tab-content">
                             @foreach ($categories as $index => $category)
-                                <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="tab-cat-{{ $category->id }}">
+                                <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}"
+                                    id="tab-cat-{{ $category->id }}">
                                     <div class="row">
                                         <img src="{{ $category->image_url }}" alt="{{ $category->name }}" />
                                     </div>
                                     <span class="panel-overlay">
-                                        <a href="{{ route('visitor.products.category', $category->slug) }}" class="btn btn-primary">View All</a>
+                                        <a href="{{ route('visitor.products.category', $category->slug) }}"
+                                            class="btn btn-primary">View All</a>
                                     </span>
                                 </div>
                             @endforeach
@@ -190,41 +205,143 @@
 
     <!-- Featured Products Start -->
     @if ($featuredProducts->isNotEmpty())
+        <!--  Feature & Special Section Start -->
         <section class="section ec-fre-spe-section section-space-p" id="offers">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-12 text-left">
-                        <div class="section-title">
-                            <h2 class="ec-bg-title">Feature Items</h2>
-                            <h2 class="ec-title">Feature Items</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    @foreach ($featuredProducts->take(4) as $product)
-                        <div class="col-lg-3 col-md-6 col-sm-6 mb-6">
-                            <div class="ec-product-inner">
-                                <div class="ec-pro-image-outer">
-                                    <div class="ec-pro-image">
-                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
-                                            <img class="main-image"
-                                                src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}"
-                                                alt="{{ $product->name }}" />
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="ec-pro-content">
-                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
-                                    <span class="ec-price">
-                                        <span class="new-price">{{ $product->price_range_label }}</span>
-                                    </span>
-                                </div>
+                    <!--  Feature Section Start -->
+                    <div class="ec-fre-section col-lg-6 col-md-6 col-sm-6 margin-b-30" data-animation="slideInRight">
+                        <div class="col-md-12 text-left">
+                            <div class="section-title">
+                                <h2 class="ec-bg-title">Feature Items</h2>
+                                <h2 class="ec-title">Feature Items</h2>
                             </div>
                         </div>
-                    @endforeach
+
+                        <div class="ec-fre-products">
+                            @forelse ($featureItems as $product)
+                                <div class="ec-fs-product">
+                                    <div class="ec-fs-pro-inner">
+                                        <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
+                                            <div class="ec-fs-pro-image">
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="image">
+                                                    <img class="main-image"
+                                                        src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/1_1.jpg') }}"
+                                                        alt="{{ $product->name }}" />
+                                                </a>
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="quickview" title="Quick view">
+                                                    <i class="fi-rr-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
+                                            <h5 class="ec-fs-pro-title"><a
+                                                    href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
+                                            </h5>
+                                            <div class="ec-fs-pro-rating">
+                                                <span class="ec-fs-rating-icon">
+                                                    @for ($i = 1; $i <= 5; $i++)
+                                                        <i
+                                                            class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                                    @endfor
+                                                </span>
+                                                <span class="ec-fs-rating-text">{{ $product->review_count }}
+                                                    Review{{ $product->review_count === 1 ? '' : 's' }}</span>
+                                            </div>
+                                            <div class="ec-fs-price">
+                                                @if ($product->has_discount)
+                                                    <span
+                                                        class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                                @endif
+                                                <span
+                                                    class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                            </div>
+                                            <div class="ec-fs-pro-desc">{{ $product->short_description }}</div>
+                                            <div class="ec-fs-pro-book">Total Sold:
+                                                <span>{{ $product->total_sales }}</span></div>
+                                            <div class="ec-fs-pro-btn">
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="btn btn-lg btn-primary">View Product</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-muted">No feature items available right now.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    <!--  Feature Section End -->
+
+                    <!--  Special Section Start -->
+                    <div class="ec-spe-section col-lg-6 col-md-6 col-sm-6" data-animation="slideInLeft">
+                        <div class="col-md-12 text-left">
+                            <div class="section-title">
+                                <h2 class="ec-bg-title">Limited Time Offer</h2>
+                                <h2 class="ec-title">Limited Time Offer</h2>
+                            </div>
+                        </div>
+
+                        <div class="ec-spe-products">
+                            @forelse ($limitedTimeOffers as $product)
+                                <div class="ec-fs-product">
+                                    <div class="ec-fs-pro-inner">
+                                        <div class="ec-fs-pro-image-outer col-lg-6 col-md-6 col-sm-6">
+                                            <div class="ec-fs-pro-image">
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="image">
+                                                    <img class="main-image"
+                                                        src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/8_1.jpg') }}"
+                                                        alt="{{ $product->name }}" />
+                                                </a>
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="quickview" title="Quick view">
+                                                    <i class="fi-rr-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="ec-fs-pro-content col-lg-6 col-md-6 col-sm-6">
+                                            <h5 class="ec-fs-pro-title"><a
+                                                    href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
+                                            </h5>
+                                            <div class="ec-fs-pro-rating">
+                                                <span class="ec-fs-rating-icon">
+                                                    @for ($i = 1; $i <= 5; $i++)
+                                                        <i
+                                                            class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                                    @endfor
+                                                </span>
+                                                <span class="ec-fs-rating-text">{{ $product->review_count }}
+                                                    Review{{ $product->review_count === 1 ? '' : 's' }}</span>
+                                            </div>
+                                            <div class="ec-fs-price">
+                                                <span
+                                                    class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                                <span
+                                                    class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                            </div>
+                                            <div class="ec-fs-pro-desc">{{ $product->short_description }}</div>
+                                            <div class="ec-fs-pro-book">Total Sold:
+                                                <span>{{ $product->total_sales }}</span></div>
+                                            <div class="ec-fs-pro-btn">
+                                                <a href="{{ route('visitor.products.show', $product->slug) }}"
+                                                    class="btn btn-lg btn-primary">View Product</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-muted">No limited time offers available right now.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    <!--  Special Section End -->
                 </div>
             </div>
         </section>
+        <!-- Feature & Special Section End -->
     @endif
     <!-- Featured Products End -->
 
@@ -254,13 +371,17 @@
                                     </div>
                                 </div>
                                 <div class="ec-pro-content">
-                                    <h5 class="ec-pro-title"><a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a></h5>
+                                    <h5 class="ec-pro-title"><a
+                                            href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
+                                    </h5>
                                     <div class="ec-pro-rating">
                                         @for ($i = 1; $i <= 5; $i++)
-                                            <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
+                                            <i
+                                                class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
                                         @endfor
                                     </div>
-                                    <span class="ec-price"><span class="new-price">${{ number_format($product->final_price, 2) }}</span></span>
+                                    <span class="ec-price"><span
+                                            class="new-price">${{ number_format($product->final_price, 2) }}</span></span>
                                 </div>
                             </div>
                         </div>

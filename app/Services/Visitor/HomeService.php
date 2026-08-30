@@ -55,4 +55,23 @@ class HomeService
             ->limit($limit)
             ->get();
     }
+
+    public function getFeatureItems(int $limit = 2)
+    {
+        return Product::featured()
+            ->inStock()
+            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getLimitedTimeOffers(int $limit = 2)
+    {
+        return Product::active()
+            ->inStock()
+            // ->withDiscount()
+            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->limit($limit)
+            ->get();
+    }
 }

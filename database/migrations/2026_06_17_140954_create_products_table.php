@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('short_description', 255)->nullable();
+            $table->text('short_description')->nullable();
             $table->longText('description')->nullable();
 
             // Relationships

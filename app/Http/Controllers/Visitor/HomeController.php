@@ -20,6 +20,8 @@ class HomeController extends Controller
             'newArrivals' => $this->homeService->getNewArrivals(),
             'topRatedProducts' => $this->homeService->getTopRatedProducts(),
             'categories' => $this->homeService->getTopCategories(),
+            'featureItems' => $this->homeService->getFeatureItems(),
+            'limitedTimeOffers' => $this->homeService->getLimitedTimeOffers(),
         ]);
     }
 }
