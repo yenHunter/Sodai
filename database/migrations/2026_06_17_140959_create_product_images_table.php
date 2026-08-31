@@ -13,12 +13,11 @@ return new class extends Migration
             $table->foreignId('product_id')
                 ->constrained()
                 ->onDelete('cascade');
-            // Null = shared across all variants. Set = only shown when
-            // that specific variant (e.g. "Red") is selected.
+
             $table->foreignId('product_variant_id')
-                ->nullable()
                 ->constrained()
                 ->onDelete('cascade');
+
             $table->string('image_path');
             $table->boolean('is_primary')->default(false);
             $table->integer('sort_order')->default(0);

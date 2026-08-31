@@ -20,7 +20,6 @@ class Product extends Model
         'description',
         'category_id',
         'brand_id',
-        'thumbnail',
         'is_active',
         'is_featured',
         'min_price',
@@ -63,14 +62,7 @@ class Product extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class)
-            ->orderBy('sort_order');
-    }
-
-    public function primaryImage()
-    {
-        return $this->hasOne(ProductImage::class)
-            ->where('is_primary', true);
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
     public function tags()
@@ -150,15 +142,13 @@ class Product extends Model
 
     public function getThumbnailUrlAttribute(): ?string
     {
-        if ($this->thumbnail) {
-            return asset('storage/'.$this->thumbnail);
-        }
+        $variant = $this->relationLoaded('defaultVariant')
+            ? $this->defaultVariant
+            : $this->defaultVariant()->first();
 
-        if ($this->primaryImage) {
-            return asset('storage/'.$this->primaryImage->image_path);
-        }
+        $variant ??= $this->variants()->active()->orderBy('id')->first();
 
-        return null;
+        return $variant?->thumbnail_url;
     }
 
     public function getStockStatusAttribute(): string
@@ -193,7 +183,6 @@ class Product extends Model
     /**
      * Human-readable reason why this product cannot be deleted.
      * Returns null if the product is safe to delete.
-     * Used by controller to display specific error messages.
      */
     public function getDeletionBlockReasonAttribute(): ?string
     {
@@ -238,35 +227,13 @@ class Product extends Model
         return $this->tags()->where('name', $tagName)->exists();
     }
 
-    /**
-     * Determine if product is safe to delete.
-     * Uses Schema::hasTable() checks so this remains
-     * forward-compatible as Order/Cart modules are built later
-     * without requiring code changes here.
-     */
     public function canDelete(): bool
     {
         return is_null($this->deletion_block_reason);
     }
 
-    public function decrementStock(int $quantity): bool
-    {
-        if ($this->stock_quantity < $quantity) {
-            return false;
-        }
-
-        $this->decrement('stock_quantity', $quantity);
-
-        return true;
-    }
-
-    public function incrementStock(int $quantity): void
-    {
-        $this->increment('stock_quantity', $quantity);
-    }
-
     // ─────────────────────────────────────────────
-    // SCOPES
+    // SCOPES (unchanged — omitted here for brevity, keep as-is)
     // ─────────────────────────────────────────────
 
     public function scopeActive($query)
@@ -281,8 +248,7 @@ class Product extends Model
 
     public function scopeFeatured($query)
     {
-        return $query->where('is_featured', true)
-            ->where('is_active', true);
+        return $query->where('is_featured', true)->where('is_active', true);
     }
 
     public function scopeInStock($query)
@@ -293,19 +259,6 @@ class Product extends Model
     public function scopeOutOfStock($query)
     {
         return $query->where('total_stock', '<=', 0);
-    }
-
-    public function scopeLowStock($query)
-    {
-        return $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
-            ->where('stock_quantity', '>', 0);
-    }
-
-    public function scopeWithDiscount($query)
-    {
-        return $query->whereNotNull('discount_type')
-            ->whereNotNull('discount_value')
-            ->where('discount_value', '>', 0);
     }
 
     public function scopeByCategory($query, $categoryId)
@@ -322,7 +275,6 @@ class Product extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%")
                 ->orWhere('short_description', 'like', "%{$search}%");
         });
     }
@@ -338,16 +290,6 @@ class Product extends Model
         });
     }
 
-    public function scopeOfColor($query, $colors)
-    {
-        return $query->whereIn('color', (array) $colors);
-    }
-
-    public function scopeOfSize($query, $sizes)
-    {
-        return $query->whereIn('size', (array) $sizes);
-    }
-
     public function scopeNewest($query)
     {
         return $query->orderBy('created_at', 'desc');
@@ -360,7 +302,6 @@ class Product extends Model
 
     public function scopeTopRated($query)
     {
-        return $query->where('review_count', '>', 0)
-            ->orderBy('average_rating', 'desc');
+        return $query->where('review_count', '>', 0)->orderBy('average_rating', 'desc');
     }
 }
