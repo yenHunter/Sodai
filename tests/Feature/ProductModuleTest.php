@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
@@ -44,36 +43,6 @@ class ProductModuleTest extends TestCase
         $response->assertViewHas('products', function ($products) {
             return $products->total() === 1;
         });
-    }
-
-    public function test_admin_can_create_product_with_thumbnail(): void
-    {
-        $admin = $this->createAdminWithPermissions(['product.view', 'product.create']);
-        $category = Category::factory()->create();
-
-        $this->actingAsAdmin($admin)
-            ->post(route('admin.ecommerce.product.store'), [
-                'category_id' => $category->id,
-                'name' => 'Test Product',
-                'is_active' => 'active',
-                'thumbnail' => UploadedFile::fake()->image('thumb.png'),
-                'variants' => [
-                    [
-                        'price' => 99.99,
-                        'stock_quantity' => 10,
-                        'low_stock_threshold' => 5,
-                        'is_active' => 'active',
-                        'is_default' => 'true',
-                    ],
-                ],
-            ])
-            ->assertRedirect();
-
-        $this->assertDatabaseHas('products', ['name' => 'Test Product']);
-
-        $product = Product::where('name', 'Test Product')->first();
-        Storage::disk('public')->assertExists($product->thumbnail);
-        $this->assertStringEndsWith('.webp', $product->thumbnail);
     }
 
     public function test_product_creation_requires_category(): void

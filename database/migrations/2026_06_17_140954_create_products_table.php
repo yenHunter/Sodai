@@ -24,9 +24,6 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('set null');
 
-            // Media
-            $table->string('thumbnail')->nullable();
-
             // Status & Features
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);

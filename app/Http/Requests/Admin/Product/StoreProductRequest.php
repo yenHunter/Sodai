@@ -34,11 +34,6 @@ class StoreProductRequest extends FormRequest
             ],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
 
-            // ── Media ──
-            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-
             // ── Status ──
             'is_active' => ['required'],
             'is_featured' => ['nullable'],
@@ -57,17 +52,12 @@ class StoreProductRequest extends FormRequest
             'related_products' => ['nullable', 'array'],
             'related_products.*' => ['integer', 'exists:products,id'],
 
-            // ── Variants (at least one required) ──
+            // ── Variants (at least one required — thumbnail/images live here only) ──
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'variants.*.purchase_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'variants.*.discount_type' => ['nullable', 'in:percentage,fixed'],
-            'variants.*.discount_value' => [
-                'nullable',
-                'required_with:variants.*.discount_type',
-                'numeric',
-                'min:0',
-            ],
+            'variants.*.discount_value' => ['nullable', 'required_with:variants.*.discount_type', 'numeric', 'min:0'],
             'variants.*.stock_quantity' => ['required', 'integer', 'min:0'],
             'variants.*.low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'variants.*.weight' => ['nullable', 'numeric', 'min:0'],
@@ -93,10 +83,6 @@ class StoreProductRequest extends FormRequest
             'category_id.required' => 'Category is required.',
             'category_id.exists' => 'Selected category does not exist.',
             'brand_id.exists' => 'Selected brand does not exist.',
-            'thumbnail.image' => 'Thumbnail must be an image.',
-            'thumbnail.mimes' => 'Thumbnail must be jpeg, jpg, png or webp.',
-            'thumbnail.max' => 'Thumbnail size cannot exceed 2MB.',
-            'images.max' => 'You can upload a maximum of 10 images.',
             'is_active.required' => 'Status is required.',
             'related_products.*.exists' => 'One or more related products do not exist.',
             'variants.required' => 'Add at least one variant (a simple product needs exactly one).',

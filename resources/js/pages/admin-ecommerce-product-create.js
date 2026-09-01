@@ -1,29 +1,22 @@
 /**
  * Admin Product Create Page
- * Handles Quill editors, Dropzone file uploads, Select2, Variant Builder, and form submission
+ * Handles Quill editors, Select2, Variant Builder, and form submission
  */
 
 // ═══════════════════════════════════════════════
 // CSS IMPORTS (from node_modules)
 // ═══════════════════════════════════════════════
 import 'quill/dist/quill.snow.css'
-import 'dropzone/dist/dropzone.css'
 import 'select2/dist/css/select2.min.css'
 
 // ═══════════════════════════════════════════════
 // JS IMPORTS
 // ═══════════════════════════════════════════════
 import Quill from 'quill'
-import Dropzone from 'dropzone'
 import $ from 'jquery'
 import select2 from 'select2'
 
 select2(window, $)
-
-// ═══════════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════════
-Dropzone.autoDiscover = false
 
 // ═══════════════════════════════════════════════
 // QUILL EDITORS
@@ -63,80 +56,6 @@ function initQuillEditors() {
             placeholder: 'Enter detailed product description...',
             modules: { toolbar: toolbarConfig }
         })
-    }
-}
-
-// ═══════════════════════════════════════════════
-// DROPZONE INSTANCES (product-level thumbnail + gallery)
-// ═══════════════════════════════════════════════
-
-let thumbnailDropzone = null
-let galleryDropzone = null
-
-function initDropzones() {
-    const thumbnailEl = document.getElementById('thumbnailDropzone')
-    const galleryEl = document.getElementById('galleryDropzone')
-
-    if (thumbnailEl) {
-        const thumbnailPreviewContainer = thumbnailEl.dataset.previewsContainer
-        const thumbnailPreviewTemplate = thumbnailEl.dataset.uploadPreviewTemplate
-
-        const thumbnailOptions = {
-            url: '#',
-            autoProcessQueue: false,
-            uploadMultiple: false,
-            maxFiles: 1,
-            maxFilesize: 2,
-            acceptedFiles: 'image/jpeg,image/jpg,image/png,image/webp',
-            addRemoveLinks: false,
-        }
-
-        if (thumbnailPreviewContainer) thumbnailOptions.previewsContainer = thumbnailPreviewContainer
-        if (thumbnailPreviewTemplate) {
-            const template = document.querySelector(thumbnailPreviewTemplate)
-            if (template) thumbnailOptions.previewTemplate = template.innerHTML
-        }
-
-        try {
-            thumbnailDropzone = new Dropzone(thumbnailEl, thumbnailOptions)
-            thumbnailDropzone.on('addedfile', function (file) {
-                if (this.files.length > 1) this.removeFile(this.files[0])
-            })
-        } catch (e) {
-            console.error('Thumbnail Dropzone initialization failed:', e)
-        }
-    }
-
-    if (galleryEl) {
-        const galleryPreviewContainer = galleryEl.dataset.previewsContainer
-        const galleryPreviewTemplate = galleryEl.dataset.uploadPreviewTemplate
-
-        const galleryOptions = {
-            url: '#',
-            autoProcessQueue: false,
-            uploadMultiple: true,
-            parallelUploads: 10,
-            maxFiles: 10,
-            maxFilesize: 2,
-            acceptedFiles: 'image/jpeg,image/jpg,image/png,image/webp',
-            addRemoveLinks: false,
-        }
-
-        if (galleryPreviewContainer) galleryOptions.previewsContainer = galleryPreviewContainer
-        if (galleryPreviewTemplate) {
-            const template = document.querySelector(galleryPreviewTemplate)
-            if (template) galleryOptions.previewTemplate = template.innerHTML
-        }
-
-        try {
-            galleryDropzone = new Dropzone(galleryEl, galleryOptions)
-            galleryDropzone.on('maxfilesexceeded', function (file) {
-                alert('Maximum 10 images allowed')
-                this.removeFile(file)
-            })
-        } catch (e) {
-            console.error('Gallery Dropzone initialization failed:', e)
-        }
     }
 }
 
@@ -403,7 +322,7 @@ function renderValidationErrors(errors) {
     let firstInvalid = null
 
     Object.entries(errors).forEach(([key, messages]) => {
-        const fieldName = key.replace(/\.(\d+)\./g, '[$1][').replace(/\.(\w+)$/, '[$1]').replace(/^([^[]+)/, '$1')
+        const fieldName = key.replace(/\.(\d+)\./g, '[$1][').replace(/\.(\w+)$/, '[$1]')
         const input = document.querySelector(`[name="${cssEscapeAttr(fieldName)}"]`)
 
         if (input) {
@@ -455,23 +374,11 @@ function initFormSubmission() {
             })
         }
 
-        // Variant rows (thumbnail / images[] file inputs) are already part of
-        // the form DOM, so FormData(form) below picks them up automatically —
-        // no special handling needed here, only the product-level dropzones.
+        // No more product-level thumbnail/images to manually append — every
+        // file input (variant thumbnail + variant gallery) is a real named
+        // form field inside variant-row.blade.php, so FormData(form) below
+        // already captures everything correctly.
         const formData = new FormData(form)
-
-        formData.delete('thumbnail')
-        formData.delete('images[]')
-
-        if (thumbnailDropzone && thumbnailDropzone.files.length > 0) {
-            formData.append('thumbnail', thumbnailDropzone.files[0])
-        }
-
-        if (galleryDropzone && galleryDropzone.files.length > 0) {
-            galleryDropzone.files.forEach((file, index) => {
-                formData.append(`images[${index}]`, file)
-            })
-        }
 
         submitBtn.disabled = true
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Publishing...'
@@ -533,7 +440,6 @@ function refreshLucideIcons() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initQuillEditors()
-    initDropzones()
     initSelect2()
     initVariantBuilder()
     initFormSubmission()

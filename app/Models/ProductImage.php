@@ -12,7 +12,7 @@ class ProductImage extends Model
     protected $fillable = [
         'product_id',
         'image_path',
-        'product_variant_id',
+        'product_variant_id', // now always set — every image belongs to exactly one variant
         'is_primary',
         'sort_order',
     ];
@@ -26,10 +26,6 @@ class ProductImage extends Model
         ];
     }
 
-    // ─────────────────────────────────────────────
-    // RELATIONSHIPS
-    // ─────────────────────────────────────────────
-
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -40,18 +36,10 @@ class ProductImage extends Model
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    // ─────────────────────────────────────────────
-    // ACCESSORS
-    // ─────────────────────────────────────────────
-
     public function getImageUrlAttribute(): string
     {
         return asset('storage/'.$this->image_path);
     }
-
-    // ─────────────────────────────────────────────
-    // SCOPES
-    // ─────────────────────────────────────────────
 
     public function scopePrimary($query)
     {

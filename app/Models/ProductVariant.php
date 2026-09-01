@@ -62,6 +62,11 @@ class ProductVariant extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
     // ─────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────
@@ -92,6 +97,24 @@ class ProductVariant extends Model
     public function getIsOutOfStockAttribute(): bool
     {
         return $this->stock_quantity <= 0;
+    }
+
+    /**
+     * The image shown as this variant's "cover" — used for the storefront
+     * hover-swap thumbnail and the admin variant row preview.
+     * Falls back: explicit thumbnail → primary gallery image → first gallery image → null.
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if ($this->thumbnail) {
+            return asset('storage/'.$this->thumbnail);
+        }
+
+        $image = $this->relationLoaded('images')
+            ? ($this->images->firstWhere('is_primary', true) ?? $this->images->first())
+            : ($this->images()->where('is_primary', true)->first() ?? $this->images()->first());
+
+        return $image ? asset('storage/'.$image->image_path) : null;
     }
 
     /**
