@@ -1,5 +1,7 @@
 <?php
 
+// app/Http/Requests/Admin/Product/UpdateProductRequest.php
+
 namespace App\Http\Requests\Admin\Product;
 
 use App\Models\Category;
@@ -36,12 +38,6 @@ class UpdateProductRequest extends FormRequest
             ],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
 
-            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'delete_image_ids' => ['nullable', 'array'],
-            'delete_image_ids.*' => ['integer', 'exists:product_images,id'],
-
             'is_active' => ['required'],
             'is_featured' => ['nullable'],
 
@@ -56,7 +52,7 @@ class UpdateProductRequest extends FormRequest
             'related_products' => ['nullable', 'array'],
             'related_products.*' => ['integer', Rule::notIn([$productId]), 'exists:products,id'],
 
-            // ── Variants ──
+            // ── Variants (thumbnail/gallery live per-variant only) ──
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'variants.*.price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
@@ -92,10 +88,6 @@ class UpdateProductRequest extends FormRequest
             'category_id.required' => 'Category is required.',
             'category_id.exists' => 'Selected category does not exist.',
             'brand_id.exists' => 'Selected brand does not exist.',
-            'thumbnail.image' => 'Thumbnail must be an image.',
-            'thumbnail.mimes' => 'Thumbnail must be jpeg, jpg, png or webp.',
-            'thumbnail.max' => 'Thumbnail size cannot exceed 2MB.',
-            'images.max' => 'You can upload a maximum of 10 images.',
             'is_active.required' => 'Status is required.',
             'related_products.*.not_in' => 'A product cannot be related to itself.',
             'related_products.*.exists' => 'One or more related products do not exist.',

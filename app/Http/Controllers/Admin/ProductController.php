@@ -126,7 +126,7 @@ class ProductController extends Controller
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', "Product \"{$product->name}\" created successfully with {$product->variants()->count()} variant(s).");
-        } catch (\Throwable $e) {          // ← was \Exception — broadened so real PHP errors are also caught & logged
+        } catch (\Throwable $e) {
             Log::error('Admin failed to create product.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),
@@ -171,15 +171,26 @@ class ProductController extends Controller
         try {
             $this->productService->update($product, $request->validated());
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'redirect' => route('admin.ecommerce.product.index'),
+                    'message' => 'Product updated successfully.',
+                ]);
+            }
+
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', 'Product updated successfully.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Admin failed to update product.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),
                 'product_id' => $product->id,
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Failed to update product: '.$e->getMessage()], 500);
+            }
 
             return redirect()
                 ->route('admin.ecommerce.product.index')
@@ -200,7 +211,7 @@ class ProductController extends Controller
             return redirect()
                 ->route('admin.ecommerce.product.index')
                 ->with('success', 'Product deleted successfully.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Admin failed to delete product.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),
@@ -323,7 +334,7 @@ class ProductController extends Controller
             $this->productService->deleteSingleImage($product, $image);
 
             return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to delete product image via AJAX.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),
@@ -345,7 +356,7 @@ class ProductController extends Controller
             $this->productService->setPrimaryImage($product, $image->id);
 
             return response()->json(['success' => true, 'message' => 'Primary image updated.']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to set primary product image via AJAX.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),
@@ -368,7 +379,7 @@ class ProductController extends Controller
             $this->productService->reorderImages($product, $request->input('ordered_ids'));
 
             return response()->json(['success' => true, 'message' => 'Image order updated.']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to reorder product images via AJAX.', [
                 'exception' => $e,
                 'admin_id' => Auth::guard('admin')->id(),

@@ -36,21 +36,21 @@ class ProductService
     // ─────────────────────────────────────────────
 
     /**
-     * Expected $data shape:
+     * Expected $data shape (no more top-level thumbnail/images — every
+     * product must have >=1 variant, and images/thumbnail always live
+     * on the variant, never on the product itself):
      * [
      *   'name', 'short_description', 'description', 'category_id', 'brand_id',
-     *   'thumbnail' => UploadedFile|null,
      *   'is_active', 'is_featured', 'meta' => [...],
      *   'tags' => [...], 'related_products' => [...],
-     *   'images' => UploadedFile[],           // product-level gallery
      *   'variants' => [
      *       [
      *           'price', 'purchase_price', 'discount_type', 'discount_value',
      *           'stock_quantity', 'low_stock_threshold', 'weight', 'weight_unit',
-     *           'thumbnail' => UploadedFile|null,
+     *           'thumbnail' => UploadedFile|null,   // -> storage/products/thumbnail
      *           'is_active', 'is_default',
      *           'option_values' => [['option' => 'Color', 'value' => 'Red'], ...],
-     *           'images' => UploadedFile[],    // variant-specific gallery
+     *           'images' => UploadedFile[],          // -> storage/products/gallery
      *       ],
      *       ...
      *   ],
@@ -63,11 +63,6 @@ class ProductService
         try {
             return DB::transaction(function () use ($data) {
 
-                $thumbnailPath = null;
-                if (! empty($data['thumbnail'])) {
-                    $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
-                }
-
                 $product = Product::create([
                     'name' => $data['name'],
                     'slug' => $this->generateUniqueSlug($data['name']),
@@ -75,7 +70,6 @@ class ProductService
                     'description' => $data['description'] ?? null,
                     'category_id' => $data['category_id'],
                     'brand_id' => $data['brand_id'] ?? null,
-                    'thumbnail' => $thumbnailPath,
                     'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
                     'is_featured' => $this->resolveBoolean($data['is_featured'] ?? false),
                     'meta' => $data['meta'] ?? null,
@@ -92,10 +86,6 @@ class ProductService
                 }
 
                 $this->ensureExactlyOneDefaultVariant($product);
-
-                if (! empty($data['images'])) {
-                    $this->storeProductImages($product, $data['images']);
-                }
 
                 if (! empty($data['tags'])) {
                     $this->syncTags($product, $data['tags']);
@@ -115,15 +105,15 @@ class ProductService
 
                 return $product->fresh([
                     'variants.optionValues.option',
-                    'images',
+                    'variants.images',
                     'tags',
                     'relatedProducts',
                 ]);
             });
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Product creation failed.', [
                 'exception' => $e,
-                'data' => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
+                'data' => collect($data)->except(['variants'])->toArray(),
             ]);
             throw $e;
         }
@@ -135,19 +125,14 @@ class ProductService
 
     /**
      * Same shape as store(), plus per-variant 'id' (existing variant to update
-     * vs. omitted = new variant), and top-level 'delete_variant_ids',
-     * 'delete_image_ids', and per-variant 'delete_image_ids'.
+     * vs. omitted = new variant), and top-level 'delete_variant_ids'.
+     * Per-variant 'delete_image_ids' removes specific gallery images from
+     * that variant.
      */
     public function update(Product $product, array $data): Product
     {
         try {
             return DB::transaction(function () use ($product, $data) {
-
-                $thumbnailPath = $product->thumbnail;
-                if (! empty($data['thumbnail'])) {
-                    $this->deleteImage($product->thumbnail);
-                    $thumbnailPath = $this->uploadImage($data['thumbnail'], 'products/thumbnails');
-                }
 
                 $slug = $product->slug;
                 if ($product->name !== $data['name']) {
@@ -161,7 +146,6 @@ class ProductService
                     'description' => $data['description'] ?? null,
                     'category_id' => $data['category_id'],
                     'brand_id' => $data['brand_id'] ?? null,
-                    'thumbnail' => $thumbnailPath,
                     'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
                     'is_featured' => $this->resolveBoolean($data['is_featured'] ?? false),
                     'meta' => $data['meta'] ?? null,
@@ -186,14 +170,6 @@ class ProductService
 
                 $this->ensureExactlyOneDefaultVariant($product);
 
-                if (! empty($data['delete_image_ids'])) {
-                    $this->deleteProductImages($product, $data['delete_image_ids']);
-                }
-
-                if (! empty($data['images'])) {
-                    $this->storeProductImages($product, $data['images']);
-                }
-
                 $this->syncTags($product, $data['tags'] ?? []);
                 $this->syncRelatedProducts($product, $data['related_products'] ?? []);
 
@@ -206,16 +182,16 @@ class ProductService
 
                 return $product->fresh([
                     'variants.optionValues.option',
-                    'images',
+                    'variants.images',
                     'tags',
                     'relatedProducts',
                 ]);
             });
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Product update failed.', [
                 'exception' => $e,
                 'product_id' => $product->id,
-                'data' => collect($data)->except(['thumbnail', 'images', 'variants'])->toArray(),
+                'data' => collect($data)->except(['variants'])->toArray(),
             ]);
             throw $e;
         }
@@ -238,8 +214,6 @@ class ProductService
 
         try {
             return DB::transaction(function () use ($product) {
-
-                $this->deleteImage($product->thumbnail);
 
                 foreach ($product->images as $image) {
                     $this->deleteImage($image->image_path);
@@ -268,7 +242,7 @@ class ProductService
 
                 return $result;
             });
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Product deletion failed.', [
                 'exception' => $e,
                 'product_id' => $product->id,
@@ -278,7 +252,7 @@ class ProductService
     }
 
     // ─────────────────────────────────────────────
-    // TOGGLE STATUS / FEATURED (product-level, unchanged in meaning)
+    // TOGGLE STATUS / FEATURED — unchanged
     // ─────────────────────────────────────────────
 
     public function toggleStatus(Product $product): Product
@@ -325,7 +299,7 @@ class ProductService
     {
         $thumbnailPath = null;
         if (! empty($variantData['thumbnail'])) {
-            $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/variants');
+            $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/thumbnail');
         }
 
         $variant = ProductVariant::create([
@@ -347,7 +321,7 @@ class ProductService
         $this->syncVariantOptionValues($variant, $variantData['option_values'] ?? []);
 
         if (! empty($variantData['images'])) {
-            $this->storeProductImages($product, $variantData['images'], $variant->id);
+            $this->storeVariantImages($product, $variant, $variantData['images']);
         }
 
         return $variant;
@@ -360,7 +334,7 @@ class ProductService
         $thumbnailPath = $variant->thumbnail;
         if (! empty($variantData['thumbnail'])) {
             $this->deleteImage($variant->thumbnail);
-            $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/variants');
+            $thumbnailPath = $this->uploadImage($variantData['thumbnail'], 'products/thumbnail');
         }
 
         $variant->update([
@@ -383,11 +357,11 @@ class ProductService
         }
 
         if (! empty($variantData['delete_image_ids'])) {
-            $this->deleteProductImages($product, $variantData['delete_image_ids']);
+            $this->deleteVariantImages($variant, $variantData['delete_image_ids']);
         }
 
         if (! empty($variantData['images'])) {
-            $this->storeProductImages($product, $variantData['images'], $variant->id);
+            $this->storeVariantImages($product, $variant, $variantData['images']);
         }
 
         return $variant->fresh();
@@ -500,9 +474,6 @@ class ProductService
             ]
         );
 
-        // firstOrCreate only sets swatch on initial creation — if the value
-        // already existed (e.g. "Red" reused across products) and a swatch
-        // was submitted this time, make sure it's actually saved.
         if ($swatch && $optionValue->swatch !== $swatch) {
             $optionValue->update(['swatch' => $swatch]);
         }
@@ -511,7 +482,7 @@ class ProductService
     }
 
     // ─────────────────────────────────────────────
-    // STOCK MANAGEMENT (now variant-scoped)
+    // STOCK MANAGEMENT (variant-scoped)
     // ─────────────────────────────────────────────
 
     public function updateVariantStock(ProductVariant $variant, int $quantity): ProductVariant
@@ -540,17 +511,14 @@ class ProductService
     }
 
     // ─────────────────────────────────────────────
-    // IMAGE HANDLING (GALLERY — product-level or variant-scoped)
+    // IMAGE HANDLING — variant gallery only. Every image now belongs to
+    // exactly one variant (product_variant_id is required), so all the
+    // old "shared/product-level gallery" branching is gone.
     // ─────────────────────────────────────────────
 
-    private function storeProductImages(Product $product, array $images, ?int $variantId = null): void
+    private function storeVariantImages(Product $product, ProductVariant $variant, array $images): void
     {
-        $existingQuery = $product->images()->when(
-            $variantId,
-            fn ($q) => $q->where('product_variant_id', $variantId),
-            fn ($q) => $q->whereNull('product_variant_id')
-        );
-
+        $existingQuery = $variant->images();
         $existingCount = $existingQuery->count();
         $hasPrimary = (clone $existingQuery)->where('is_primary', true)->exists();
 
@@ -563,7 +531,7 @@ class ProductService
 
             ProductImage::create([
                 'product_id' => $product->id,
-                'product_variant_id' => $variantId,
+                'product_variant_id' => $variant->id,
                 'image_path' => $path,
                 'is_primary' => ! $hasPrimary && $index === 0,
                 'sort_order' => $existingCount + $index,
@@ -575,32 +543,22 @@ class ProductService
         }
     }
 
-    private function deleteProductImages(Product $product, array $imageIds): void
+    private function deleteVariantImages(ProductVariant $variant, array $imageIds): void
     {
-        $images = $product->images()->whereIn('id', $imageIds)->get();
+        $images = $variant->images()->whereIn('id', $imageIds)->get();
 
         foreach ($images as $image) {
             $this->deleteImage($image->image_path);
             $wasPrimary = $image->is_primary;
-            $variantId = $image->product_variant_id;
             $image->delete();
 
             if ($wasPrimary) {
-                $next = $product->images()
-                    ->when(
-                        $variantId,
-                        fn ($q) => $q->where('product_variant_id', $variantId),
-                        fn ($q) => $q->whereNull('product_variant_id')
-                    )
-                    ->orderBy('sort_order')
-                    ->first();
-
-                $next?->update(['is_primary' => true]);
+                $variant->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
             }
         }
 
-        Log::info('Product gallery images deleted.', [
-            'product_id' => $product->id,
+        Log::info('Variant gallery images deleted.', [
+            'variant_id' => $variant->id,
             'image_ids' => $imageIds,
         ]);
     }
@@ -608,7 +566,7 @@ class ProductService
     public function deleteSingleImage(Product $product, ProductImage $image): void
     {
         try {
-            DB::transaction(function () use ($product, $image) {
+            DB::transaction(function () use ($image) {
                 $this->deleteImage($image->image_path);
                 $wasPrimary = $image->is_primary;
                 $variantId = $image->product_variant_id;
@@ -616,24 +574,17 @@ class ProductService
                 $image->delete();
 
                 if ($wasPrimary) {
-                    $next = $product->images()
-                        ->when(
-                            $variantId,
-                            fn ($q) => $q->where('product_variant_id', $variantId),
-                            fn ($q) => $q->whereNull('product_variant_id')
-                        )
+                    ProductImage::where('product_variant_id', $variantId)
                         ->orderBy('sort_order')
-                        ->first();
-
-                    $next?->update(['is_primary' => true]);
+                        ->first()
+                        ?->update(['is_primary' => true]);
                 }
 
-                Log::info('Single product image deleted.', ['product_id' => $product->id, 'image_id' => $imageId]);
+                Log::info('Single product image deleted.', ['image_id' => $imageId, 'variant_id' => $variantId]);
             });
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Single product image deletion failed.', [
                 'exception' => $e,
-                'product_id' => $product->id,
                 'image_id' => $image->id,
             ]);
             throw $e;
@@ -643,25 +594,19 @@ class ProductService
     public function setPrimaryImage(Product $product, int $imageId): void
     {
         try {
-            DB::transaction(function () use ($product, $imageId) {
-                $image = $product->images()->findOrFail($imageId);
+            DB::transaction(function () use ($imageId) {
+                $image = ProductImage::findOrFail($imageId);
 
-                $product->images()
-                    ->when(
-                        $image->product_variant_id,
-                        fn ($q) => $q->where('product_variant_id', $image->product_variant_id),
-                        fn ($q) => $q->whereNull('product_variant_id')
-                    )
+                ProductImage::where('product_variant_id', $image->product_variant_id)
                     ->update(['is_primary' => false]);
 
                 $image->update(['is_primary' => true]);
             });
 
-            Log::info('Product primary image updated.', ['product_id' => $product->id, 'image_id' => $imageId]);
-        } catch (\Exception $e) {
+            Log::info('Product primary image updated.', ['image_id' => $imageId]);
+        } catch (\Throwable $e) {
             Log::error('Setting primary image failed.', [
                 'exception' => $e,
-                'product_id' => $product->id,
                 'image_id' => $imageId,
             ]);
             throw $e;
@@ -681,7 +626,7 @@ class ProductService
                 'product_id' => $product->id,
                 'ordered_ids' => $orderedIds,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Reordering product images failed.', ['exception' => $e, 'product_id' => $product->id]);
             throw $e;
         }
@@ -753,7 +698,7 @@ class ProductService
             }
 
             return $path;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Image upload failed.', [
                 'exception' => $e,
                 'directory' => $directory,
@@ -814,7 +759,7 @@ class ProductService
     }
 
     // ─────────────────────────────────────────────
-    // SKU AUTO-GENERATION — now per variant
+    // SKU AUTO-GENERATION (fixed for soft-deleted collisions — from previous fix)
     // ─────────────────────────────────────────────
 
     private function generateUniqueVariantSku(int $categoryId): string
@@ -827,33 +772,26 @@ class ProductService
 
         $prefix = $this->generateSkuPrefix($category?->name ?? 'PRD');
 
-        return DB::transaction(function () use ($prefix) {
-            // withTrashed() is essential: a soft-deleted variant's SKU is still
-            // physically present and enforced by the DB unique index, so it
-            // must count as "already used" even though normal queries skip it.
-            $lastSku = ProductVariant::withTrashed()
-                ->where('sku', 'like', $prefix.'-%')
-                ->lockForUpdate()
-                ->orderBy('sku', 'desc')
-                ->value('sku');
+        $lastSku = ProductVariant::withTrashed()
+            ->where('sku', 'like', $prefix.'-%')
+            ->lockForUpdate()
+            ->orderBy('sku', 'desc')
+            ->value('sku');
 
-            $nextNumber = 1;
-            if ($lastSku) {
-                $lastNumber = (int) substr($lastSku, strrpos($lastSku, '-') + 1);
-                $nextNumber = $lastNumber + 1;
-            }
+        $nextNumber = 1;
+        if ($lastSku) {
+            $lastNumber = (int) substr($lastSku, strrpos($lastSku, '-') + 1);
+            $nextNumber = $lastNumber + 1;
+        }
 
+        $sku = $prefix.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+        while (ProductVariant::withTrashed()->where('sku', $sku)->exists()) {
+            $nextNumber++;
             $sku = $prefix.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        }
 
-            // Belt-and-suspenders: guarantees uniqueness even if the sequential
-            // numbering above ever produces a gap-related collision.
-            while (ProductVariant::withTrashed()->where('sku', $sku)->exists()) {
-                $nextNumber++;
-                $sku = $prefix.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-            }
-
-            return $sku;
-        });
+        return $sku;
     }
 
     private function generateSkuPrefix(string $categoryName): string
@@ -871,7 +809,7 @@ class ProductService
     public function getProductsList(array $filters = [])
     {
         $query = Product::with(['category', 'brand', 'defaultVariant'])
-            ->withCount(['images', 'tags', 'variants']);
+            ->withCount(['tags', 'variants']);
 
         if (! empty($filters['category_id'])) {
             $query->byCategory($filters['category_id']);
@@ -896,9 +834,8 @@ class ProductService
             'brand',
             'variants.optionValues.option',
             'variants.images' => fn ($q) => $q->orderBy('sort_order'),
-            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.min_price'),
         ]);
     }
 
@@ -909,9 +846,8 @@ class ProductService
             'brand',
             'variants.optionValues.option',
             'variants.images' => fn ($q) => $q->orderBy('sort_order'),
-            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.min_price'),
             'reviews' => fn ($q) => $q->latest()->with('user:id,name,avatar'),
         ]);
     }
@@ -932,7 +868,7 @@ class ProductService
 
     public function getProductsForRelation(?string $excludeId = null)
     {
-        $query = Product::active()->select('id', 'name', 'min_price', 'thumbnail');
+        $query = Product::active()->select('id', 'name', 'min_price');
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
