@@ -28,13 +28,14 @@ class ProductCatalogService
     {
         $query = Product::query()
             ->active()
-            ->inStock() // uses the total_stock cache — see Product::scopeInStock
+            ->inStock()
             ->with([
                 'category',
                 'brand',
                 'primaryImage',
                 'defaultVariant',
                 'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
             ]);
 
         if ($scopeCategory) {
@@ -167,9 +168,8 @@ class ProductCatalogService
             'brand',
             'variants' => fn ($v) => $v->active()->with('optionValues.option'),
             'variants.images' => fn ($q) => $q->orderBy('sort_order'),
-            'images' => fn ($q) => $q->whereNull('product_variant_id')->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.thumbnail', 'products.min_price'),
+            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.min_price'),
             'reviews' => fn ($q) => $q->approved()->latest()->with('user:id,name,avatar'),
         ]);
     }
@@ -203,22 +203,45 @@ class ProductCatalogService
         $combinations = $variants->mapWithKeys(function ($variant) {
             $key = $variant->optionValues->pluck('id')->sort()->implode('-');
 
+            $gallery = $variant->images->map(fn ($img) => [
+                'id' => $img->id,
+                'url' => asset('storage/'.$img->image_path),
+                'is_primary' => $img->is_primary,
+            ])->values();
+
             return [$key => [
                 'variant_id' => $variant->id,
                 'sku' => $variant->sku,
                 'price' => (float) $variant->price,
                 'final_price' => (float) $variant->final_price,
+                'has_discount' => $variant->discount_type && $variant->discount_value,
                 'stock_quantity' => $variant->stock_quantity,
                 'is_in_stock' => $variant->is_in_stock,
                 'is_low_stock' => $variant->is_low_stock,
-                'thumbnail_url' => $variant->thumbnail ? asset('storage/'.$variant->thumbnail) : null,
+                'weight' => $variant->weight,
+                'weight_unit' => $variant->weight_unit,
+                'thumbnail_url' => $variant->thumbnail_url,
                 'is_default' => $variant->is_default,
+                'gallery' => $gallery,
             ]];
         });
+
+        // Combined gallery across ALL variants — shown before the customer
+        // makes any selection, per the "show everything together first" requirement.
+        $allImages = $variants
+            ->flatMap(fn ($v) => $v->images)
+            ->sortBy('sort_order')
+            ->map(fn ($img) => [
+                'id' => $img->id,
+                'url' => asset('storage/'.$img->image_path),
+                'is_primary' => $img->is_primary,
+            ])
+            ->values();
 
         return [
             'option_groups' => $optionGroups,
             'combinations' => $combinations,
+            'all_images' => $allImages,
             'default_key' => optional($variants->firstWhere('is_default', true))
                 ?->optionValues->pluck('id')->sort()->implode('-') ?? '',
         ];

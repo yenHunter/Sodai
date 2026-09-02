@@ -27,12 +27,11 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'brand', 'defaultVariant'])
+        $query = Product::with(['category', 'brand', 'defaultVariant.images'])
             ->select(
                 'id',
                 'name',
                 'slug',
-                'thumbnail',
                 'short_description',
                 'category_id',
                 'brand_id',

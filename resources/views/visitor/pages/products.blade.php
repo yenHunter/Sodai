@@ -77,72 +77,7 @@
                             <div class="shop-pro-inner">
                                 <div class="row">
                                     @forelse ($products as $product)
-                                        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-6 mb-6 pro-gl-content">
-                                            <div class="ec-product-inner">
-                                                <div class="ec-pro-image-outer">
-                                                    <div class="ec-pro-image">
-                                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
-                                                            <img class="main-image"
-                                                                src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/6_1.jpg') }}"
-                                                                alt="{{ $product->name }}" />
-                                                        </a>
-                                                        @if ($product->has_discount)
-                                                            <span
-                                                                class="percentage">{{ round($product->discount_percentage, 2) }}%</span>
-                                                        @endif
-                                                        @if ($product->is_out_of_stock)
-                                                            <span class="flags">
-                                                                <span class="sale">Sold Out</span>
-                                                            </span>
-                                                        @endif
-                                                        <a href="{{ route('visitor.products.show', $product->slug) }}"
-                                                            class="quickview" title="View Product">
-                                                            <i class="fi-rr-eye"></i>
-                                                        </a>
-                                                        <div class="ec-pro-actions">
-                                                            <a href="{{ route('visitor.products.show', $product->slug) }}"
-                                                                class="ec-btn-group compare" title="View Details">
-                                                                <i class="fi-rr-shopping-basket"></i>
-                                                            </a>
-                                                            @auth('customer')
-                                                                <a href="#" class="ec-btn-group wishlist toggle-wishlist"
-                                                                    data-product-id="{{ $product->id }}" title="Wishlist">
-                                                                    <i class="fi-rr-heart"></i>
-                                                                </a>
-                                                            @else
-                                                                <a href="{{ route('visitor.login') }}"
-                                                                    class="ec-btn-group wishlist" title="Login to add to wishlist">
-                                                                    <i class="fi-rr-heart"></i>
-                                                                </a>
-                                                            @endauth
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="ec-pro-content">
-                                                    <h5 class="ec-pro-title">
-                                                        <a href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
-                                                    </h5>
-                                                    <div class="ec-pro-rating">
-                                                        @for ($i = 1; $i <= 5; $i++)
-                                                            <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
-                                                        @endfor
-                                                    </div>
-                                                    <div class="ec-pro-list-desc">
-                                                        <p>{{ $product->short_description }}</p>
-                                                    </div>
-                                                    <span class="ec-price">
-                                                        @if ($product->has_variants)
-                                                            <span class="new-price">{{ $product->price_range_label }}</span>
-                                                        @elseif ($product->has_discount)
-                                                            <span class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
-                                                            <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
-                                                        @else
-                                                            <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @include('visitor.partials.product-card', ['product' => $product])
                                     @empty
                                         <div class="col-12 text-center py-5">
                                             <p class="mb-0">No products found matching your filters.</p>
@@ -176,8 +111,8 @@
                                             @foreach ($categories->take(6) as $category)
                                                 <li>
                                                     <div class="ec-sidebar-block-item">
-                                                        <input type="checkbox" name="category[]"
-                                                            value="{{ $category->id }}" class="filter-auto-submit"
+                                                        <input type="checkbox" name="category[]" value="{{ $category->id }}"
+                                                            class="filter-auto-submit"
                                                             {{ in_array($category->id, $filters['category']) ? 'checked' : '' }} />
                                                         <a href="#">{{ $category->name }}</a><span
                                                             class="checked"></span>
@@ -224,8 +159,8 @@
                                             @foreach ($sizes as $size)
                                                 <li>
                                                     <div class="ec-sidebar-block-item">
-                                                        <input type="checkbox" name="size[]"
-                                                            value="{{ $size }}" class="filter-auto-submit"
+                                                        <input type="checkbox" name="size[]" value="{{ $size }}"
+                                                            class="filter-auto-submit"
                                                             {{ in_array($size, $filters['size']) ? 'checked' : '' }} />
                                                         <a href="#">{{ $size }}</a><span
                                                             class="checked"></span>
@@ -249,8 +184,8 @@
                                                 <li class="{{ in_array($color, $filters['color']) ? 'active' : '' }}">
                                                     <label class="ec-sidebar-block-item" title="{{ $color }}"
                                                         style="cursor:pointer">
-                                                        <input type="checkbox" name="color[]"
-                                                            value="{{ $color }}" class="filter-auto-submit d-none"
+                                                        <input type="checkbox" name="color[]" value="{{ $color }}"
+                                                            class="filter-auto-submit d-none"
                                                             {{ in_array($color, $filters['color']) ? 'checked' : '' }} />
                                                         <span style="background-color: {{ strtolower($color) }};"></span>
                                                     </label>
@@ -304,5 +239,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/pages/visitor-products.js'])
+    @vite(['resources/js/pages/visitor-products.js', 'resources/js/pages/visitor-product-card-swatch.js'])
 @endsection

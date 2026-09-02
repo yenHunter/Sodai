@@ -104,8 +104,8 @@
                                         <td>
                                             <div class="d-flex">
                                                 <div class="avatar-xl me-3">
-                                                    @if ($product->thumbnail)
-                                                        <img src="{{ Storage::url($product->thumbnail) }}"
+                                                    @if ($product->thumbnail_url)
+                                                        <img src="{{ $product->thumbnail_url }}"
                                                             alt="{{ $product->name }}" class="img-fluid rounded" />
                                                     @else
                                                         <div class="bg-light rounded d-flex align-items-center justify-content-center"

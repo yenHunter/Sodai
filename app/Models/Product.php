@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -94,6 +95,23 @@ class Product extends Model
     public function defaultVariant()
     {
         return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
+    /**
+     * Convenience proxy to the default variant's primary gallery image,
+     * since images live on ProductVariant, not Product, in this schema.
+     */
+    public function primaryImage()
+    {
+        return $this->hasOneThrough(
+            ProductImage::class,
+            ProductVariant::class,
+            'product_id',       // FK on product_variants referencing products
+            'product_variant_id', // FK on product_images referencing product_variants
+            'id',                // local key on products
+            'id'                 // local key on product_variants
+        )->where('product_variants.is_default', true)
+            ->where('product_images.is_primary', true);
     }
 
     // ─────────────────────────────────────────────
@@ -216,6 +234,38 @@ class Product extends Model
             'max_price' => $variants->max('price') ?? 0,
             'total_stock' => $variants->sum('stock_quantity'),
         ]);
+    }
+
+    /**
+     * Distinct color-variant swatches for the listing card hover effect.
+     * One entry per distinct "Color" option value, using that variant's
+     * thumbnail + price. Products without a Color option return an empty collection.
+     */
+    public function getColorSwatchOptionsAttribute(): Collection
+    {
+        return $this->variants
+            ->filter(fn ($v) => $v->is_active)
+            ->map(function ($v) {
+                $colorValue = $v->optionValues->first(
+                    fn ($ov) => $ov->option && strtolower($ov->option->name) === 'color'
+                );
+
+                if (! $colorValue) {
+                    return null;
+                }
+
+                return [
+                    'value_id' => $colorValue->id,
+                    'swatch' => $colorValue->swatch,
+                    'label' => $colorValue->value,
+                    'thumbnail_url' => $v->thumbnail_url,
+                    'price' => (float) $v->price,
+                    'final_price' => (float) $v->final_price,
+                ];
+            })
+            ->filter()
+            ->unique('value_id')
+            ->values();
     }
 
     // ─────────────────────────────────────────────

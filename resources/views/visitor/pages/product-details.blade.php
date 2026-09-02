@@ -31,11 +31,10 @@
                             <div class="row">
                                 <div class="single-pro-img single-pro-img-no-sidebar">
                                     <div class="single-product-scroll">
-                                        <div class="single-product-cover">
-                                            @forelse ($product->images as $image)
+                                        <div class="single-product-cover" id="variant-gallery-cover">
+                                            @forelse ($variantMatrix['all_images'] as $image)
                                                 <div class="single-slide zoom-image-hover">
-                                                    <img class="img-responsive"
-                                                        src="{{ asset('storage/' . $image->image_path) }}"
+                                                    <img class="img-responsive" src="{{ $image['url'] }}"
                                                         alt="{{ $product->name }}">
                                                 </div>
                                             @empty
@@ -46,11 +45,10 @@
                                                 </div>
                                             @endforelse
                                         </div>
-                                        <div class="single-nav-thumb">
-                                            @forelse ($product->images as $image)
+                                        <div class="single-nav-thumb" id="variant-gallery-thumb">
+                                            @forelse ($variantMatrix['all_images'] as $image)
                                                 <div class="single-slide">
-                                                    <img class="img-responsive"
-                                                        src="{{ asset('storage/' . $image->image_path) }}"
+                                                    <img class="img-responsive" src="{{ $image['url'] }}"
                                                         alt="{{ $product->name }}">
                                                 </div>
                                             @empty
@@ -89,6 +87,7 @@
                                                 <span class="ec-single-ps-title">Price</span>
                                                 <span class="new-price"
                                                     id="variant-price">${{ number_format($product->final_price, 2) }}</span>
+                                                <span class="old-price d-none" id="variant-old-price"></span>
                                             </div>
                                             <div class="ec-single-stoke">
                                                 <span class="ec-single-ps-title"
@@ -96,6 +95,10 @@
                                                 <span class="ec-single-sku" id="variant-sku">SKU#:
                                                     {{ $product->defaultVariant->sku ?? '—' }}</span>
                                             </div>
+                                        </div>
+                                        <div class="ec-single-weight d-none" id="variant-weight-wrap">
+                                            <span class="ec-single-ps-title">Weight: </span>
+                                            <span id="variant-weight"></span>
                                         </div>
 
                                         @if (!empty($variantMatrix['option_groups']) && count($variantMatrix['option_groups']))

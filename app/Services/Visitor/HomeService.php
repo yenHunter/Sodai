@@ -19,9 +19,17 @@ class HomeService
 
     public function getFeaturedProducts(int $limit = 8)
     {
-        return Product::featured()
+        return Product::active()
             ->inStock()
-            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->newest()
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
+            ])
             ->limit($limit)
             ->get();
     }
@@ -31,7 +39,14 @@ class HomeService
         return Product::active()
             ->inStock()
             ->newest()
-            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
+            ])
             ->limit($limit)
             ->get();
     }
@@ -50,17 +65,32 @@ class HomeService
     {
         return Product::active()
             ->inStock()
-            ->topRated()
-            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->newest()
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
+            ])
             ->limit($limit)
             ->get();
     }
 
     public function getFeatureItems(int $limit = 2)
     {
-        return Product::featured()
+        return Product::active()
             ->inStock()
-            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->newest()
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
+            ])
             ->limit($limit)
             ->get();
     }
@@ -69,8 +99,15 @@ class HomeService
     {
         return Product::active()
             ->inStock()
-            // ->withDiscount()
-            ->with(['category', 'brand', 'primaryImage', 'defaultVariant'])
+            ->newest()
+            ->with([
+                'category',
+                'brand',
+                'primaryImage',
+                'defaultVariant',
+                'variants' => fn ($v) => $v->active(),
+                'variants.optionValues.option',
+            ])
             ->limit($limit)
             ->get();
     }
