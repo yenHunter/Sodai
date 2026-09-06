@@ -61,11 +61,10 @@
                 <div class="ec-pro-option">
                     <div class="ec-pro-color">
                         <span class="ec-pro-opt-label">Color</span>
-                        <ul class="ec-opt-swatch">
+                        <ul class="ec-opt-swatch ec-change-img" data-default-thumb="{{ $defaultThumb }}">
                             @foreach ($swatches as $swatch)
                                 <li class="{{ $loop->first ? 'active' : '' }}">
                                     <a href="javascript:void(0)" class="product-swatch-option"
-                                        data-thumb="{{ $swatch['thumbnail_url'] ?? $defaultThumb }}"
                                         data-price="{{ number_format($swatch['final_price'], 2) }}"
                                         data-old-price="{{ number_format($swatch['price'], 2) }}"
                                         title="{{ $swatch['label'] }}">
@@ -75,6 +74,8 @@
                                             <span
                                                 style="background-image: url('{{ $swatch['thumbnail_url'] ?? $defaultThumb }}'); background-size: cover; background-position: center;"></span>
                                         @endif
+                                        <span class="ec-opt-clr-img d-none"
+                                            data-src="{{ $swatch['thumbnail_url'] ?? $defaultThumb }}"></span>
                                     </a>
                                 </li>
                             @endforeach

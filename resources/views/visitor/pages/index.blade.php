@@ -301,34 +301,13 @@
                     </div>
                 </div>
                 <div class="row">
-                    @foreach ($topRatedProducts as $product)
-                        <div class="col-lg-2 col-md-4 col-sm-6 mb-6">
-                            <div class="ec-product-inner">
-                                <div class="ec-pro-image-outer">
-                                    <div class="ec-pro-image">
-                                        <a href="{{ route('visitor.products.show', $product->slug) }}" class="image">
-                                            <img class="main-image"
-                                                src="{{ $product->thumbnail_url ?? asset('visitor/images/product-image/2_1.jpg') }}"
-                                                alt="{{ $product->name }}" />
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="ec-pro-content">
-                                    <h5 class="ec-pro-title"><a
-                                            href="{{ route('visitor.products.show', $product->slug) }}">{{ $product->name }}</a>
-                                    </h5>
-                                    <div class="ec-pro-rating">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            <i
-                                                class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
-                                        @endfor
-                                    </div>
-                                    <span class="ec-price"><span
-                                            class="new-price">${{ number_format($product->final_price, 2) }}</span></span>
-                                </div>
-                            </div>
+                    @forelse ($topRatedProducts as $product)
+                        @include('visitor.partials.product-card', ['product' => $product])
+                    @empty
+                        <div class="col-12 text-center py-5">
+                            <p class="mb-0">No products found matching your filters.</p>
                         </div>
-                    @endforeach
+                    @endforelse
                 </div>
             </div>
         </section>

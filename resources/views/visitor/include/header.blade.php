@@ -200,7 +200,7 @@
                                 </ul>
                             </li>
                             <li>
-                                <a href="javascript:void(0)">Products</a>
+                                <a href="{{ route('visitor.products.index') }}">Products</a>
                             </li>
                             <li>
                                 <a href="javascript:void(0)">Blog</a>
