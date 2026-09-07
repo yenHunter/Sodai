@@ -15,13 +15,11 @@ function handleSwap(e) {
     if (!card) return
 
     const priceWrap = card.querySelector('.product-card-price')
-    const img = card.querySelector('.ec-pro-image img.main-image')
 
+    // Cache the default price once, from current DOM state — safe to do here
+    // since nothing else touches price before our handler runs.
     if (!card.dataset.defaultPrice && priceWrap) {
         card.dataset.defaultPrice = priceWrap.innerHTML
-    }
-    if (!card.dataset.defaultThumb && img) {
-        card.dataset.defaultThumb = img.getAttribute('src')
     }
 
     if (priceWrap) {
@@ -42,22 +40,23 @@ function handleReset(e) {
 
     const priceWrap = card.querySelector('.product-card-price')
     const img = card.querySelector('.ec-pro-image img.main-image')
-
-    // Only reset if the swatch list was actually interacted with on this card
-    const activeLi = card.querySelector('.ec-opt-swatch li.active')
+    const swatchList = card.querySelector('.ec-opt-swatch')
 
     if (priceWrap && card.dataset.defaultPrice) {
         priceWrap.innerHTML = card.dataset.defaultPrice
     }
 
-    if (img && card.dataset.defaultThumb) {
-        img.setAttribute('src', card.dataset.defaultThumb)
+    // Restore from the fixed data-default-thumb attribute rendered server-side
+    // (the product's actual default variant thumbnail) rather than anything
+    // captured at runtime — main.js's own image-swap handler fires on an
+    // unrelated event (mouseover, bubbling) with no guaranteed order relative
+    // to ours, so caching "whatever the image currently shows" is unreliable.
+    if (img && swatchList && swatchList.dataset.defaultThumb) {
+        img.setAttribute('src', swatchList.dataset.defaultThumb)
     }
 
-    // Also clear the theme's own "active"/"loaded" state so a fresh hover
-    // re-triggers main.js's changeProductImg cleanly next time.
-    if (activeLi) {
-        card.querySelectorAll('.ec-opt-swatch li').forEach((el, i) => {
+    if (swatchList) {
+        swatchList.querySelectorAll('li').forEach((el, i) => {
             el.classList.toggle('active', i === 0)
         })
     }
