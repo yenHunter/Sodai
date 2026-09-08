@@ -12,12 +12,13 @@
         <div class="ec-slider swiper-container main-slider-nav main-slider-dot">
             <div class="swiper-wrapper">
                 @forelse ($sliderBanners as $banner)
-                    <div class="ec-slide-item swiper-slide d-flex"
-                        style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center;">
+                    <div class="ec-slide-item swiper-slide d-flex ec-slide-text-{{ $banner->text_position }}"
+                        style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center; background-repeat: no-repeat; overflow-y: hidden;">
                         <div class="container align-self-center">
                             <div class="row">
-                                <div class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center">
-                                    <div class="ec-slide-content slider-animation">
+                                <div
+                                    class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center {{ $banner->text_position === 'right' ? 'offset-xl-6 offset-lg-5 offset-md-5 offset-sm-5' : '' }}">
+                                    <div class="ec-slide-content slider-animation text-{{ $banner->text_position }}">
                                         @if ($banner->title)
                                             <h1 class="ec-slide-title">{{ $banner->title }}</h1>
                                         @endif
@@ -25,7 +26,10 @@
                                             <h2 class="ec-slide-stitle">{{ $banner->subtitle }}</h2>
                                         @endif
                                         @if ($banner->description)
-                                            <p>{{ $banner->description }}</p>
+                                            <p
+                                                style="max-width: 350px; margin-left: {{ $banner->text_position === 'right' ? 'auto' : '0' }}; margin-right: {{ $banner->text_position === 'right' ? '0' : 'auto' }}; text-align: {{ $banner->text_position }};">
+                                                {{ $banner->description }}
+                                            </p>
                                         @endif
                                         @if ($banner->button_text && $banner->button_url)
                                             <a href="{{ $banner->button_url }}" target="{{ $banner->button_target }}"
