@@ -26,6 +26,7 @@ class UpdateBannerRequest extends FormRequest
             'mobile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
             'position' => ['required', 'in:'.implode(',', Banner::POSITIONS)],
             'text_position' => ['nullable', 'in:'.implode(',', Banner::TEXT_POSITIONS)],
+            'text_color' => ['nullable', 'string', 'in:'.implode(',', Banner::TEXT_COLOR)],
             'is_active' => ['required'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'starts_at' => ['nullable', 'date'],

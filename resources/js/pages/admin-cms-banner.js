@@ -172,6 +172,7 @@ waitForJQuery(function ($) {
             buttonTarget,
             position,
             textPosition,
+            textColor,
             sortOrder,
             startsAt,
             expiresAt,
@@ -197,6 +198,7 @@ waitForJQuery(function ($) {
         setSelectVal('bannerButtonTarget', buttonTarget || '_self');
         setSelectVal('bannerPosition', position);
         setSelectVal('bannerTextPosition', textPosition || 'left');
+        setSelectVal('bannerTextColor', textColor || 'secondary');
         setVal('bannerSortOrder',    sortOrder || 0);
         setVal('bannerStartsAt',     startsAt || '');
         setVal('bannerExpiresAt',    expiresAt || '');

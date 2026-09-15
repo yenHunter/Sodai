@@ -76,6 +76,23 @@ class BannerModuleTest extends TestCase
             ->assertSessionHasErrors('position');
     }
 
+    public function test_admin_can_create_banner_with_text_color(): void
+    {
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.cms.banner.store'), [
+                'title' => 'Summer Sale',
+                'position' => 'home_slider',
+                'is_active' => 'active',
+                'text_color' => 'secondary',
+                'image' => UploadedFile::fake()->image('slide.jpg'),
+            ])
+            ->assertRedirect(route('admin.cms.banner.index'));
+
+        $this->assertDatabaseHas('banners', ['title' => 'Summer Sale', 'text_color' => 'secondary']);
+    }
+
     public function test_expires_at_must_be_after_or_equal_starts_at(): void
     {
         $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);

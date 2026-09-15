@@ -1,5 +1,7 @@
 <?php
 
+// app/Models/Banner.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +16,8 @@ class Banner extends Model
 
     public const TEXT_POSITIONS = ['left', 'center', 'right'];
 
+    public const TEXT_COLOR = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'];
+
     public const TARGETS = ['_self', '_blank'];
 
     protected $fillable = [
@@ -27,6 +31,7 @@ class Banner extends Model
         'mobile_image',
         'position',
         'text_position',
+        'text_color',
         'is_active',
         'sort_order',
         'starts_at',
@@ -93,6 +98,21 @@ class Banner extends Model
         };
     }
 
+    public function getTextColorHexAttribute(): string
+    {
+        return match ($this->text_color) {
+            'primary' => '#0d6efd',
+            'secondary' => '#6c757d',
+            'success' => '#198754',
+            'danger' => '#dc3545',
+            'warning' => '#ffc107',
+            'info' => '#0dcaf0',
+            'light' => '#f8f9fa',
+            'dark' => '#212529',
+            default => '#3474d4',
+        };
+    }
+
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
@@ -113,7 +133,7 @@ class Banner extends Model
     }
 
     // ─────────────────────────────────────────────
-    // SCOPES
+    // SCOPES — unchanged
     // ─────────────────────────────────────────────
 
     public function scopeActive($query)

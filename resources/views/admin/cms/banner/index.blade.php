@@ -136,6 +136,7 @@
                                                     data-button-target="{{ $banner->button_target }}"
                                                     data-position="{{ $banner->position }}"
                                                     data-text-position="{{ $banner->text_position }}"
+                                                    data-text-color="{{ $banner->text_color }}"
                                                     data-sort-order="{{ $banner->sort_order }}"
                                                     data-starts-at="{{ $banner->starts_at?->format('Y-m-d\TH:i') }}"
                                                     data-expires-at="{{ $banner->expires_at?->format('Y-m-d\TH:i') }}"
@@ -227,7 +228,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold" for="bannerPosition">
                                     Position <span class="text-danger">*</span>
                                 </label>
@@ -239,7 +240,7 @@
                                     <option value="popup">Popup</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold" for="bannerTextPosition">
                                     Text Alignment
                                 </label>
@@ -247,6 +248,21 @@
                                     <option value="left">Left</option>
                                     <option value="center">Center</option>
                                     <option value="right">Right</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold" for="bannerTextColor">
+                                    Text Color
+                                </label>
+                                <select class="form-select" id="bannerTextColor" name="text_color">
+                                    <option value="primary">Blue</option>
+                                    <option value="secondary">Gray</option>
+                                    <option value="success">Green</option>
+                                    <option value="danger">Red</option>
+                                    <option value="warning">Yellow</option>
+                                    <option value="info">Sky Blue</option>
+                                    <option value="light">White</option>
+                                    <option value="dark">Black</option>
                                 </select>
                             </div>
 

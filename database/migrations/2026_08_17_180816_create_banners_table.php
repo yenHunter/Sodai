@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('mobile_image')->nullable();
             $table->string('position')->default('home_slider'); // home_slider, home_promo, category_banner, popup
             $table->string('text_position', 10)->default('left'); // left, center, right
+            $table->string('text_color', 20)->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestamp('starts_at')->nullable();

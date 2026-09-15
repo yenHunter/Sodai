@@ -234,10 +234,25 @@
   top: 0;
   height: 5px;
   width: 50px;
-  margin: 0 auto;
-  background: #3474d4;
+  background: var(--slide-title-before-bg, #3474d4);
+}
+
+.ec-slide-content .ec-slide-title.text-position-left:before {
   left: 4px;
   right: auto;
+  margin: 0;
+}
+
+.ec-slide-content .ec-slide-title.text-position-center:before {
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+}
+
+.ec-slide-content .ec-slide-title.text-position-right:before {
+  left: auto;
+  right: 4px;
+  margin: 0;
 }
 
 .ec-slide-content .ec-slide-stitle {

@@ -20,20 +20,22 @@
                                     class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center {{ $banner->text_position === 'right' ? 'offset-xl-6 offset-lg-5 offset-md-5 offset-sm-5' : '' }}">
                                     <div class="ec-slide-content slider-animation text-{{ $banner->text_position }}">
                                         @if ($banner->title)
-                                            <h1 class="ec-slide-title">{{ $banner->title }}</h1>
+                                            <h1 class="ec-slide-title text-{{ $banner->text_color }} text-position-{{ $banner->text_position }}" style="--slide-title-before-bg: {{ $banner->text_color_hex }};">
+                                                {{ $banner->title }}
+                                            </h1>
                                         @endif
                                         @if ($banner->subtitle)
-                                            <h2 class="ec-slide-stitle">{{ $banner->subtitle }}</h2>
+                                            <h2 class="ec-slide-stitle text-{{ $banner->text_color }}">{{ $banner->subtitle }}</h2>
                                         @endif
                                         @if ($banner->description)
-                                            <p
+                                            <p class="text-{{ $banner->text_color }}"
                                                 style="max-width: 350px; margin-left: {{ $banner->text_position === 'right' ? 'auto' : '0' }}; margin-right: {{ $banner->text_position === 'right' ? '0' : 'auto' }}; text-align: {{ $banner->text_position }};">
                                                 {{ $banner->description }}
                                             </p>
                                         @endif
                                         @if ($banner->button_text && $banner->button_url)
                                             <a href="{{ $banner->button_url }}" target="{{ $banner->button_target }}"
-                                                class="btn btn-lg btn-secondary">{{ $banner->button_text }}</a>
+                                                class="btn btn-lg btn-{{ $banner->text_color ?? 'secondary' }}">{{ $banner->button_text }}</a>
                                         @endif
                                     </div>
                                 </div>

@@ -3127,28 +3127,28 @@ textarea.form-control.is-invalid {
 
 .btn-danger {
   color: #ffffff;
-  background-color: #050505;
-  border-color: #050505;
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 
 .btn-danger:hover {
   color: #ffffff;
-  background-color: black;
-  border-color: black;
+  background-color: #bb2d3b;
+  border-color: #b52a3a;
 }
 
 .btn-danger:focus {
   color: #ffffff;
-  background-color: black;
-  border-color: black;
+  background-color: #bb2d3b;
+  border-color: #bb2d3b;
   -webkit-box-shadow: 0 0 0 4px rgba(43, 43, 43, 0.5);
   box-shadow: 0 0 0 4px rgba(43, 43, 43, 0.5);
 }
 
 .btn-danger:active {
   color: #ffffff;
-  background-color: black;
-  border-color: black;
+  background-color: #b02a37;
+  border-color: #b02a37;
 }
 
 .btn-danger:active:focus {
