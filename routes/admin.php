@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CmsPageController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -177,6 +178,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/{banner}', [BannerController::class, 'destroy'])->name('destroy')->middleware('permission:banner.delete');
             Route::delete('/', [BannerController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:banner.delete');
             Route::patch('/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:banner.edit');
+        });
+
+        // ── Offers: only roles with offer permissions ──
+        Route::middleware('permission:offer.view')->prefix('offers')->name('offer.')->group(function () {
+            Route::get('/', [OfferController::class, 'index'])->name('index');
+            Route::post('/store', [OfferController::class, 'store'])->name('store')->middleware('permission:offer.create');
+            Route::post('/{offer}/update', [OfferController::class, 'update'])->name('update')->middleware('permission:offer.edit');
+            Route::delete('/{offer}', [OfferController::class, 'destroy'])->name('destroy')->middleware('permission:offer.delete');
+            Route::delete('/', [OfferController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:offer.delete');
+            Route::patch('/{offer}/toggle-status', [OfferController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:offer.edit');
         });
 
         // ── CMS Static Pages: only roles with cms permissions ──

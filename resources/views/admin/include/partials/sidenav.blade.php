@@ -159,6 +159,12 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.cms.offer.index') }}">
+                        <span class="menu-icon"><i data-lucide="badge-percent"></i></span>
+                        <span class="menu-text">Offers</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a class="side-nav-link" href="{{ route('admin.cms.pages.index') }}">
                         <span class="menu-icon"><i data-lucide="book"></i></span>
                         <span class="menu-text">Static Pages</span>

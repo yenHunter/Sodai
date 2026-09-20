@@ -51,6 +51,7 @@ export default defineConfig({
 
                 // ───────────── CMS Pages ─────────────
                 'resources/js/pages/admin-cms-banner.js',
+                'resources/js/pages/admin-cms-offer.js',
                 'resources/js/pages/admin-cms-page-edit.js',
 
                 // ───────────── Settings Pages ─────────────

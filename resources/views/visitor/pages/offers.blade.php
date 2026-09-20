@@ -40,7 +40,7 @@
                     </div>
                 </div>
             </div>
-            <div class="ec-line-offer" style="background-image: url('assets/images/offer-image/offer-banner-06.jpg');">
+            <div class="ec-line-offer" style="background-image: url('visitor/images/offer-image/offer-banner-06.jpg');">
                 <div class="ec-line-offer-info">
                     <div class="container">
                         <div class="row">

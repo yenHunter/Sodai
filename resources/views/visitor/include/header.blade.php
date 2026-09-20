@@ -206,7 +206,7 @@
                                 <a href="javascript:void(0)">Blog</a>
                             </li>
                             <li>
-                                <a href="offer.html">Hot Offers</a>
+                                <a href="{{ route('visitor.offers') }}">Hot Offers</a>
                             </li>
                             <li class="dropdown scroll-to"><a href="javascript:void(0)"><i
                                         class="fi fi-rr-sort-amount-down-alt"></i></a>

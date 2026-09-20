@@ -84,6 +84,12 @@ class RolePermissionSeeder extends Seeder
             'banner.edit',
             'banner.delete',
 
+            // Offers
+            'offer.view',
+            'offer.create',
+            'offer.edit',
+            'offer.delete',
+
             // Reviews
             'review.view',
             'review.approve',
@@ -189,6 +195,11 @@ class RolePermissionSeeder extends Seeder
             'banner.edit',
             'banner.delete',
 
+            'offer.view',
+            'offer.create',
+            'offer.edit',
+            'offer.delete',
+
             'cms.view',
             'cms.edit',
 
@@ -240,6 +251,10 @@ class RolePermissionSeeder extends Seeder
             'banner.view',
             'banner.create',
             'banner.edit',
+
+            'offer.view',
+            'offer.create',
+            'offer.edit',
 
             'cms.view',
             'cms.edit',
