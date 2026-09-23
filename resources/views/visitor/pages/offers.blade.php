@@ -40,21 +40,37 @@
                     </div>
                 </div>
             </div>
-            <div class="ec-line-offer" style="background-image: url('visitor/images/offer-image/offer-banner-06.jpg');">
-                <div class="ec-line-offer-info">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>On Furniture</h6>
-                                <h2 class="offer-upto">Upto <span>45%</span> OFF</h2>
-                                <p class="offer-desc">Lorem Ipsum is simply dummy text of the printing and typesetting
-                                    industry. Lorem Ipsum has been the industry's.</p>
-                                <div class="offer-btn"><a class="btn-shop-now">SHOP NOW!</a></div>
+            @forelse ($offers as $offer)
+                <div class="ec-line-offer" style="background-image: url('{{ $offer->image_url }}');">
+                    <div class="ec-line-offer-info">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @if ($offer->title)
+                                        <h6>{{ $offer->title }}</h6>
+                                    @endif
+                                    @if ($offer->subtitle)
+                                        <h2 class="offer-upto">{{ $offer->subtitle }}</h2>
+                                    @endif
+                                    @if ($offer->description)
+                                        <p class="offer-desc">{{ $offer->description }}</p>
+                                    @endif
+                                    @if ($offer->button_text)
+                                        <div class="offer-btn">
+                                            <a href="{{ $offer->resolved_button_url }}"
+                                                class="btn-shop-now">{{ $offer->button_text }}</a>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @empty
+                <div class="container text-center py-5">
+                    <p class="mb-0">No active offers right now — check back soon!</p>
+                </div>
+            @endforelse
         </div>
     </section>
     <!-- End Offer section -->

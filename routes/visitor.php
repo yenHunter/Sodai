@@ -12,16 +12,12 @@ use App\Http\Controllers\Visitor\OrderController;
 use App\Http\Controllers\Visitor\ProductController;
 use App\Http\Controllers\Visitor\ReviewController;
 use App\Http\Controllers\Visitor\WishlistController;
-use App\Services\Visitor\CmsPageService;
 use Illuminate\Support\Facades\Route;
 
 // ── Landing Page ──
 Route::get('/', [HomeController::class, 'index'])->name('index');
-Route::get('about', function (CmsPageService $cmsPageService) {
-    $page = $cmsPageService->getPage('about');
-
-    return view('visitor.pages.about', compact('page'));
-})->name('about');
+Route::get('about', [HomeController::class, 'about'])->name('about');
+Route::get('offers', [HomeController::class, 'offer'])->name('offers');
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -32,7 +28,6 @@ Route::get('/category/{category:slug}', [ProductController::class, 'byCategory']
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
-
 Route::get('/order-confirm', [OrderConfirmController::class, 'show'])->name('order-confirm');
 
 // ── CMS Static Pages (public) ──

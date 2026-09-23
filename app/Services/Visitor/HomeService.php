@@ -4,6 +4,7 @@ namespace App\Services\Visitor;
 
 use App\Models\Banner;
 use App\Models\Category;
+use App\Models\Offer;
 use App\Models\Product;
 
 class HomeService
@@ -109,6 +110,14 @@ class HomeService
                 'variants.optionValues.option',
             ])
             ->limit($limit)
+            ->get();
+    }
+
+    public function getOfferList()
+    {
+        return Offer::with('category')
+            ->currentlyValid()
+            ->ordered()
             ->get();
     }
 }

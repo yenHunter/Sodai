@@ -26,10 +26,6 @@ Route::get('faq', function () {
     return view('visitor.pages.faq');
 })->name('visitor.faq');
 
-Route::get('offers', function () {
-    return view('visitor.pages.offers');
-})->name('visitor.offers');
-
 Route::get('/widgets', function () {
     return view('admin.widgets');
 });
