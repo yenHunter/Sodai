@@ -2,6 +2,13 @@
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('visitor/css/demo1.css') }}" />
+    <style>
+        @media (max-width: 767px) {
+            .ec-slide-item[style*="--bg-mobile"] {
+                background-image: var(--bg-mobile) !important;
+            }
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -13,19 +20,21 @@
             <div class="swiper-wrapper">
                 @forelse ($sliderBanners as $banner)
                     <div class="ec-slide-item swiper-slide d-flex ec-slide-text-{{ $banner->text_position }}"
-                        style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center; background-repeat: no-repeat; overflow-y: hidden;">
+                        style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center; background-repeat: no-repeat; overflow-y: hidden;{{ $banner->mobile_image_url ? ' --bg-mobile: url(\'' . $banner->mobile_image_url . '\');' : '' }}">
                         <div class="container align-self-center">
                             <div class="row">
                                 <div
                                     class="col-xl-6 col-lg-7 col-md-7 col-sm-7 align-self-center {{ $banner->text_position === 'right' ? 'offset-xl-6 offset-lg-5 offset-md-5 offset-sm-5' : '' }}">
                                     <div class="ec-slide-content slider-animation text-{{ $banner->text_position }}">
                                         @if ($banner->title)
-                                            <h1 class="ec-slide-title text-{{ $banner->text_color }} text-position-{{ $banner->text_position }}" style="--slide-title-before-bg: {{ $banner->text_color_hex }};">
+                                            <h1 class="ec-slide-title text-{{ $banner->text_color }} text-position-{{ $banner->text_position }}"
+                                                style="--slide-title-before-bg: {{ $banner->text_color_hex }};">
                                                 {{ $banner->title }}
                                             </h1>
                                         @endif
                                         @if ($banner->subtitle)
-                                            <h2 class="ec-slide-stitle text-{{ $banner->text_color }}">{{ $banner->subtitle }}</h2>
+                                            <h2 class="ec-slide-stitle text-{{ $banner->text_color }}">
+                                                {{ $banner->subtitle }}</h2>
                                         @endif
                                         @if ($banner->description)
                                             <p class="text-{{ $banner->text_color }}"
