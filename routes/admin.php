@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\CmsPageController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaqCategoryController;
+use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -195,6 +197,24 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::get('/', [CmsPageController::class, 'index'])->name('index');
             Route::get('/{slug}/edit', [CmsPageController::class, 'edit'])->name('edit')->whereIn('slug', CmsPage::SLUGS);
             Route::post('/{slug}/update', [CmsPageController::class, 'update'])->name('update')->middleware('permission:cms.edit')->whereIn('slug', CmsPage::SLUGS);
+        });
+
+        // ── FAQs: category + FAQ management under one index page ──
+        Route::middleware('permission:faq.view')->prefix('faq')->name('faq.')->group(function () {
+            Route::get('/', [FaqCategoryController::class, 'index'])->name('index');
+
+            // Categories
+            Route::post('/categories', [FaqCategoryController::class, 'store'])->name('categories.store')->middleware('permission:faq.create');
+            Route::post('/categories/{faq_category}', [FaqCategoryController::class, 'update'])->name('categories.update')->middleware('permission:faq.edit');
+            Route::delete('/categories/{faq_category}', [FaqCategoryController::class, 'destroy'])->name('categories.destroy')->middleware('permission:faq.delete');
+            Route::patch('/categories/{faq_category}/toggle-status', [FaqCategoryController::class, 'toggleStatus'])->name('categories.toggle-status')->middleware('permission:faq.edit');
+
+            // FAQs
+            Route::post('/items', [FaqController::class, 'store'])->name('items.store')->middleware('permission:faq.create');
+            Route::post('/items/{faq}', [FaqController::class, 'update'])->name('items.update')->middleware('permission:faq.edit');
+            Route::delete('/items/{faq}', [FaqController::class, 'destroy'])->name('items.destroy')->middleware('permission:faq.delete');
+            Route::delete('/items', [FaqController::class, 'bulkDestroy'])->name('items.bulk-destroy')->middleware('permission:faq.delete');
+            Route::patch('/items/{faq}/toggle-status', [FaqController::class, 'toggleStatus'])->name('items.toggle-status')->middleware('permission:faq.edit');
         });
     });
 

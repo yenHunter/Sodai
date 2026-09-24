@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             AttributeSeeder::class,
             CmsPageSeeder::class,
+            FaqCategorySeeder::class,
         ]);
     }
 }

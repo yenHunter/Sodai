@@ -90,6 +90,12 @@ class RolePermissionSeeder extends Seeder
             'offer.edit',
             'offer.delete',
 
+            // FAQs
+            'faq.view',
+            'faq.create',
+            'faq.edit',
+            'faq.delete',
+
             // Reviews
             'review.view',
             'review.approve',
@@ -121,7 +127,7 @@ class RolePermissionSeeder extends Seeder
 
         // Create all permissions for admin guard
         foreach ($permissions as $permission) {
-            Permission::create([
+            Permission::firstOrCreate([
                 'name' => $permission,
                 'guard_name' => 'admin',
             ]);
@@ -132,14 +138,14 @@ class RolePermissionSeeder extends Seeder
         // ═══════════════════════════════════════════
 
         // ── Super Admin: All permissions ────────────
-        $superAdmin = Role::create([
+        $superAdmin = Role::firstOrCreate([
             'name' => 'super-admin',
             'guard_name' => 'admin',
         ]);
         $superAdmin->givePermissionTo(Permission::where('guard_name', 'admin')->get());
 
         // ── Manager: Everything except admin management ──
-        $manager = Role::create([
+        $manager = Role::firstOrCreate([
             'name' => 'manager',
             'guard_name' => 'admin',
         ]);
@@ -200,6 +206,11 @@ class RolePermissionSeeder extends Seeder
             'offer.edit',
             'offer.delete',
 
+            'faq.view',
+            'faq.create',
+            'faq.edit',
+            'faq.delete',
+
             'cms.view',
             'cms.edit',
 
@@ -212,7 +223,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // ── Order Manager: Orders & customers only ──
-        $orderManager = Role::create([
+        $orderManager = Role::firstOrCreate([
             'name' => 'order-manager',
             'guard_name' => 'admin',
         ]);
@@ -229,7 +240,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // ── Content Editor: Products, Categories, Banners ──
-        $contentEditor = Role::create([
+        $contentEditor = Role::firstOrCreate([
             'name' => 'content-editor',
             'guard_name' => 'admin',
         ]);
@@ -256,12 +267,16 @@ class RolePermissionSeeder extends Seeder
             'offer.create',
             'offer.edit',
 
+            'faq.view',
+            'faq.create',
+            'faq.edit',
+
             'cms.view',
             'cms.edit',
         ]);
 
         // ── Support: View orders, handle reviews & customers ──
-        $support = Role::create([
+        $support = Role::firstOrCreate([
             'name' => 'support',
             'guard_name' => 'admin',
         ]);
