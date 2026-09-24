@@ -53,6 +53,7 @@ export default defineConfig({
                 'resources/js/pages/admin-cms-banner.js',
                 'resources/js/pages/admin-cms-offer.js',
                 'resources/js/pages/admin-cms-page-edit.js',
+                'resources/js/pages/admin-cms-faq.js',
 
                 // ───────────── Settings Pages ─────────────
                 'resources/js/pages/admin-settings-users-index.js',

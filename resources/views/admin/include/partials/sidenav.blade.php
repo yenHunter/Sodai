@@ -171,7 +171,7 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a class="side-nav-link" href="#">
+                    <a class="side-nav-link" href="{{ route('admin.cms.faq.index') }}">
                         <span class="menu-icon"><i data-lucide="shield-question-mark"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-banners">FAQ</span>
                     </a>
