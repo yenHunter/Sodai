@@ -343,6 +343,61 @@ class SettingModuleTest extends TestCase
             ->assertSessionHasErrors('admin_alert_email');
     }
 
+    public function test_admin_can_update_abandoned_cart_reminder_settings(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'abandoned_cart_enabled' => '1',
+                'abandoned_cart_hours' => 48,
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        // Stored as '1'/'0' strings like every boolean setting; hours as string too.
+        $this->assertEquals('1', Setting::get('notification', 'abandoned_cart_enabled'));
+        $this->assertEquals('48', (string) Setting::get('notification', 'abandoned_cart_hours'));
+    }
+
+    public function test_abandoned_cart_toggle_unchecked_persists_as_false_with_default_hours(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        // Submit without the switch (unchecked checkboxes send nothing)
+        // and without hours — the controller must store '0' and the 24h default.
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('0', Setting::get('notification', 'abandoned_cart_enabled'));
+        $this->assertEquals('24', (string) Setting::get('notification', 'abandoned_cart_hours'));
+
+        // The scheduled command reads this exact triple via the setting helper.
+        $this->assertFalse((bool) setting('notification', 'abandoned_cart_enabled', '0'));
+    }
+
+    public function test_abandoned_cart_hours_must_be_within_bounds(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'abandoned_cart_hours' => 0,
+            ])
+            ->assertSessionHasErrors('abandoned_cart_hours');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'abandoned_cart_hours' => 1000,
+            ])
+            ->assertSessionHasErrors('abandoned_cart_hours');
+    }
+
     public function test_admin_can_update_marketing_settings_across_two_groups(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);

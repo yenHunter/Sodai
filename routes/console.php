@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// ── Abandoned-cart recovery ──
+// The command itself checks the abandoned_cart_enabled setting, so the
+// schedule stays unconditional and admins toggle behavior in Settings → Notification.
+Schedule::command('carts:send-reminders')->everyThirtyMinutes()->withoutOverlapping();

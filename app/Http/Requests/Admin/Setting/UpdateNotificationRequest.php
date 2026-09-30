@@ -19,6 +19,8 @@ class UpdateNotificationRequest extends FormRequest
             'notify_new_order' => ['nullable'],
             'notify_low_stock' => ['nullable'],
             'notify_new_review' => ['nullable'],
+            'abandoned_cart_enabled' => ['nullable'],
+            'abandoned_cart_hours' => ['nullable', 'integer', 'min:1', 'max:720'],
         ];
     }
 

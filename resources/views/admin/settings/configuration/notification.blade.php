@@ -62,13 +62,22 @@
                                 Notify on Low Stock
                             </label>
                         </div>
-                        <div class="form-check form-switch mb-0">
+                        <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" role="switch" value="1"
-                                id="notify_new_review" name="notify_new_review"
-                                {{ old('notify_new_review', $settings['notify_new_review'] ?? false) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="notify_new_review">
-                                Notify on New Product Review
+                                id="abandoned_cart_enabled" name="abandoned_cart_enabled"
+                                {{ old('abandoned_cart_enabled', ($settings['abandoned_cart_enabled'] ?? '0') === '1') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="abandoned_cart_enabled">
+                                Send abandoned-cart reminders
                             </label>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-semibold" for="abandoned_cart_hours">
+                                Send after (hours of inactivity)
+                            </label>
+                            <input type="number" class="form-control" min="1" max="720"
+                                id="abandoned_cart_hours" name="abandoned_cart_hours"
+                                value="{{ old('abandoned_cart_hours', $settings['abandoned_cart_hours'] ?? 24) }}">
+                            <div class="form-text">Emails are queued automatically twice an hour when enabled.</div>
                         </div>
                     </div>
                 </div>

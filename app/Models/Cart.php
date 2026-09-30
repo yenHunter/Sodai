@@ -12,7 +12,15 @@ class Cart extends Model
     protected $fillable = [
         'user_id',
         'session_id',
+        'reminder_sent_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'reminder_sent_at' => 'datetime',
+        ];
+    }
 
     public function user()
     {
