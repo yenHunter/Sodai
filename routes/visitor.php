@@ -78,6 +78,10 @@ Route::middleware('auth.customer')->group(function () {
 
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [OrderController::class, 'index'])->name('index');
+
+            // Static path BEFORE the {order} wildcard.
+            Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+
             Route::get('/{order}', [OrderController::class, 'show'])->name('show');
         });
 

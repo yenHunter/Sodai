@@ -4,14 +4,13 @@ namespace App\Services\Visitor;
 
 use App\Models\Address;
 use App\Models\Cart;
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\Admin\CustomerService;
-use App\Services\Admin\SettingService;
+use App\Services\Shared\PricingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +19,7 @@ use Illuminate\Support\Str;
 class CheckoutService
 {
     public function __construct(
-        private SettingService $settingService,
+        private PricingService $pricingService,
         private CustomerService $customerService
     ) {}
 
@@ -50,24 +49,21 @@ class CheckoutService
 
             [$items, $subtotal] = $this->buildItemsWithStockLock($cart);
 
-            $shippingCharge = round(
-                $this->settingService->resolveShippingCharge($shipping['shipping_city'], $subtotal),
-                2
-            );
-            $taxAmount = $this->resolveTaxAmount($subtotal);
+            $shippingCharge = $this->pricingService->resolveShippingCharge($shipping['shipping_city'], $subtotal);
+            $taxAmount = $this->pricingService->calculateTax($subtotal);
 
             $coupon = null;
             $discountAmount = 0.0;
 
             if (! empty($data['coupon_code'])) {
-                $coupon = $this->validateAndLockCoupon($data['coupon_code'], $customer, $subtotal);
-                $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
+                $coupon = $this->pricingService->validateAndLockCoupon($data['coupon_code'], $customer?->id, $subtotal);
+                $discountAmount = $this->pricingService->calculateCouponDiscount($coupon, $subtotal);
             }
 
-            $totalAmount = max(0, round($subtotal - $discountAmount + $shippingCharge + $taxAmount, 2));
+            $totalAmount = $this->pricingService->calculateTotal($subtotal, $discountAmount, $shippingCharge, $taxAmount);
 
             $order = Order::create([
-                'order_number' => $this->generateUniqueOrderNumber(),
+                'order_number' => $this->pricingService->generateUniqueOrderNumber(),
                 'user_id' => $customer->id,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
@@ -226,133 +222,24 @@ class CheckoutService
                 throw new \Exception("Only {$variant->stock_quantity} unit(s) left for \"{$variant->product->name}\".");
             }
 
-            $unitPrice = $variant->final_price;
-            $totalPrice = round($unitPrice * $cartItem->quantity, 2);
-            $subtotal += $totalPrice;
+            $item = $this->pricingService->buildOrderItemPayload($variant->product, $variant, $cartItem->quantity);
+            $subtotal += $item['total_price'];
 
-            $items[] = [
-                'product' => $variant->product,
-                'variant' => $variant,
-                'product_id' => $variant->product_id,
-                'product_variant_id' => $variant->id,
-                'product_name' => $variant->product->name,
-                'product_sku' => $variant->sku,
-                'product_image' => $variant->thumbnail ?? $variant->product->thumbnail,
-                'variant_options' => $variant->options_label,
-                'unit_price' => $unitPrice,
-                'quantity' => $cartItem->quantity,
-                'total_price' => $totalPrice,
-            ];
+            $items[] = $item;
         }
 
         return [$items, round($subtotal, 2)];
     }
 
-    // ─────────────────────────────────────────────
-    // TAX (mirrors OrderService::resolveTaxAmount, non-override branch only)
-    // ─────────────────────────────────────────────
-
-    private function resolveTaxAmount(float $subtotal): float
-    {
-        $taxSettings = $this->settingService->getGroup('tax');
-
-        if (($taxSettings['tax_enabled'] ?? '0') !== '1') {
-            return 0.0;
-        }
-
-        $rate = (float) ($taxSettings['tax_rate'] ?? 0);
-        if ($rate <= 0) {
-            return 0.0;
-        }
-
-        $pricesIncludeTax = ($taxSettings['prices_include_tax'] ?? '0') === '1';
-
-        if ($pricesIncludeTax) {
-            return round($subtotal - ($subtotal / (1 + ($rate / 100))), 2);
-        }
-
-        return round($subtotal * ($rate / 100), 2);
-    }
-
-    // ─────────────────────────────────────────────
-    // COUPON (mirrors OrderService validation, scoped to storefront customer)
-    // ─────────────────────────────────────────────
-
-    private function validateAndLockCoupon(string $code, ?User $customer, float $subtotal): Coupon
-    {
-        $coupon = Coupon::where('code', strtoupper(trim($code)))->lockForUpdate()->first();
-
-        if (! $coupon) {
-            throw new \Exception("Coupon \"{$code}\" does not exist.");
-        }
-
-        if (! $coupon->isCurrentlyValid()) {
-            throw new \Exception("Coupon \"{$coupon->code}\" is not currently valid.");
-        }
-
-        if ($subtotal < (float) $coupon->minimum_order_amount) {
-            throw new \Exception("This coupon requires a minimum order of {$coupon->minimum_order_amount}.");
-        }
-
-        if ($customer) {
-            $usedByCustomer = Order::where('user_id', $customer->id)
-                ->where('coupon_id', $coupon->id)
-                ->whereNotIn('status', ['cancelled'])
-                ->count();
-
-            if ($usedByCustomer >= $coupon->usage_per_user) {
-                throw new \Exception('You have already used this coupon the maximum number of times.');
-            }
-        }
-
-        return $coupon;
-    }
-
     public function previewCoupon(string $code, ?User $customer, float $subtotal): array
     {
-        $coupon = $this->validateAndLockCoupon($code, $customer, $subtotal);
-        $discount = $this->calculateCouponDiscount($coupon, $subtotal);
+        $coupon = $this->pricingService->validateAndLockCoupon($code, $customer?->id, $subtotal);
+        $discount = $this->pricingService->calculateCouponDiscount($coupon, $subtotal);
 
         return [
             'code' => $coupon->code,
             'discount_amount' => $discount,
         ];
-    }
-
-    private function calculateCouponDiscount(Coupon $coupon, float $subtotal): float
-    {
-        if ($coupon->type === 'fixed') {
-            return round(min((float) $coupon->value, $subtotal), 2);
-        }
-
-        $discount = $subtotal * ((float) $coupon->value / 100);
-
-        if ($coupon->maximum_discount) {
-            $discount = min($discount, (float) $coupon->maximum_discount);
-        }
-
-        return round(min($discount, $subtotal), 2);
-    }
-
-    // ─────────────────────────────────────────────
-    // ORDER NUMBER (mirrors OrderService::generateUniqueOrderNumber)
-    // ─────────────────────────────────────────────
-
-    private function generateUniqueOrderNumber(): string
-    {
-        $prefix = $this->settingService->getGroup('order')['order_number_prefix'] ?? 'ORD-';
-
-        $lastNumber = Order::where('order_number', 'like', $prefix.'%')
-            ->lockForUpdate()
-            ->orderBy('order_number', 'desc')
-            ->value('order_number');
-
-        $next = 1;
-        if ($lastNumber) {
-            $next = (int) substr($lastNumber, strrpos($lastNumber, '-') !== false ? strrpos($lastNumber, '-') + 1 : strlen($prefix)) + 1;
-        }
-
-        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     // ─────────────────────────────────────────────
@@ -365,8 +252,8 @@ class CheckoutService
 
         return [
             'subtotal' => $subtotal,
-            'shipping_charge_estimate' => $this->settingService->resolveShippingCharge(null, $subtotal),
-            'tax_amount_estimate' => $this->resolveTaxAmount($subtotal),
+            'shipping_charge_estimate' => $this->pricingService->resolveShippingCharge(null, $subtotal),
+            'tax_amount_estimate' => $this->pricingService->calculateTax($subtotal),
         ];
     }
 }

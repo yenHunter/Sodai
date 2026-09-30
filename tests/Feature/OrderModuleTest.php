@@ -441,4 +441,187 @@ class OrderModuleTest extends TestCase
             ->assertOk()
             ->assertJson(['success' => true, 'code' => 'AJAX10', 'discount_amount' => 10]);
     }
+
+    // ─────────────────────────────────────────────
+    // COUPON SWAP / REMOVAL ON ORDER UPDATE
+    // (OrderService::update used_count release/re-consume block)
+    // ─────────────────────────────────────────────
+
+    /**
+     * A pending order for $customer holding one item of $product at $price,
+     * already using $coupon, with stock set up for the update re-lock.
+     */
+    private function pendingOrderWithCoupon(User $customer, Product $product, Coupon $coupon, int $price = 200, int $quantity = 1): Order
+    {
+        $product->defaultVariant->update(['price' => $price, 'stock_quantity' => 10]);
+        $product->refreshPriceAndStockCache();
+
+        $order = Order::factory()->withStatus('pending')->for($customer)->create([
+            'coupon_id' => $coupon->id,
+            'coupon_code' => $coupon->code,
+            'subtotal' => $price * $quantity,
+        ]);
+
+        OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $product->defaultVariant->id,
+            'unit_price' => $price,
+            'quantity' => $quantity,
+            'total_price' => $price * $quantity,
+        ]);
+
+        return $order;
+    }
+
+    /**
+     * Valid update payload keeping the order's original shipping + items.
+     */
+    private function orderUpdatePayload(Order $order, array $overrides = []): array
+    {
+        $items = $order->items->map(fn ($item) => [
+            'product_id' => $item->product_id,
+            'quantity' => $item->quantity,
+        ])->all();
+
+        return array_merge([
+            'user_id' => $order->user_id,
+            'shipping_name' => $order->shipping_name,
+            'shipping_email' => $order->shipping_email,
+            'shipping_phone' => $order->shipping_phone,
+            'shipping_address' => $order->shipping_address,
+            'shipping_city' => $order->shipping_city,
+            'shipping_state' => $order->shipping_state,
+            'shipping_zip' => $order->shipping_zip,
+            'shipping_country' => $order->shipping_country,
+            'items' => $items,
+        ], $overrides);
+    }
+
+    public function test_removing_coupon_on_update_releases_used_count(): void
+    {
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.edit']);
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $coupon = Coupon::factory()->create(['code' => 'RELEASE20', 'value' => 20, 'used_count' => 1]);
+        $order = $this->pendingOrderWithCoupon($customer, $product, $coupon);
+
+        // Sanity: subtotal before update.
+        $this->assertSame('200.00', (string) $order->subtotal);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.order.update', $order), $this->orderUpdatePayload($order, [
+                'coupon_code' => null, // coupon removed
+            ]))
+            ->assertRedirect(route('admin.ecommerce.order.show', $order));
+
+        $order->refresh();
+
+        $this->assertNull($order->coupon_id);
+        $this->assertNull($order->coupon_code);
+        $this->assertSame('0.00', (string) $order->discount_amount);
+
+        // The consumed usage was released.
+        $this->assertSame(0, (int) $coupon->refresh()->used_count);
+    }
+
+    public function test_swapping_coupon_releases_old_and_consumes_new(): void
+    {
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.edit']);
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $oldCoupon = Coupon::factory()->create(['code' => 'OLDPCT', 'type' => 'percentage', 'value' => 20, 'used_count' => 1]);
+        $newCoupon = Coupon::factory()->create(['code' => 'NEWFIXED', 'type' => 'fixed', 'value' => 10, 'used_count' => 0]);
+
+        $order = $this->pendingOrderWithCoupon($customer, $product, $oldCoupon);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.order.update', $order), $this->orderUpdatePayload($order, [
+                'coupon_code' => 'NEWFIXED',
+            ]))
+            ->assertRedirect(route('admin.ecommerce.order.show', $order));
+
+        $order->refresh();
+
+        $this->assertSame($newCoupon->id, $order->coupon_id);
+        $this->assertSame('NEWFIXED', $order->coupon_code);
+
+        // Discount recalculated from the new coupon (fixed 10 on 200 subtotal).
+        $this->assertSame('10.00', (string) $order->discount_amount);
+        $this->assertSame('190.00', (string) $order->total_amount); // 200 − 10, no shipping/tax settings
+
+        $this->assertSame(0, (int) $oldCoupon->refresh()->used_count);
+        $this->assertSame(1, (int) $newCoupon->refresh()->used_count);
+    }
+
+    public function test_resubmitting_the_same_coupon_does_not_double_count_usage(): void
+    {
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.edit']);
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $coupon = Coupon::factory()->create(['code' => 'SAME20', 'type' => 'percentage', 'value' => 20, 'used_count' => 1, 'usage_per_user' => 1]);
+        $order = $this->pendingOrderWithCoupon($customer, $product, $coupon);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.order.update', $order), $this->orderUpdatePayload($order, [
+                'coupon_code' => 'SAME20', // unchanged coupon
+            ]))
+            ->assertRedirect(route('admin.ecommerce.order.show', $order));
+
+        // Idempotent: neither released nor re-consumed.
+        $this->assertSame(1, (int) $coupon->refresh()->used_count);
+
+        $order->refresh();
+        $this->assertSame($coupon->id, $order->coupon_id);
+        $this->assertSame('40.00', (string) $order->discount_amount); // 20% of 200
+    }
+
+    public function test_coupon_release_does_not_steal_usage_from_other_orders(): void
+    {
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.edit']);
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $coupon = Coupon::factory()->create(['code' => 'SHARED10', 'value' => 10, 'used_count' => 2, 'usage_per_user' => 5]);
+
+        // A second order from another customer also holds this coupon.
+        Order::factory()->withStatus('confirmed')->create([
+            'coupon_id' => $coupon->id,
+            'coupon_code' => $coupon->code,
+        ]);
+
+        $order = $this->pendingOrderWithCoupon($customer, $product, $coupon);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.order.update', $order), $this->orderUpdatePayload($order, [
+                'coupon_code' => null,
+            ]))
+            ->assertRedirect(route('admin.ecommerce.order.show', $order));
+
+        // Exactly one usage released — the other order's usage is untouched.
+        $this->assertSame(1, (int) $coupon->refresh()->used_count);
+    }
+
+    public function test_order_variant_stock_is_net_unchanged_after_update(): void
+    {
+        $admin = $this->createAdminWithPermissions(['order.view', 'order.edit']);
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $coupon = Coupon::factory()->create(['code' => 'STOCKTEN', 'value' => 10]);
+        $order = $this->pendingOrderWithCoupon($customer, $product, $coupon, price: 200, quantity: 3);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.order.update', $order), $this->orderUpdatePayload($order, [
+                'coupon_code' => null,
+            ]))
+            ->assertRedirect(route('admin.ecommerce.order.show', $order));
+
+        // Restore (3) then rebuild (3) — stock ends where it started.
+        $this->assertSame(10, (int) $product->defaultVariant->refresh()->stock_quantity);
+        $this->assertSame(10, (int) $product->refresh()->total_stock);
+    }
 }

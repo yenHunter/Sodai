@@ -83,8 +83,16 @@
 
                 <div class="ec-shop-rightside col-lg-9 col-md-12">
                     <div class="ec-vendor-dashboard-card">
-                        <div class="ec-vendor-card-header">
-                            <h5>Order #{{ $order->order_number }} — {{ ucfirst($order->status) }}</h5>
+                        <div class="ec-vendor-card-header d-flex justify-content-between align-items-center gap-2">
+                            <h5 class="mb-0">Order #{{ $order->order_number }} — {{ ucfirst($order->status) }}</h5>
+
+                            @if ($canCancel)
+                                <form action="{{ route('visitor.account.orders.cancel', $order) }}" method="POST"
+                                    onsubmit="return confirm('Cancel this order? This cannot be undone.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel Order</button>
+                                </form>
+                            @endif
                         </div>
                         <div class="ec-vendor-card-body">
                             <div class="ec-vendor-card-table">

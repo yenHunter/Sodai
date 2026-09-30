@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\Visitor\CustomerOrderService;
 use App\Traits\Visitor\EnsuresCustomerOwnership;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
@@ -30,8 +31,34 @@ class OrderController extends Controller
         $order = $this->orderService->getOrderWithDetails($order);
 
         $trackingSteps = $this->buildTrackingSteps($order->status);
+        $canCancel = $this->orderService->canBeCancelledByCustomer($order);
 
-        return view('visitor.pages.user-order-details', compact('order', 'trackingSteps'));
+        return view('visitor.pages.user-order-details', compact('order', 'trackingSteps', 'canCancel'));
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        $this->ensureOwnedByCustomer($order);
+
+        $validated = $request->validate([
+            'cancel_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $this->orderService->cancelOrder(
+                $order,
+                Auth::guard('customer')->user(),
+                $validated['cancel_reason'] ?? null
+            );
+
+            return redirect()
+                ->route('visitor.account.orders.show', $order)
+                ->with('success', 'Your order has been cancelled.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('visitor.account.orders.show', $order)
+                ->with('error', $e->getMessage());
+        }
     }
 
     private function buildTrackingSteps(string $status): array

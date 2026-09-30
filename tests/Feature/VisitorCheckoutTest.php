@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\Admin\CustomerSetPasswordMail;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Category;
@@ -70,11 +71,11 @@ class VisitorCheckoutTest extends TestCase
     }
 
     /**
-    * Start a real guest session by rendering the public cart page, then
-    * carry its session cookie into all subsequent requests. Without this,
-    * every request without a cookie gets a freshly generated session ID
-    * and the session-keyed guest cart is never found again.
-    */
+     * Start a real guest session by rendering the public cart page, then
+     * carry its session cookie into all subsequent requests. Without this,
+     * every request without a cookie gets a freshly generated session ID
+     * and the session-keyed guest cart is never found again.
+     */
     private function startGuestSession(): void
     {
         $response = $this->get('/cart')->assertOk();
@@ -183,7 +184,8 @@ class VisitorCheckoutTest extends TestCase
 
         [, $variant] = $this->makeProduct(price: 50, stock: 5);
         $cart = $this->cartForContext(null);
-        $this->fillCart($cart, $variant, quantity: 1);        $response = $this->post(route('visitor.checkout.store'), $this->checkoutPayload([
+        $this->fillCart($cart, $variant, quantity: 1);
+        $response = $this->post(route('visitor.checkout.store'), $this->checkoutPayload([
             'shipping_email' => 'newguest@example.com',
         ]));
 
@@ -201,7 +203,7 @@ class VisitorCheckoutTest extends TestCase
         ]);
 
         // Set-password mail sent for account bootstrap.
-        Mail::assertSent(\App\Mail\Admin\CustomerSetPasswordMail::class, 1);
+        Mail::assertSent(CustomerSetPasswordMail::class, 1);
     }
 
     public function test_guest_checkout_with_existing_email_reuses_account_instead_of_duplicating(): void
@@ -223,7 +225,7 @@ class VisitorCheckoutTest extends TestCase
         $this->assertDatabaseHas('orders', ['user_id' => $existing->id]);
 
         // Existing account: no set-password email needed.
-        Mail::assertNotSent(\App\Mail\Admin\CustomerSetPasswordMail::class);
+        Mail::assertNotSent(CustomerSetPasswordMail::class);
     }
 
     public function test_guest_checkout_is_rejected_when_setting_disallows_it(): void

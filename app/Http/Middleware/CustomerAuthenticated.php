@@ -12,7 +12,7 @@ class CustomerAuthenticated
     {
         if (! Auth::guard('customer')->check()) {
             return redirect()
-                ->route('login')
+                ->route('visitor.login')
                 ->with('error', 'Please login to continue.');
         }
 
@@ -22,7 +22,7 @@ class CustomerAuthenticated
             Auth::guard('customer')->logout();
 
             return redirect()
-                ->route('login')
+                ->route('visitor.login')
                 ->with('error', 'Please verify your email address before continuing.')
                 ->with('unverified_email', $user->email);
         }
@@ -31,7 +31,7 @@ class CustomerAuthenticated
             Auth::guard('customer')->logout();
 
             return redirect()
-                ->route('login')
+                ->route('visitor.login')
                 ->with('error', 'Your account has been suspended. Contact support.');
         }
 
@@ -39,7 +39,7 @@ class CustomerAuthenticated
             Auth::guard('customer')->logout();
 
             return redirect()
-                ->route('login')
+                ->route('visitor.login')
                 ->with('error', 'Account temporarily locked. Try again later.');
         }
 
