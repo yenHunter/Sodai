@@ -125,16 +125,18 @@ class Product extends Model
 
     public function getDiscountAmountAttribute(): float
     {
-        return (float) ($this->price - $this->final_price);
+        // List price = highest variant base price (max_price is the
+        // denormalized cache maintained by refreshPriceAndStockCache()).
+        return (float) max(0, $this->max_price - $this->final_price);
     }
 
     public function getDiscountPercentageAttribute(): float
     {
-        if ($this->price <= 0) {
+        if ($this->max_price <= 0) {
             return 0;
         }
 
-        return (float) (($this->discount_amount / $this->price) * 100);
+        return (float) (($this->discount_amount / $this->max_price) * 100);
     }
 
     public function getIsInStockAttribute(): bool
@@ -144,8 +146,12 @@ class Product extends Model
 
     public function getIsLowStockAttribute(): bool
     {
-        return $this->stock_quantity > 0
-            && $this->stock_quantity <= $this->low_stock_threshold;
+        // Stock lives per-variant; at product level we compare the
+        // aggregated total against the global inventory default.
+        $threshold = (int) setting('inventory', 'default_low_stock_threshold', 5);
+
+        return $this->total_stock > 0
+            && $this->total_stock <= $threshold;
     }
 
     public function getIsOutOfStockAttribute(): bool
@@ -213,7 +219,9 @@ class Product extends Model
 
         if (
             Schema::hasTable('cart_items') &&
-            DB::table('cart_items')->where('product_variant_id', $this->id)->exists()
+            DB::table('cart_items')
+                ->whereIn('product_variant_id', $this->variants()->select('id'))
+                ->exists()
         ) {
             return 'This product is currently in customer carts and cannot be deleted.';
         }

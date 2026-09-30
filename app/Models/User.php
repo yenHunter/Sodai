@@ -25,6 +25,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'ban_reason',
         'failed_login_attempts',
         'locked_until',
+        // Trusted internal flows only (guest-checkout auto-accounts,
+        // admin-created customers). Public registration never accepts it.
+        'email_verified_at',
     ];
 
     protected $hidden = [
