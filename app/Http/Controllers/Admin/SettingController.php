@@ -322,11 +322,13 @@ class SettingController extends Controller
             $data['notify_new_review'] = $request->boolean('notify_new_review');
             $data['abandoned_cart_enabled'] = $request->boolean('abandoned_cart_enabled');
             $data['abandoned_cart_hours'] = $data['abandoned_cart_hours'] ?? 24;
+            $data['weekly_sales_summary_enabled'] = $request->boolean('weekly_sales_summary_enabled');
+            $data['monthly_sales_summary_enabled'] = $request->boolean('monthly_sales_summary_enabled');
 
             $this->settingService->updateGroup(
                 'notification',
                 $data,
-                booleanKeys: ['notify_new_order', 'notify_low_stock', 'notify_new_review', 'abandoned_cart_enabled']
+                booleanKeys: ['notify_new_order', 'notify_low_stock', 'notify_new_review', 'abandoned_cart_enabled', 'weekly_sales_summary_enabled', 'monthly_sales_summary_enabled']
             );
 
             return redirect()

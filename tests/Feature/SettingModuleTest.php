@@ -379,6 +379,58 @@ class SettingModuleTest extends TestCase
         $this->assertFalse((bool) setting('notification', 'abandoned_cart_enabled', '0'));
     }
 
+    public function test_weekly_sales_summary_toggle_persists_as_strings(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'weekly_sales_summary_enabled' => '1',
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('1', Setting::get('notification', 'weekly_sales_summary_enabled'));
+
+        // Unchecked checkboxes send nothing → controller must store '0'.
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('0', Setting::get('notification', 'weekly_sales_summary_enabled'));
+
+        // The scheduled command reads this exact triple via the setting helper.
+        $this->assertFalse((bool) setting('notification', 'weekly_sales_summary_enabled', '0'));
+    }
+
+    public function test_monthly_sales_summary_toggle_persists_as_strings(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'monthly_sales_summary_enabled' => '1',
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('1', Setting::get('notification', 'monthly_sales_summary_enabled'));
+
+        // Unchecked checkboxes send nothing → controller must store '0'.
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('0', Setting::get('notification', 'monthly_sales_summary_enabled'));
+
+        // The scheduled command reads this exact triple via the setting helper.
+        $this->assertFalse((bool) setting('notification', 'monthly_sales_summary_enabled', '0'));
+    }
+
     public function test_abandoned_cart_hours_must_be_within_bounds(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);

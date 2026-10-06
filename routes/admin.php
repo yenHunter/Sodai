@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
@@ -216,6 +217,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::delete('/items', [FaqController::class, 'bulkDestroy'])->name('items.bulk-destroy')->middleware('permission:faq.delete');
             Route::patch('/items/{faq}/toggle-status', [FaqController::class, 'toggleStatus'])->name('items.toggle-status')->middleware('permission:faq.edit');
         });
+    });
+
+    // ── Reports: read-only analytics, view permission gates everything ──
+    Route::middleware('permission:report.view')->prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/sales-by-date', [ReportController::class, 'salesByDate'])->name('sales-by-date');
+        Route::get('/sales-by-date/export', [ReportController::class, 'exportSalesByDate'])->name('sales-by-date.export');
+        Route::get('/top-products', [ReportController::class, 'topProducts'])->name('top-products');
+        Route::get('/top-products/export', [ReportController::class, 'exportTopProducts'])->name('top-products.export');
+        Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
     });
 
     // ── Settings / Configuration ──

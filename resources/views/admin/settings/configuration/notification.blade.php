@@ -79,6 +79,32 @@
                                 value="{{ old('abandoned_cart_hours', $settings['abandoned_cart_hours'] ?? 24) }}">
                             <div class="form-text">Emails are queued automatically twice an hour when enabled.</div>
                         </div>
+
+                        <div class="form-check form-switch mb-3 mt-4">
+                            <input class="form-check-input" type="checkbox" role="switch" value="1"
+                                id="weekly_sales_summary_enabled" name="weekly_sales_summary_enabled"
+                                {{ old('weekly_sales_summary_enabled', ($settings['weekly_sales_summary_enabled'] ?? '0') === '1') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="weekly_sales_summary_enabled">
+                                Send weekly sales summary email
+                            </label>
+                            <div class="form-text">
+                                Emails the store notification email every Monday at 8:00 AM with last week's revenue,
+                                orders and best sellers.
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" value="1"
+                                id="monthly_sales_summary_enabled" name="monthly_sales_summary_enabled"
+                                {{ old('monthly_sales_summary_enabled', ($settings['monthly_sales_summary_enabled'] ?? '0') === '1') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="monthly_sales_summary_enabled">
+                                Send monthly sales summary email
+                            </label>
+                            <div class="form-text">
+                                Emails the store notification email on the 1st of every month at 8:00 AM with last
+                                month's revenue, orders and best sellers.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

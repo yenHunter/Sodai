@@ -146,6 +146,12 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
+                    <a class="side-nav-link" href="{{ route('admin.reports.index') }}">
+                        <span class="menu-icon"><i data-lucide="chart-no-axes-combined"></i></span>
+                        <span class="menu-text" data-lang="reports">Reports</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a class="side-nav-link" href="{{ route('admin.ecommerce.attribute.index') }}">
                         <span class="menu-icon"><i data-lucide="columns-3-cog"></i></span>
                         <span class="menu-text" data-lang="apps-ecommerce-attributes">Attributes</span>
