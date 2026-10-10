@@ -4,19 +4,20 @@
 <meta http-equiv="x-ua-compatible" content="ie=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
-<title>Sodai - {{ $title }}</title>
+@php $brand = \App\Support\StorefrontBranding::common(); @endphp
+<title>{{ $brand['name'] }} - {{ $title }}</title>
 @if (isset($page) && $page->meta_description)
     <meta name="description" content="{{ $page->meta_description }}">
+@else
+    <meta name="description" content="{{ $brand['description'] }}">
 @endif
-<meta name="keywords"
-    content="apparel, catalog, clean, ecommerce, ecommerce HTML, electronics, fashion, html eCommerce, html store, minimal, multipurpose, multipurpose ecommerce, online store, responsive ecommerce template, shops" />
-<meta name="description" content="Best ecommerce html template for single and multi vendor store.">
-<meta name="author" content="ashishmaraviya">
+<meta name="keywords" content="{{ $brand['keywords'] }}" />
+<meta name="author" content="{{ $brand['author'] }}">
 
 <!-- site Favicon -->
-<link rel="icon" href="{{ asset('visitor/images/favicon/favicon-4.png') }}" sizes="32x32" />
-<link rel="apple-touch-icon" href="{{ asset('visitor/images/favicon/favicon-4.png') }}" />
-<meta name="msapplication-TileImage" content="{{ asset('visitor/images/favicon/favicon-4.png') }}" />
+<link rel="icon" href="{{ $brand['favicon'] }}" sizes="32x32" />
+<link rel="apple-touch-icon" href="{{ $brand['favicon'] }}" />
+<meta name="msapplication-TileImage" content="{{ $brand['favicon'] }}" />
 
 <!-- css Icon Font -->
 <link rel="stylesheet" href="{{ asset('visitor/css/vendor/ecicons.min.css') }}" />

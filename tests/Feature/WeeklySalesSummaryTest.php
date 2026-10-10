@@ -59,7 +59,9 @@ class WeeklySalesSummaryTest extends TestCase
         $this->enableSummary('owner@sodai.com');
 
         $order = $this->deliveredOrder(total: 150, quantity: 5);
-        $order->created_at = now()->subDays(3); // inside last week
+        // Anchor inside the previous Mon–Sun window — a naive subDays(3) drifts
+        // into the current week when the suite runs late in the week.
+        $order->created_at = now()->subWeek()->startOfWeek()->addDays(3);
         $order->save();
 
         Queue::fake();
@@ -99,9 +101,9 @@ class WeeklySalesSummaryTest extends TestCase
     {
         $this->enableSummary('owner@sodai.com');
 
-        // Last week (previous Mon–Sun): the report uses Carbon week windows
-        // that always include 7 days ago, so backdate against that anchor.
-        $inWeek = now()->subDays(3);
+        // Last week (previous Mon–Sun): anchored from the window start so the
+        // date is always inside, whatever weekday the suite runs on.
+        $inWeek = now()->subWeek()->startOfWeek()->addDays(2);
         $order = $this->deliveredOrder(total: 120, quantity: 4);
         $order->created_at = $inWeek;
         $order->save();

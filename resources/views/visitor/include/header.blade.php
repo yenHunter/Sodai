@@ -1,4 +1,5 @@
 <!-- ----- Header Section Start -----  -->
+@php $brand = \App\Support\StorefrontBranding::logos(); @endphp
 <header class="ec-header">
     <!-- Ec Header Bottom  Start -->
     <div class="ec-header-bottom d-none d-lg-block">
@@ -9,9 +10,9 @@
                     <div class="align-self-center">
                         <div class="header-logo">
                             <a href="{{ route('visitor.index') }}">
-                                <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" />
-                                <img class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}"
-                                    alt="Site Logo" style="display: none;" />
+                                <img src="{{ $brand['logo'] }}" alt="{{ setting('company', 'name', 'Site') }}" />
+                                <img class="dark-logo" src="{{ $brand['logo_dark'] }}"
+                                    alt="{{ setting('company', 'name', 'Site') }}" style="display: none;" />
                             </a>
                         </div>
                     </div>
@@ -85,9 +86,9 @@
                 <div class="col">
                     <div class="header-logo">
                         <a href="{{ route('visitor.index') }}">
-                            <img src="{{ asset('visitor/images/logo/logo.png') }}" alt="Site Logo" />
-                            <img class="dark-logo" src="{{ asset('visitor/images/logo/dark-logo.png') }}"
-                                alt="Site Logo" style="display: none;" />
+                            <img src="{{ $brand['logo'] }}" alt="{{ setting('company', 'name', 'Site') }}" />
+                            <img class="dark-logo" src="{{ $brand['logo_dark'] }}"
+                                alt="{{ setting('company', 'name', 'Site') }}" style="display: none;" />
                         </a>
                     </div>
                 </div>
@@ -112,9 +113,11 @@
             <div class="row">
                 <div class="col-md-12 align-self-center">
                     <div class="ec-main-menu">
-                        <a href="javascript:void(0)" class="ec-header-btn ec-sidebar-toggle">
-                            <i class="fi fi-rr-apps"></i>
-                        </a>
+                        @if (request()->routeIs('visitor.index'))
+                            <a href="javascript:void(0)" class="ec-header-btn ec-sidebar-toggle">
+                                <i class="fi fi-rr-apps"></i>
+                            </a>
+                        @endif
                         <ul>
                             <li><a href="{{ route('visitor.index') }}">Home</a></li>
                             <li class="dropdown position-static"><a href="javascript:void(0)">Categories</a>
@@ -208,28 +211,34 @@
                             <li>
                                 <a href="{{ route('visitor.offers') }}">Hot Offers</a>
                             </li>
-                            <li class="dropdown scroll-to"><a href="javascript:void(0)"><i
-                                        class="fi fi-rr-sort-amount-down-alt"></i></a>
-                                <ul class="sub-menu">
-                                    <li class="menu_title">Scroll To Section</li>
-                                    <li><a href="javascript:void(0)" data-scroll="collection" class="nav-scroll">Top
-                                            Collection</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="categories"
-                                            class="nav-scroll">Categories</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="offers"
-                                            class="nav-scroll">Offers</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="vendors" class="nav-scroll">Top
-                                            Vendors</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="services"
-                                            class="nav-scroll">Services</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="arrivals" class="nav-scroll">New
-                                            Arrivals</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="reviews" class="nav-scroll">Client
-                                            Review</a></li>
-                                    <li><a href="javascript:void(0)" data-scroll="insta" class="nav-scroll">Instagram
-                                            Feed</a></li>
-                                </ul>
-                            </li>
+                            @if (request()->routeIs('visitor.index'))
+                                <li class="dropdown scroll-to"><a href="javascript:void(0)"><i
+                                            class="fi fi-rr-sort-amount-down-alt"></i></a>
+                                    <ul class="sub-menu">
+                                        <li class="menu_title">Scroll To Section</li>
+                                        <li><a href="javascript:void(0)" data-scroll="collection"
+                                                class="nav-scroll">Top
+                                                Collection</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="categories"
+                                                class="nav-scroll">Categories</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="offers"
+                                                class="nav-scroll">Offers</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="vendors" class="nav-scroll">Top
+                                                Vendors</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="services"
+                                                class="nav-scroll">Services</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="arrivals"
+                                                class="nav-scroll">New
+                                                Arrivals</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="reviews"
+                                                class="nav-scroll">Client
+                                                Review</a></li>
+                                        <li><a href="javascript:void(0)" data-scroll="insta"
+                                                class="nav-scroll">Instagram
+                                                Feed</a></li>
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
