@@ -14,53 +14,40 @@ _Companion to `.github/admin-todo.md` and `.github/project-instructions.md`. Upd
 - Views that ARE already wired to real data: `login`, `register`, `forgot-password`, `reset-password`,
   `set-password`, `verify-email`, `products` (index + by-category), `product-details`, `cart`,
   `user-profile`, `user-address`, `user-order-history`, `user-order-details`, `user-wishlist`,
-  `user-reviews`, `header` (mini-cart via `CartComposer`).
+  `user-reviews`, `header` (mini-cart via `CartComposer`) — plus, since the storefront wiring
+  pass: `index` (homepage w/ banners, featured/new/limited-time products, categories),
+  `checkout` (COD, guest or registered, stock re-locking), `order-confirm`, `offers`,
+  `about`, and the CMS policy pages (`privacy-policy`, `terms-conditions`, `shipping-policy`,
+  `return-refund-policy` via `CmsPageService`). Header/footer branding (logos, favicon,
+  SEO meta, contact block, copyright) resolves from admin Settings via
+  `App\Support\StorefrontBranding`.
 - Views that are STILL raw UBold template markup with hardcoded/dummy content, not bound to
-  controllers/services: `index` (homepage), `about`, `contact`, `checkout`, `order-confirm`,
-  `offers`, `faq`, `privacy-policy`, `terms-conditions`, `shipping-policy`, `return-refund-policy`.
-- No payment gateway, no transactional emails beyond password/reminder, no queueing.
+  controllers/services: `contact` (form posts nowhere), `faq`, and the header's category
+  mega-menu / wishlist badge / search bar.
+- No payment gateway beyond COD, no transactional lifecycle emails beyond password/reminder,
+  no queueing.
 
 ---
 
 ## PART 1 — P0: Wire remaining core views to real data (highest priority, unlocks demoability)
 
-- [ ] **Homepage (`visitor/pages/index.blade.php`)**: Currently 100% static dummy products/testimonials.
-      Needs a `HomeController@index` (new) pulling: featured products (`Product::scopeFeatured`),
-      newest arrivals (`Product::scopeNewest`), active categories, and active banners
-      (`Banner::scopeCurrentlyValid()->scopeOfPosition('home_slider'|'home_promo')` — Banner model
-      and admin CMS already fully support this, just needs storefront consumption).
-- [ ] **Checkout (`visitor/pages/checkout.blade.php`)**: Currently a static form posting to `#`.
-      This is the single biggest storefront gap. Needs:
-      - `CheckoutController` (new) + `routes/visitor.php` entries
-      - Guest vs. registered checkout branching (guest checkout toggle already exists in
-        Settings → Order group: `allow_guest_checkout`)
-      - Address selection (reuse `AddressService`) or inline new-address form
-      - Live shipping charge + tax computation reusing `SettingService::resolveShippingCharge()`
-        and the same tax logic already built for `OrderService` (consider extracting a shared
-        `PriceCalculationService` so admin POS and storefront checkout don't duplicate logic)
-      - Coupon apply/remove (reuse the same validation logic as `OrderController::applyCoupon`
-        AJAX endpoint — currently admin-only, needs a customer-facing equivalent with customer's
-        own usage-limit check)
-      - On submit: create `Order` + `OrderItem`s via a new `Services/Visitor/CheckoutService`
-        (mirroring `OrderService::store()` but scoped to the authenticated/guest customer,
-        with the same stock-locking transaction pattern)
-      - Clear the cart after successful order placement
-- [ ] **Order confirmation (`visitor/pages/order-confirm.blade.php`)**: Currently static "Thank You"
-      page with hardcoded products. Needs `$order` passed in from checkout, showing real order
-      number/items/total. Route currently takes no order id — needs
-      `visitor.order-confirm` → `visitor.orders.confirm/{order}` or session-flash the last order id.
-- [ ] **About / Contact pages**: Low effort — About can stay mostly static (marketing copy is fine
-      to hardcode) but Contact form should actually submit somewhere (mail to admin alert email
-      from Settings → Notification group `admin_alert_email`, or store as a lead). Currently posts
-      to `#` with no backend.
-- [ ] **CMS-backed policy pages**: `privacy-policy.blade.php`, `terms-conditions.blade.php`,
-      `shipping-policy.blade.php`, `return-refund-policy.blade.php` are static Lorem Ipsum.
-      The `CmsPage` model + admin editor already exist and are fully functional
-      (`.github/admin-todo.md` P0 item — CMS admin editor). Once that ships, these 4 storefront
-      views just need to fetch `CmsPage::findOrCreateBySlug($slug)->content` and render it instead
-      of the hardcoded blocks. This is a quick win once the admin-side editor exists.
-- [ ] **FAQ / Offers pages**: Currently fully static. Lower priority — either leave as marketing
-      content or (offers) wire to `Coupon::active()->currentlyValid()` for a real "current offers" list.
+- [x] **Homepage (`visitor/pages/index.blade.php`)**: ✅ Done — `HomeController@index` pulls featured
+      products, new arrivals, top-rated, limited-time offers, top categories, feature items,
+      and active banners (`home_slider` / `home_promo`) via `HomeService`.
+- [x] **Checkout (`visitor/pages/checkout.blade.php`)**: ✅ Done — `CheckoutController` +
+      `Services/Visitor/CheckoutService` + throttled routes: guest vs. registered branching
+      (`allow_guest_checkout`), address selection/new form, live shipping + tax computation
+      from Settings, customer-scoped coupon AJAX (`visitor.checkout.apply-coupon`, throttle:20,1),
+      per-item stock re-locking inside the order transaction, cart cleared after placement.
+- [x] **Order confirmation (`visitor/pages/order-confirm.blade.php`)**: ✅ Done — real order data
+      from session `last_order_id`.
+- [ ] **About / Contact pages**: About is served from the CMS (`HomeController::about`).
+      Contact form still posts nowhere — needs a mail-to-admin (`admin_alert_email`) or lead
+      storage backend (reCAPTCHA `data-recaptcha` attr is already in the markup).
+- [x] **CMS-backed policy pages**: ✅ Done — cached `CmsPageService::getPage()` renders
+      admin-edited content (HTML-sanitized on save); per-page meta overrides `<head>`.
+- [ ] **Offers page**: ✅ Wired to real offers (`HomeService::getOfferList`).
+      **FAQ page**: still static marketing content.
 
 ---
 
@@ -75,8 +62,8 @@ _Companion to `.github/admin-todo.md` and `.github/project-instructions.md`. Upd
       accurate for logged-in customers, and hidden/zero for guests (wishlist requires auth currently).
 - [ ] **Search bar** — `<input class="ec-search-bar">` in header submits nowhere. Needs a
       `visitor.products.index` GET with a `search` query param wired into
-      `ProductCatalogService::getFilteredProducts()` (the service doesn't currently accept a
-      `search` filter key at all — needs adding alongside `category`/`color`/`size`).
+      `ProductCatalogService::getFilteredProducts()` (the service currently accepts only
+      `category`/`color`/`size`/`price`/`sort` — still no `search` filter key).
 - [ ] **Category sidebar widget** (`visitor/include/category-sidebar.blade.php`, shown on homepage)
       is fully hardcoded with dummy categories/products/prices. Either wire to real
       `Category`/`Product` data or remove it from the homepage if not needed for MVP.
@@ -89,19 +76,15 @@ _Companion to `.github/admin-todo.md` and `.github/project-instructions.md`. Upd
       (`CartService::getOrCreateCart`), but there's no guest → registered account merge flow if a
       guest logs in mid-session. Decide: merge guest cart into user cart on login (recommended,
       small addition to `AuthController@login`).
-- [ ] **Stock re-validation at checkout time**: `CartService::addItem`/`updateQuantity` check stock
-      when adding, but by the time checkout is submitted stock may have changed. `CheckoutService`
-      must re-lock and re-validate stock per item (same `lockForUpdate()` pattern already used in
-      `OrderService::buildItemsWithStockLock()` — can likely reuse that method directly if it's
-      moved to a shared trait/service, since Admin POS order creation and Customer checkout have
-      near-identical stock-locking needs).
-- [ ] **Order cancellation by customer**: `visitor.account.orders.show` currently only displays order
-      status/timeline — no "Cancel Order" action for customers on cancellable (pending/confirmed)
-      orders. Needs a new route + `CustomerOrderService::cancel()` (should reuse
-      `OrderService::cancel()` logic but restrict who can call it and what reasons are allowed).
-- [ ] **Customer-facing coupon validation endpoint** (AJAX) — needed for checkout to show live
-      discount preview, mirroring `Admin\OrderController::applyCoupon` but scoped to
-      `Auth::guard('customer')` and without admin-only fields.
+- [x] **Stock re-validation at checkout time**: ✅ Done — `CheckoutService` re-locks and
+      re-validates stock per item inside the order transaction (same `lockForUpdate()`
+      pattern as admin order creation).
+- [x] **Order cancellation by customer**: ✅ Done — `visitor.account.orders.cancel` exists,
+      ownership-guarded, restricted to `CustomerOrderService::CUSTOMER_CANCELLABLE_STATUSES`,
+      with a cancel-reason and the same stock-restore behavior as the admin flow.
+- [x] **Customer-facing coupon validation endpoint** (AJAX) — ✅ Done, `visitor.checkout.apply-coupon`,
+      customer-scoped usage-limit checks, `throttle:20,1` for brute-force protection
+      (covered in `SecurityHardeningTest`).
 
 ---
 
@@ -150,9 +133,11 @@ storefront angle:
 ## PART 6 — P2: Polish / SEO / performance
 
 - [ ] **Sitemap.xml** — no route/controller generates one. Needed for real SEO once launched.
-- [ ] **Meta tag rendering from Settings → Marketing (SEO group)** — `Setting::get('seo', 'meta_title')`
-      etc. exist but nothing injects them into `<head>` on storefront pages
-      (`visitor/include/head.blade.php` has hardcoded `<title>`/`<meta>` tags).
+- [x] **Meta tag rendering from Settings** — ✅ Done via `App\Support\StorefrontBranding`:
+      `<head>` resolves title prefix, description, keywords and favicon from admin Settings
+      (`seo`, `design` groups) with template defaults when unset; CMS pages override with
+      their own meta. **Still open:** og:/twitter: card tags (`og_image` setting exists but
+      unused on storefront).
 - [ ] **og:image / social share tags** — same gap, `og_image` setting exists but unused on storefront.
 - [ ] **N+1 query audit** on `products.blade.php` / `products-by-category.blade.php` — verify eager
       loading (`with([...])`) in `ProductCatalogService::getFilteredProducts()` covers everything
@@ -165,16 +150,16 @@ storefront angle:
 
 ## Suggested Build Order (mirrors admin-todo.md style prioritization)
 
-1. **Part 1 items** (homepage, checkout, order-confirm) — biggest unlock, makes the app demoable
-   end-to-end as a real storefront.
-2. **Part 2 items** (header search/category/wishlist wiring) — small, high-visibility fixes.
-3. **Part 3 items** (checkout stock-locking, cancellation, coupon AJAX) — needed for checkout to be
-   production-safe, not just "technically working."
-4. **Part 4 items** — nice-to-have UX, do after core flow is solid.
-5. **Part 5 items** — payment gateway + transactional emails, do once checkout flow is stable.
-6. **Part 6 items** — polish, do last before any real launch.
+1. **Part 1/Part 3 items** are done — homepage, checkout (with stock-locking), order-confirm,
+   CMS policy pages, offers, and customer order cancellation are all shipped and exercised by
+   the Feature test suites.
+2. **Part 2 → Part 4 items** (header search/category menu/wishlist badge, contact backend) —
+   small, high-visibility fixes next.
+3. **Part 4 UX polish** (quick-view, breadcrumbs, recently viewed) — after core flow polish.
+4. **Part 5 items** — payment gateway beyond COD + transactional emails + queueing.
+5. **Part 6 items** — sitemap, og: tags, N+1 audit — last before any real launch.
 
 ---
 
-*Last generated from source analysis: current repo snapshot, cross-referenced against
-`.github/project-instructions.md` and `.github/admin-todo.md`.*
+*Last updated: October 2026 storefront-wiring + security-hardening pass, verified against
+source and cross-referenced with `.github/project-instructions.md` and `.github/admin-todo.md`.*

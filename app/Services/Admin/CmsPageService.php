@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\CmsPage;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +30,7 @@ class CmsPageService
 
         $page->update([
             'title' => $data['title'],
-            'content' => $data['content'] ?? null,
+            'content' => app(HtmlSanitizer::class)->clean($data['content'] ?? null),
             'image' => $imagePath,
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,

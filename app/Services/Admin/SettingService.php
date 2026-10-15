@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\Setting;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -83,7 +84,27 @@ class SettingService
 
     private function uploadFile(UploadedFile $file, string $group): string
     {
+        $extension = strtolower($file->getClientOriginalExtension());
         $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+
+        // SVGs can carry embedded script (they execute when opened or
+        // inlined), so they are stored with active content stripped.
+        if ($extension === 'svg') {
+            $sanitized = app(HtmlSanitizer::class)->cleanSvg($file->getContent());
+
+            if ($sanitized === null) {
+                throw new \Exception('Failed to upload file.');
+            }
+
+            $path = "settings/{$group}/{$filename}";
+
+            if (! Storage::disk('public')->put($path, $sanitized)) {
+                throw new \Exception('Failed to upload file.');
+            }
+
+            return $path;
+        }
+
         $path = $file->storeAs("settings/{$group}", $filename, 'public');
 
         if (! $path) {

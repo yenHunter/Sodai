@@ -10,6 +10,7 @@ use App\Models\ProductOption;
 use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
 use App\Models\Tag;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -66,8 +67,8 @@ class ProductService
                 $product = Product::create([
                     'name' => $data['name'],
                     'slug' => $this->generateUniqueSlug($data['name']),
-                    'short_description' => $data['short_description'] ?? null,
-                    'description' => $data['description'] ?? null,
+                    'short_description' => $this->sanitizeRichText($data['short_description'] ?? null),
+                    'description' => $this->sanitizeRichText($data['description'] ?? null),
                     'category_id' => $data['category_id'],
                     'brand_id' => $data['brand_id'] ?? null,
                     'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
@@ -142,8 +143,8 @@ class ProductService
                 $product->update([
                     'name' => $data['name'],
                     'slug' => $slug,
-                    'short_description' => $data['short_description'] ?? null,
-                    'description' => $data['description'] ?? null,
+                    'short_description' => $this->sanitizeRichText($data['short_description'] ?? null),
+                    'description' => $this->sanitizeRichText($data['description'] ?? null),
                     'category_id' => $data['category_id'],
                     'brand_id' => $data['brand_id'] ?? null,
                     'is_active' => $this->resolveBoolean($data['is_active'] ?? false),
@@ -718,6 +719,19 @@ class ProductService
     // ─────────────────────────────────────────────
     // RESOLVE BOOLEAN — unchanged
     // ─────────────────────────────────────────────
+
+    /**
+     * Rich-text description fields are rendered unescaped on the
+     * storefront, so they are stored already sanitized.
+     */
+    private function sanitizeRichText(?string $value): ?string
+    {
+        if ($value === null || trim($value) === '') {
+            return $value;
+        }
+
+        return app(HtmlSanitizer::class)->clean($value);
+    }
 
     private function resolveBoolean(mixed $value): bool
     {
