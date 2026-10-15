@@ -26,8 +26,10 @@ Route::get('/category/{category:slug}', [ProductController::class, 'byCategory']
 
 // ── Checkout (guest or authenticated, gated by allow_guest_checkout setting) ──
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
+// Throttled: order placement and especially coupon validation are
+// brute-force targets (coupon code enumeration).
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:20,1');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon')->middleware('throttle:20,1');
 Route::get('/order-confirm', [OrderConfirmController::class, 'show'])->name('order-confirm');
 
 // ── CMS Static Pages (public) ──
