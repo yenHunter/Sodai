@@ -23,16 +23,33 @@
 ## About Sodai
 
 Sodai is a single-vendor e-commerce platform with a completely separated admin panel and
-customer storefront, each with its own authentication guard. The project is currently
-**admin-first**: the admin panel is feature-complete for core catalog and order operations,
-while the customer-facing storefront is next on the roadmap.
+customer storefront, each with its own authentication guard. The admin panel is
+feature-complete for core catalog and order operations, and the customer storefront is now
+wired end-to-end: browse → cart → coupon → COD checkout → order confirmation and tracking.
 
-This is a **learning and portfolio project** — it is not deployed to production, and some
-areas (payment gateway, transactional customer emails, storefront UI) are intentionally
-incomplete. See [`.github/project-instructions.md`](.github/project-instructions.md) for a
-detailed, continuously-updated breakdown of what's built vs. what's planned.
+This is a **learning and portfolio project** — it is not deployed to production. Payment
+integration is intentionally limited to Cash On Delivery, and transactional customer
+emails are limited to order-relevant admin summaries. See
+[`.github/project-instructions.md`](.github/project-instructions.md) for a detailed,
+continuously-updated breakdown of what's built vs. what's planned.
 
 ## Key Features
+
+**Storefront (Customer)**
+- Homepage wired to real data: banners (scheduled CMS placements), featured/new/limited-time
+  products, top categories
+- Catalog with category/option/color/size/price filters and sorting, product detail pages
+  with variant matrix
+- Guest or registered checkout (guest checkout toggle in Settings), COD payment,
+  live shipping charge/free-shipping threshold/tax and coupon validation via throttled AJAX
+- Stock is re-locked and re-validated inside a DB transaction at order placement
+- Customer account area: order history + timeline tracking, cancellation of pending orders,
+  addresses (default management), reviews (only after delivered purchase), wishlist,
+  profile/password management
+- Email verification at registration; set-password bootstrap for admin-created customers
+- CMS-backed policy pages (privacy, terms, shipping, return/refund) editable in admin
+- Admin-brandable storefront: company name, logos (light/dark/favicon), SEO meta, and
+  footer contact details all resolve from Settings → Branding with template defaults
 
 **Admin Panel**
 - Role-based access control (Spatie Permission) with 5 seeded roles and granular permissions
@@ -44,7 +61,8 @@ detailed, continuously-updated breakdown of what's built vs. what's planned.
 - Coupon engine (percentage/fixed, usage limits, validity windows)
 - Refund workflow, independent from order cancellation, with approval/rejection
 - Product review moderation with automatic rating recalculation
-- Abandoned cart visibility + customer reminder emails
+- Abandoned cart visibility + automatic reminder emails (30-minute scheduled job)
+- Sales report emails: weekly (Mon–Sun) and monthly revenue summaries to the admin inbox
 - CMS banners (position + scheduling based)
 - A 10-group Settings module (company, design, shipping, payment, inventory, invoice,
   order rules, tax, notifications, marketing/SEO/social) — all backed by a generic,
@@ -53,15 +71,28 @@ detailed, continuously-updated breakdown of what's built vs. what's planned.
 
 **Engineering practices**
 - Thin controllers, business logic in a dedicated Service layer
-- ~15 PHPUnit Feature test suites covering permissions, validation edge cases, and
-  business rules (e.g. stock locking on order creation, coupon eligibility, refund balances)
+- 306 tests / 1,259 assertions across 29 Feature suites + Unit tests, covering permissions,
+  validation edge cases, and business rules (stock locking on order creation, coupon
+  eligibility, refund balances, report window anchoring)
 - Consistent Form Request validation, soft deletes on core models, security headers + CSP
+
+**Security hardening**
+- Whitelist-based HTML sanitizer on all unescaped rich-text rendering (CMS content,
+  product descriptions) — strips scripts, event handlers, and dangerous URLs while
+  preserving normal editor output
+- Uploaded SVGs (design logos) are stored with active content stripped
+- Rate limiting on every authentication surface plus checkout/coupon endpoints
+  (coupon brute-force protection); throttled endpoints return 429
+- Ownership enforcement on every customer resource (orders, reviews, addresses, cart,
+  wishlist) via a dedicated trait — object-level authorization
+- App-image-only `mimes`/`max` validation on all uploads; UUID filenames; no source-map
+  files shipped to the browser; `composer audit` tracked clean
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 13.17, PHP 8.3 |
+| Backend | Laravel 13.36, PHP 8.3 |
 | Database | SQLite (dev), MySQL-ready |
 | Authorization | Spatie Laravel Permission |
 | Image processing | Intervention Image v4 (WebP conversion) |
@@ -124,11 +155,11 @@ tests/Feature/                  # Module-level test suites
 See [`.github/project-instructions.md`](.github/project-instructions.md) for the full,
 up-to-date backlog. Near-term priorities:
 
-1. Wire the storefront views to real catalog/cart/order data
-2. Payment gateway integration
-3. Transactional customer emails (order confirmation, shipment updates)
-4. Admin dashboard KPIs
-5. CMS static page content (privacy policy, terms, shipping/refund policy)
+1. Payment gateway integration (COD is the only payment method today)
+2. Admin dashboard KPIs (reports module is shipped, dashboard view is still placeholder)
+3. Transactional customer emails (order confirmation, shipment updates) + queueing
+4. Storefront header polish: real category mega-menu, live search, wishlist count badge
+5. 2FA for admin accounts
 
 ## Connect & Support
 

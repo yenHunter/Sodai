@@ -9,13 +9,18 @@
 6. Run `php artisan migrate`
 7. Run `npm run dev`
 
+A single command does steps 3–7: `composer run setup`
+
 ## Branching Strategy
-- Create feature branches from `develop`
+- Create feature branches from `main`
 - Name format: `feature/description` or `bugfix/description`
-- Create PR to `develop` (not `main`)
+- CI (`.github/workflows/laravel.yml`) runs on pushes/PRs to `main` and `develop`
 - Request review before merging
 
 ## Coding Standards
-- Follow PSR-12
-- Run `php artisan test` before pushing
-- Use Laravel Pint for formatting
+- Follow PSR-12; use Laravel Pint for formatting:
+  `vendor/bin/pint` to fix, `vendor/bin/pint --test` to check (CI enforces the latter)
+- Run `composer test` before pushing (CI runs `php artisan test` on SQLite)
+- Add or update Feature tests for the behavior you change — new modules should ship with
+  a suite covering permissions, validation, and business rules
+- Run `composer audit` after dependency changes; do not introduce new advisories

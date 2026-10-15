@@ -6,12 +6,19 @@ on:
   push:
     branches: [main, develop]
 
+# Cancel superseded runs on the same branch to keep CI snappy.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -76,7 +83,7 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
-        run: php artisan test
+        run: php artisan test --stop-on-failure
 
       - name: Upload logs on failure
         if: failure()

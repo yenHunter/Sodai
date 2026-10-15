@@ -16,14 +16,17 @@ modules previously marked pending in older versions of this doc are already buil
 ## 1. PROJECT OVERVIEW
 
 - **Project Name:** Sodai (Single Vendor E-Commerce)
-- **Stage:** Active development, pre-production. Admin panel is the current focus.
-- **Backend:** Laravel 13.17, PHP 8.3
+- **Stage:** Active development, pre-production. Storefront is now wired end-to-end
+  (browse → cart → coupon → COD checkout → order confirmation/tracking); payments beyond
+  COD and transactional lifecycle emails remain open.
+- **Backend:** Laravel 13.36, PHP 8.3
 - **Frontend:** Blade + Bootstrap 5.3 (UBold admin theme by Coderthemes) + Vite
 - **DB (dev):** SQLite (`database/database.sqlite`), MySQL-ready via `config/database.php`
 - **Auth:** Two fully separate guards — `admin` (table `admins`) and `customer` (table `users`, model `App\Models\User`)
 - **Authorization:** Spatie Laravel Permission, guard `admin`, 5 seeded roles
 - **Image handling:** `intervention/image` v4 + Laravel wrapper, images converted to WebP on upload
-- **Testing:** PHPUnit 12, ~15 Feature test suites under `tests/Feature`, using `AdminTestHelpers` trait
+- **Testing:** PHPUnit 12, 306 tests / 1,259 assertions across 29 Feature suites
+  (`tests/Feature`) + Unit tests, using the `AdminTestHelpers` trait
 - **CI:** GitHub Actions (`.github/workflows/laravel.yml`) — SQLite-based test run
 
 ---
@@ -104,20 +107,27 @@ ProductImage      — product_id + nullable product_variant_id (null = shared ga
 | Reviews (moderation) | ✅ Done | Approve/reject recalculates product rating |
 | Banners (CMS) | ✅ Done | Position-based (slider/promo/category/popup), scheduling window |
 | Settings / Configuration | ✅ Done | 10 groups, generic `SettingService` with cache-per-group |
-| CMS static pages (privacy/terms/shipping/refund policy) | ❌ Not started | Blade files exist but are **empty stubs** |
-| Reports | ❌ Not started | No controller, no route, listed in permission seeder only |
+| CMS static pages (privacy/terms/shipping/refund policy) | ✅ Done | `CmsPage` model + admin Quill editor + storefront rendering (`CmsPageService::getPage()`) |
+| Reports | ✅ Done | `ReportService` (sales-by-date, top products, low stock) + weekly/monthly summary emails with `reports:send-weekly-summary` / `reports:send-monthly-summary` scheduled commands |
 | File Manager / Chat / Calendar (sidebar links) | ❌ Template demo only | Not wired to real features — decide whether to build or remove from sidebar |
 
 ### 2.6 Visitor/Storefront Module Status
-- Controllers + services exist for: product catalog + filters (`ProductCatalogService`),
-  cart, wishlist, reviews, addresses, account/profile, order history.
-- **Views are largely still the raw UBold template markup**, not wired to the real
-  visitor controllers/data. This is the single biggest gap before this becomes a
-  demoable storefront.
-- No payment gateway is integrated. `Setting::get('payment', 'online_payment_enabled')`
-  exists as a toggle only — no Stripe/SSLCommerz/bKash/Nagad code.
-- No order-confirmation/shipped/delivered transactional emails to the customer
-  (only `CartReminderMail` and `CustomerSetPasswordMail` exist).
+- Controllers + services exist and are **wired to the views** for: product catalog +
+  filters (`ProductCatalogService`), cart, wishlist, reviews, addresses, account/profile,
+  order history + tracking, checkout (`CheckoutService`, guest or registered, COD),
+  order confirmation (session `last_order_id`), homepage (`HomeService`: banners,
+  featured/new/top-rated/limited-time, categories), offers, CMS policy pages.
+- Storefront branding resolves from admin Settings via `App\Support\StorefrontBranding`
+  (company name, light/dark logos, favicon, SEO meta, footer contact) with template
+  defaults when unset.
+- Checkout is rate limited (`throttle:20,1`) on order placement and coupon validation;
+  stock is re-locked/re-validated inside the checkout transaction.
+- No payment gateway beyond COD (`payment_method` column exists, validated `in:cod`).
+  `Setting::get('payment', 'online_payment_enabled')` exists as a toggle only —
+  no Stripe/SSLCommerz/bKash/Nagad code.
+- Still template-static: header category mega-menu, wishlist count badge, header search
+  bar (no `search` filter key in `ProductCatalogService` yet), contact form backend,
+  FAQ page content. No sitemap.xml.
 
 ### 2.7 Role-Permission Matrix
 - Guard: `admin`. Roles: `super-admin`, `manager`, `order-manager`, `content-editor`, `support`.
@@ -167,24 +177,31 @@ JS files:     kebab-case → admin-ecommerce-product-index.js
 
 ```
 reCAPTCHA v3                  ✅  Admin + Customer: login, forgot, reset, register
-Rate Limiting                 ✅  Per guard, keyed by email+IP
+Rate Limiting                 ✅  Per guard, keyed by email+IP; checkout + coupon apply throttled (429 after 20/min)
 Session regen on login        ✅
 Session invalidate on logout  ✅
-CSRF                          ✅  All forms
+CSRF                          ✅  All forms (ValidateCsrfToken on the web group)
 Password hashing              ✅  bcrypt via 'hashed' cast
 Security headers + CSP        ✅  SecurityHeaders middleware (global)
 Prevent-back-history           ✅  Admin authenticated routes
 Email enumeration prevention  ✅  Same message regardless of match
 Token hashing                 ✅  Reset tokens hashed in DB
+Rich-text XSS defense         ✅  HtmlSanitizer (whitelist DOM) applied to CMS content + product descriptions on save
+SVG upload hardening          ✅  SettingService strips scripts/on*/javascript: from SVG uploads
+Ownership checks (customer)   ✅  EnsuresCustomerOwnership trait on visitor controllers
 Soft deletes                  ✅  Key models
 RBAC                          ✅  Spatie Permission
-Ownership checks (customer)   ✅  EnsuresCustomerOwnership trait on visitor controllers
+Dependency hygiene            ✅  composer audit clean (laravel 13.36, guzzle 8.2, commonmark 2.10.3, symfony 7.4.21)
+Source maps                   ✅  No .map files served from public/; Vite build produced without maps
 ```
 
 **Not yet addressed (flag before production):**
-- No CSP `report-uri`, no rate limiting on public API-like AJAX endpoints (product search, tag search).
+- No CSP `report-uri`; CSP still allows `unsafe-inline` scripts.
+- No rate limiting on some public AJAX endpoints (admin product/tag search; visitor wishlist toggle).
 - No explicit file-upload MIME sniffing beyond Laravel's `image`/`mimes` rules.
-- No 2FA for admin accounts.
+- **No 2FA for admin accounts** — biggest remaining auth-surface gap.
+- Seeders use documented default credentials (`Admin#123` / `Customer#123` / `Manager#123`)
+  — rotate before any shared deployment; set `SESSION_SECURE_COOKIE=true` in production.
 
 ---
 
@@ -233,4 +250,5 @@ See Part 5 (To-Do List & Missing Modules) of the accompanying analysis for the p
 
 ---
 
-*Last verified against source: current repo snapshot analyzed turn-by-turn, PHP 8.3 / Laravel 13.17.*
+*Last verified against source: October 2026 snapshot (security-hardening pass, PHP 8.3 /
+Laravel 13.36, 306 tests / 1,259 assertions passing).*
