@@ -70,7 +70,7 @@
     "pdfmake": "^0.2.20",
     "plyr": "^3.8.4",
     "prismjs": "^1.30.0",
-    "quill": "^2.0.3",
+    "quill": "2.0.2",
     "select2": "^4.1.0-rc.0",
     "simplebar": "^6.3.3",
     "sortablejs": "^1.15.6",

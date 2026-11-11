@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Offer;
 
+use App\Rules\SafeUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +20,7 @@ class StoreOfferRequest extends FormRequest
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'button_text' => ['nullable', 'string', 'max:100'],
-            'button_url' => ['nullable', 'string', 'max:255'],
+            'button_url' => ['nullable', 'string', 'max:255', new SafeUrl],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
             'is_active' => ['required'],

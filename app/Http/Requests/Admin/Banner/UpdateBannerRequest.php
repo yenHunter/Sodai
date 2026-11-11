@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Banner;
 
 use App\Models\Banner;
+use App\Rules\SafeUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +21,7 @@ class UpdateBannerRequest extends FormRequest
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'button_text' => ['nullable', 'string', 'max:100'],
-            'button_url' => ['nullable', 'string', 'max:255'],
+            'button_url' => ['nullable', 'string', 'max:255', new SafeUrl],
             'button_target' => ['nullable', 'in:'.implode(',', Banner::TARGETS)],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
             'mobile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],

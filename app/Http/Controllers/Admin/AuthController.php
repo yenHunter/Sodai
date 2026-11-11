@@ -48,10 +48,21 @@ class AuthController extends Controller
                 ]);
         }
 
+        $admin = Auth::guard('admin')->user();
+
+        // Credentials are valid, but the session must not be authenticated
+        // until the second factor is verified.
+        if ($admin->hasTwoFactorEnabled()) {
+            Auth::guard('admin')->logout();
+            $request->session()->regenerate();
+            $request->session()->put('login.2fa.admin_id', $admin->id);
+            $request->session()->put('login.2fa.remember', $remember);
+
+            return redirect()->route('admin.two-factor.challenge');
+        }
+
         $request->clearRateLimiter();
         $request->session()->regenerate();
-
-        $admin = Auth::guard('admin')->user();
         $admin->updateLastLogin($request->ip());
 
         return redirect()

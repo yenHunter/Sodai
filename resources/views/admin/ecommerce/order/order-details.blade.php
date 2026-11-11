@@ -319,9 +319,6 @@
                                     data-lucide="pencil"></i></a>
                         </div>
                         <div class="card-body">
-                            <iframe
-                                src="https://www.google.com/maps/embed/v1/place?q=New+York+University&amp;key=AIzaSyBSFRN6WWGYwmFi498qXXsD2UwkbmD74v4"
-                                style="width: 100%; height: 180px; overflow: hidden; border: 0"></iframe>
                             <div class="d-flex align-items-start my-3">
                                 <div class="flex-grow-1">
                                     <h5 class="mb-2">John Doe</h5>

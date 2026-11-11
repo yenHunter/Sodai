@@ -51,9 +51,10 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       already exists (prefix, starting number, footer note, tax-breakdown toggle) and
       `RefundService` already derives refund numbers from `invoice_prefix`, so a DomPDF export
       mirrors an established pattern.
-- [ ] **2FA for admin accounts** — no TOTP implementation or package exists; the `/auth/two-factor`
-      route is a static theme demo page. Admin login is protected by reCAPTCHA v3 + rate limiting
-      only. This remains the biggest auth-surface gap.
+- [x] **2FA for admin accounts** — dependency-free TOTP implemented (`TwoFactorService`,
+      `TwoFactorController`, encrypted `two_factor_*` columns, recovery codes, challenge after
+      password verification). Routes: `admin/two-factor` + `admin/two-factor-challenge`; the profile
+      page links to it. Covered by `tests/Feature/AdminTwoFactorTest.php`. Customers still have no MFA.
 - [ ] **Bulk product import/export (CSV)** — only report exports exist (sales-by-date, top products).
       No product or order import/export controller, route or view.
 - [ ] **Admin activity log surfaced in UI** — `ActivityLog` model + migration + `Admin::loggable()`

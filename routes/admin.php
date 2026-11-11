@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TwoFactorController;
 use App\Models\CmsPage;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,12 @@ Route::middleware('guest:admin')->group(function () {
     Route::post('forgot-password', [AuthController::class, 'forgotPasswordAttempt'])->name('forgot-password.attempt');
     Route::get('reset-password/{token}', [AuthController::class, 'resetPasswordView'])->name('reset-password.view');
     Route::post('reset-password', [AuthController::class, 'resetPasswordAttempt'])->name('reset-password.attempt');
+
+    // Post-login TOTP challenge (admin is intentionally logged out here).
+    Route::get('two-factor-challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])
+        ->name('two-factor.verify')
+        ->middleware('throttle:5,5');
 });
 
 // Authenticated
@@ -40,6 +47,11 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Two-factor authentication management for the signed-in admin.
+    Route::get('two-factor', [TwoFactorController::class, 'show'])->name('two-factor.show');
+    Route::post('two-factor', [TwoFactorController::class, 'enable'])->name('two-factor.enable')->middleware('throttle:10,1');
+    Route::delete('two-factor', [TwoFactorController::class, 'disable'])->name('two-factor.disable')->middleware('throttle:10,1');
 
     Route::prefix('ecommerce')->name('ecommerce.')->group(function () {
         // ── Categories: only roles with category permissions ──

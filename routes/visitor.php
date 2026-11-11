@@ -48,9 +48,9 @@ Route::get('/return-refund-policy', [CmsPageController::class, 'show'])->name('r
 // ── Cart (guest or authenticated — uses session_id for guests) ──
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
-    Route::post('/add', [CartController::class, 'add'])->name('add');
-    Route::patch('/{cartItem}', [CartController::class, 'update'])->name('update');
-    Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
+    Route::post('/add', [CartController::class, 'add'])->name('add')->middleware('throttle:60,1');
+    Route::patch('/{cartItem}', [CartController::class, 'update'])->name('update')->middleware('throttle:60,1');
+    Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy')->middleware('throttle:60,1');
 });
 
 // ── Guest Only ──
@@ -59,13 +59,13 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.attempt');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.attempt')->middleware('throttle:10,1');
 
     Route::get('/forgot-password', [AuthController::class, 'forgotPasswordView'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'forgotPasswordAttempt'])->name('password.email');
 
     Route::get('/reset-password/{token}', [AuthController::class, 'resetPasswordView'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPasswordAttempt'])->name('password.update');
+    Route::post('/reset-password', [AuthController::class, 'resetPasswordAttempt'])->name('password.update')->middleware('throttle:10,1');
 });
 
 // ── Authenticated Customer ──
@@ -79,10 +79,10 @@ Route::middleware('auth.customer')->group(function () {
 
         Route::prefix('addresses')->name('addresses.')->group(function () {
             Route::get('/', [AddressController::class, 'index'])->name('index');
-            Route::post('/store', [AddressController::class, 'store'])->name('store');
-            Route::post('/{address}/update', [AddressController::class, 'update'])->name('update');
-            Route::delete('/{address}', [AddressController::class, 'destroy'])->name('destroy');
-            Route::patch('/{address}/set-default', [AddressController::class, 'setDefault'])->name('set-default');
+            Route::post('/store', [AddressController::class, 'store'])->name('store')->middleware('throttle:30,1');
+            Route::post('/{address}/update', [AddressController::class, 'update'])->name('update')->middleware('throttle:30,1');
+            Route::delete('/{address}', [AddressController::class, 'destroy'])->name('destroy')->middleware('throttle:30,1');
+            Route::patch('/{address}/set-default', [AddressController::class, 'setDefault'])->name('set-default')->middleware('throttle:30,1');
         });
 
         Route::prefix('orders')->name('orders.')->group(function () {
@@ -96,7 +96,7 @@ Route::middleware('auth.customer')->group(function () {
 
         Route::prefix('wishlist')->name('wishlist.')->group(function () {
             Route::get('/', [WishlistController::class, 'index'])->name('index');
-            Route::post('/{product}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
+            Route::post('/{product}/toggle', [WishlistController::class, 'toggle'])->name('toggle')->middleware('throttle:30,1');
             Route::delete('/{product}', [WishlistController::class, 'destroy'])->name('destroy');
         });
 
@@ -109,13 +109,13 @@ Route::middleware('auth.customer')->group(function () {
 
         Route::prefix('reviews')->name('reviews.')->group(function () {
             Route::get('/', [ReviewController::class, 'index'])->name('index');
-            Route::post('/store', [ReviewController::class, 'store'])->name('store');
-            Route::post('/{review}/update', [ReviewController::class, 'update'])->name('update');
-            Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+            Route::post('/store', [ReviewController::class, 'store'])->name('store')->middleware('throttle:10,1');
+            Route::post('/{review}/update', [ReviewController::class, 'update'])->name('update')->middleware('throttle:10,1');
+            Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy')->middleware('throttle:10,1');
         });
     });
 });
 
 // ── Set Password (admin-created account bootstrap; token itself is the auth, no guest gate needed) ──
 Route::get('/set-password/{token}', [AuthController::class, 'setPasswordView'])->name('set-password.view');
-Route::post('/set-password', [AuthController::class, 'setPasswordAttempt'])->name('set-password.attempt');
+Route::post('/set-password', [AuthController::class, 'setPasswordAttempt'])->name('set-password.attempt')->middleware('throttle:10,1');

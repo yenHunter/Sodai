@@ -6,12 +6,15 @@ use App\Models\Category;
 use App\Models\CmsPage;
 use App\Models\Coupon;
 use App\Models\Product;
+use App\Models\ProductOption;
+use App\Models\ProductOptionValue;
 use App\Models\Setting;
 use App\Services\Admin\SettingService;
 use App\Support\HtmlSanitizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
@@ -88,6 +91,55 @@ class SecurityHardeningTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('<script', $product->description);
         $this->assertStringContainsString('<em>Soft</em>', $product->short_description);
         $this->assertStringNotContainsStringIgnoringCase('onerror', $product->short_description);
+    }
+
+    public function test_variant_matrix_json_cannot_break_out_of_its_script_tag(): void
+    {
+        $product = Product::factory()->create();
+        $variant = $product->variants()->firstOrFail();
+
+        // An option value makes the matrix block render at all; the SKU is one
+        // of the admin-entered fields embedded inside its JSON payload.
+        $option = ProductOption::create([
+            'name' => 'Label',
+            'slug' => 'label-'.Str::lower(Str::random(6)),
+            'sort_order' => 0,
+        ]);
+
+        $value = ProductOptionValue::create([
+            'product_option_id' => $option->id,
+            'value' => 'Default',
+            'slug' => 'default',
+            'sort_order' => 0,
+        ]);
+
+        $variant->optionValues()->attach($value->id);
+        $variant->update(['sku' => '</script><img src=x onerror=alert(1)>']);
+
+        $response = $this->get(route('visitor.products.show', $product));
+
+        $response->assertOk();
+        $response->assertSee('variant-matrix-data', false);
+        $response->assertDontSee('</script><img', false);
+        $response->assertSee('\u003C\/script\u003E', false);
+    }
+
+    public function test_admin_cannot_save_a_javascript_cta_url(): void
+    {
+        $admin = $this->createAdminWithPermissions(['banner.view', 'banner.create']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.cms.banner.store'), [
+                'title' => 'Bad CTA',
+                'button_text' => 'Click',
+                'button_url' => 'javascript:alert(document.cookie)',
+                'position' => 'home_slider',
+                'is_active' => 'active',
+                'image' => UploadedFile::fake()->image('slide.jpg'),
+            ])
+            ->assertSessionHasErrors('button_url');
+
+        $this->assertDatabaseMissing('banners', ['title' => 'Bad CTA']);
     }
 
     // ─── File uploads: SVG hardening ───
