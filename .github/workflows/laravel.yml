@@ -164,8 +164,11 @@ jobs:
       - name: Migrate and Seed Database
         run: php artisan migrate:fresh --seed --force
 
+      # GitHub's ubuntu image already ships Chromium's runtime libraries.
+      # Avoid `--with-deps`: its apt phase pulls optional fonts and fails when
+      # the runner cannot reach the Ubuntu mirrors.
       - name: Install Playwright Browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run Playwright Tests
         run: npm run test:e2e
