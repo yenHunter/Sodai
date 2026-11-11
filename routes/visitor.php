@@ -6,6 +6,7 @@ use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\CartController;
 use App\Http\Controllers\Visitor\CheckoutController;
 use App\Http\Controllers\Visitor\CmsPageController;
+use App\Http\Controllers\Visitor\FaqController;
 use App\Http\Controllers\Visitor\HomeController;
 use App\Http\Controllers\Visitor\OrderConfirmController;
 use App\Http\Controllers\Visitor\OrderController;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('index');
 Route::get('about', [HomeController::class, 'about'])->name('about');
 Route::get('offers', [HomeController::class, 'offer'])->name('offers');
+Route::get('faq', [FaqController::class, 'index'])->name('faq');
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

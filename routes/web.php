@@ -22,10 +22,6 @@ Route::get('contact', function () {
     return view('visitor.pages.contact');
 })->name('visitor.contact');
 
-Route::get('faq', function () {
-    return view('visitor.pages.faq');
-})->name('visitor.faq');
-
 Route::get('/widgets', function () {
     return view('admin.widgets');
 });

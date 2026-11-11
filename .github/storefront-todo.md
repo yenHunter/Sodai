@@ -27,13 +27,13 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
   `user-reviews`, `header` (mini-cart via `CartComposer`), `footer`.
 - Branding (company name, light/dark logos, favicon, SEO title/description/keywords/author,
   footer contact block) resolves from admin Settings via `App\Support\StorefrontBranding`.
-- Still template-static / not wired: `contact` (form posts to `#`), `faq` (Lorem Ipsum),
-  header category mega-menu, both header search inputs, wishlist count badge, and the
-  homepage category sidebar widget.
+- Still template-static / not wired: `contact` (form posts to `#`), header category
+  mega-menu, both header search inputs, wishlist count badge, and the homepage category
+  sidebar widget.
 - Not implemented at all: payment beyond COD, order-lifecycle emails, sitemap, og:/twitter:
   tags, quick-view, recently viewed, compare, guest→account cart merge, storefront search.
 - Coverage relevant to this surface: `VisitorCheckoutTest`, `VisitorOrderCancellationTest`,
-  `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
+  `VisitorFaqTest`, `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
   `OfferModuleTest`, `SecurityHardeningTest`.
 
 ---
@@ -60,23 +60,23 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       HTML-sanitized content; per-page meta overrides `<head>`.
 - [x] **Offers page**: ✅ Done — `HomeController@offer` renders `HomeService::getOfferList()`
       (`Offer::currentlyValid()->ordered()`), backed by the admin Offers module and `OfferModuleTest`.
-- [ ] **FAQ page** — best quick win in this file. `/faq` is still a `routes/web.php` closure returning
-      `visitor.pages.faq`, which is hand-written Lorem Ipsum (and its breadcrumb links to
-      `index.html`). The admin side already ships `FaqCategory` + `Faq` models with
-      `active()`/`ordered()` scopes, `FaqService` query helpers
-      (`getCategoriesWithFaqs()`, `getActiveCategoriesForSelect()`) and permission-gated CRUD.
-      Needs a visitor controller/service to load active categories with their active FAQs and render
-      them in the existing accordion markup.
+- [x] **FAQ page**: ✅ Done — `visitor.faq` is served by
+      `App\Http\Controllers\Visitor\FaqController` through
+      `App\Services\Visitor\FaqService::getPublishedCategories()`, which returns only active
+      categories that still have active FAQs (ordered, with only active FAQs eager-loaded). The view
+      renders one `ec-faq-container` per category with the theme's existing accordion markup, escaped
+      answers with `nl2br`, a real `route('visitor.index')` breadcrumb, and an empty state. Covered by
+      `VisitorFaqTest` (published content, inactive filtering, ordering, escaping, empty state).
 - [ ] **Homepage section semantics** — `HomeService` currently implements
       `getFeaturedProducts()`, `getTopRatedProducts()`, `getLimitedTimeOffers()` and
       `getFeatureItems()` all as `Product::active()->inStock()->newest()`. `Product::scopeFeatured()`
       (`is_featured`) and `Product::scopeTopRated()` exist but `HomeService` doesn't use them, and
       offers are not derived from the `offers`/coupon data at all. Decide per section: use the real scopes, or rename the
       sections so they don't promise filtering that isn't happening.
-- [ ] **Route cleanup** — `routes/web.php` still defines an `/about` closure that is shadowed by the
-      later-registered `visitor.about` route (`route:list` shows only `HomeController@about`), and
-      `/contact` + `/faq` bypass controllers entirely. Remove the dead closure and move contact/FAQ
-      onto controllers (the FAQ move is required by the item above).
+- [ ] **Route cleanup** — `/faq` now has a controller and its `routes/web.php` closure is gone. Still
+      dead: the `/about` closure in `routes/web.php` is shadowed by the later-registered `visitor.about`
+      route (`route:list` shows only `HomeController@about`), and `/contact` still bypasses controllers
+      entirely. Remove the dead closure and move contact onto a controller.
 
 ---
 
@@ -182,7 +182,7 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
 
 ## Suggested Build Order (mirrors admin-todo.md style prioritization)
 
-1. **FAQ page + header nav** (mega-menu, search, wishlist badge) — data/services already exist, all
+1. **Header nav** (mega-menu, search, wishlist badge) — data/services already exist, all
    high-visibility, no schema changes.
 2. **Contact form backend + branding values** — small, removes the last fully static form.
 3. **Homepage section semantics** — use `scopeFeatured` / `scopeTopRated` / real offers instead of
