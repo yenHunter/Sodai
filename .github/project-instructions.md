@@ -191,17 +191,19 @@ SVG upload hardening          ✅  SettingService strips scripts/on*/javascript:
 Ownership checks (customer)   ✅  EnsuresCustomerOwnership trait on visitor controllers
 Soft deletes                  ✅  Key models
 RBAC                          ✅  Spatie Permission
-Dependency hygiene            ✅  composer audit clean (laravel 13.36, guzzle 8.2, commonmark 2.10.3, symfony 7.4.21)
+Dependency hygiene            ✅  composer audit clean (laravel 13.36, guzzle 8.2, commonmark 2.10.3, symfony 7.4.23)
 Source maps                   ✅  No .map files served from public/; Vite build produced without maps
 ```
 
 **Not yet addressed (flag before production):**
 - No CSP `report-uri`; CSP still allows `unsafe-inline` scripts.
-- No rate limiting on some public AJAX endpoints (admin product/tag search; visitor wishlist toggle).
+- Rate limits cover register/reset/cart/wishlist/reviews/addresses; only authenticated admin
+  typeahead search is deliberately unthrottled.
 - No explicit file-upload MIME sniffing beyond Laravel's `image`/`mimes` rules.
-- **No 2FA for admin accounts** — biggest remaining auth-surface gap.
-- Seeders use documented default credentials (`Admin#123` / `Customer#123` / `Manager#123`)
-  — rotate before any shared deployment; set `SESSION_SECURE_COOKIE=true` in production.
+- Admin MFA is TOTP-only and not forced; customers have no MFA and recovery-code rotation requires
+  disabling/re-enabling.
+- Demo seeders are production-gated (and `SEED_*_PASSWORD` overrides exist), but accounts created by
+  earlier deploys must still be rotated; set `SESSION_SECURE_COOKIE=true` in production.
 
 ---
 

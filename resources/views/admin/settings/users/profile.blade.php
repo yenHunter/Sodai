@@ -19,6 +19,9 @@
                     <a href="{{ route('admin.users.profile.edit') }}" class="btn btn-sm btn-light w-100 mt-3">
                         <i class="fs-sm me-1" data-lucide="pencil"></i> Edit Profile
                     </a>
+                    <a href="{{ route('admin.two-factor.show') }}" class="btn btn-sm btn-light w-100 mt-2">
+                        <i class="fs-sm me-1" data-lucide="shield-check"></i> Two-Factor Authentication
+                    </a>
                 </div>
             </div>
         </div>

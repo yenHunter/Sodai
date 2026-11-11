@@ -13,11 +13,18 @@ class CustomerSeeder extends Seeder
      */
     public function run(): void
     {
+        // Never create known-password accounts on a deployed environment.
+        if (app()->environment('production')) {
+            $this->command?->warn('CustomerSeeder skipped: demo credentials are disabled in production.');
+
+            return;
+        }
+
         User::create([
-            'name' => 'Firoz Ebna Jobaier',
-            'email' => 'firoz.jobaier@gmail.com',
+            'name' => 'Demo Customer',
+            'email' => env('SEED_CUSTOMER_EMAIL', 'customer@example.com'),
             'phone' => '+8801515283693',
-            'password' => Hash::make('Customer#123'),
+            'password' => Hash::make(env('SEED_CUSTOMER_PASSWORD', 'Customer#123')),
             'status' => 'active',
         ]);
     }

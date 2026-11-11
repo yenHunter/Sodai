@@ -43,7 +43,8 @@
                                 Description <span class="text-muted">(Optional)</span>
                             </label>
                             <div id="descriptionEditor" class="quill-editor-container">
-                                {!! old('description', $product->description ?? '') !!}
+                                {{-- Sanitize reflected old input: stored content is sanitized on save, but failed validation re-renders raw input. --}}
+                                {!! app(\App\Support\HtmlSanitizer::class)->clean(old('description', $product->description ?? '')) !!}
                             </div>
                             <textarea name="description" id="descriptionInput" class="d-none">{{ old('description', $product->description ?? '') }}</textarea>
                             @error('description')
