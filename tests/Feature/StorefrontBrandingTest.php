@@ -119,6 +119,27 @@ class StorefrontBrandingTest extends TestCase
     // SIDEBAR TOGGLE: HOME-ONLY VISIBILITY
     // ─────────────────────────────────────────────
 
+    public function test_contact_page_sidebar_uses_admin_company_contact_details(): void
+    {
+        Setting::setMany('company', [
+            'name' => 'Sodai Boutique',
+            'address' => '12 Gulshan Avenue, Dhaka',
+            'phone' => '+8801712345678',
+            'email' => 'care@sodai.test',
+        ]);
+
+        $response = $this->get(route('visitor.contact'));
+
+        $response->assertOk();
+        $response->assertSee('12 Gulshan Avenue, Dhaka');
+        $response->assertSee('+8801712345678');
+        $response->assertSee('mailto:care@sodai.test');
+        // Footer already used settings, so these can only come from the sidebar.
+        $response->assertDontSee('71 Pilgrim Avenue');
+        $response->assertDontSee('+44 0123 456 789');
+        $response->assertDontSee('example@ec-email.com');
+    }
+
     public function test_sidebar_toggle_button_shows_on_home_page(): void
     {
         $response = $this->get(route('visitor.index'));

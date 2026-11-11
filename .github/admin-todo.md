@@ -32,8 +32,9 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
 - [x] **FAQ module**: ✅ Shipped on the admin side — `FaqCategory` + `Faq` models, `FaqService`,
       `FaqCategoryController` / `FaqController`, permission-gated `admin.cms.faq.*` routes, ordering,
       active toggles, bulk delete, and a delete guard that blocks removing a category that still has
-      FAQs. Covered by `FaqModuleTest`. **The public `/faq` page is still static Lorem Ipsum** —
-      wiring it is tracked in `.github/storefront-todo.md` Part 1.
+      FAQs. Covered by `FaqModuleTest`. The public `/faq` page now renders this data through
+      `App\Http\Controllers\Visitor\FaqController` + `App\Services\Visitor\FaqService`
+      (`VisitorFaqTest`).
 - [x] **Offers module**: ✅ Shipped — `Offer` model (image, scheduling window, optional category link,
       resolved CTA URL, status label), `OfferService` + `OfferController`, permission-gated
       `admin.cms.offer.*` routes with toggle/bulk delete, sidebar entry, and `OfferModuleTest`.
@@ -91,8 +92,8 @@ Grouped by how blocking they are to calling this a real, launchable e-commerce a
    `Mail::queue()`, but password reset / set-password mail is still sent synchronously, no Mailable
    implements `ShouldQueue`, and there is no retry/failed-job monitoring story. Finish this before
    adding lifecycle emails.
-4. **Remaining storefront wiring** — category mega-menu, live search, wishlist count badge, contact
-   form backend and the FAQ page. These are the last template-static public surfaces; details live in
+4. **Remaining storefront wiring** — category mega-menu, live search and the wishlist count badge.
+   These are the last template-static public surfaces; details live in
    `.github/storefront-todo.md` (Parts 1–2).
 5. **Sitemap + social share tags** — no `sitemap.xml` route/controller, and `<head>` has no
    `og:`/`twitter:` tags (`og_image` setting exists but is unused). Title, description, keywords,
@@ -131,8 +132,8 @@ Grouped by how blocking they are to calling this a real, launchable e-commerce a
 
 ## Suggested Build Order (if picking up from here)
 
-1. **Storefront FAQ page + header nav** — the admin data already exists (FAQ categories/items,
-   categories, wishlist service); wiring these is high-visibility and low-risk.
+1. **Storefront header nav** — the admin data already exists (categories, wishlist service); wiring
+   these is high-visibility and low-risk.
 2. **Dashboard KPIs + charts** — every stat service already exists; this is the biggest remaining
    "looks unfinished" surface in the admin panel.
 3. **Currency formatting helper** — small, and it prevents rework across ~20 templates.

@@ -27,13 +27,12 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
   `user-reviews`, `header` (mini-cart via `CartComposer`), `footer`.
 - Branding (company name, light/dark logos, favicon, SEO title/description/keywords/author,
   footer contact block) resolves from admin Settings via `App\Support\StorefrontBranding`.
-- Still template-static / not wired: `contact` (form posts to `#`), `faq` (Lorem Ipsum),
-  header category mega-menu, both header search inputs, wishlist count badge, and the
-  homepage category sidebar widget.
+- Still template-static / not wired: header category mega-menu, both header search inputs,
+  wishlist count badge, and the homepage category sidebar widget.
 - Not implemented at all: payment beyond COD, order-lifecycle emails, sitemap, og:/twitter:
   tags, quick-view, recently viewed, compare, guest→account cart merge, storefront search.
 - Coverage relevant to this surface: `VisitorCheckoutTest`, `VisitorOrderCancellationTest`,
-  `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
+  `VisitorFaqTest`, `VisitorContactTest`, `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
   `OfferModuleTest`, `SecurityHardeningTest`.
 
 ---
@@ -51,32 +50,39 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       transaction, cart cleared after placement.
 - [x] **Order confirmation** (`visitor/pages/order-confirm.blade.php`): ✅ Done — real order data from
       the session's `last_order_id`.
-- [ ] **About / Contact pages**: About is CMS-backed (`HomeController@about`). The contact form
-      still posts to `#` with no route/controller, and the right-hand column hardcodes a US address,
-      `+44 0123 456 789` and `example@ec-email.com` instead of the Settings company/contact values
-      (the map itself does use `setting('company', 'map_embed_url')`). Needs a POST route + validation
-      + reCAPTCHA verification, delivering to `admin_alert_email` or storing a lead.
+- [x] **About page**: ✅ Done — CMS-backed through `HomeController@about`.
+- [x] **Contact page**: ✅ Done — `visitor.contact` (GET) and `visitor.contact.store` (POST,
+      `throttle:5,1`) are served by `App\Http\Controllers\Visitor\ContactController`.
+      `ContactRequest` validates names/email/phone/message and verifies a reCAPTCHA v3 token for the
+      `customer_contact` action; a valid submission is sent to `admin_alert_email` (falling back to
+      the company email) via `App\Mail\Admin\ContactMessageMail`, with `replyTo` set to the visitor.
+      The form now posts with CSRF, keeps old input, shows validation errors and a success/error
+      flash, and the righthand map still uses `setting('company', 'map_embed_url')`. Covered by
+      `VisitorContactTest` (wiring, valid send, validation, low score, action mismatch, fallback).
+- [x] **Contact page sidebar details**: ✅ Done — the address, phone and email now come from
+      `setting('company', ...)` with the template values as fallbacks, matching the footer, and are
+      covered by `StorefrontBrandingTest` (custom values render, hardcoded defaults disappear).
 - [x] **CMS-backed policy pages**: ✅ Done — cached `CmsPageService::getPage()` renders admin-edited,
       HTML-sanitized content; per-page meta overrides `<head>`.
 - [x] **Offers page**: ✅ Done — `HomeController@offer` renders `HomeService::getOfferList()`
       (`Offer::currentlyValid()->ordered()`), backed by the admin Offers module and `OfferModuleTest`.
-- [ ] **FAQ page** — best quick win in this file. `/faq` is still a `routes/web.php` closure returning
-      `visitor.pages.faq`, which is hand-written Lorem Ipsum (and its breadcrumb links to
-      `index.html`). The admin side already ships `FaqCategory` + `Faq` models with
-      `active()`/`ordered()` scopes, `FaqService` query helpers
-      (`getCategoriesWithFaqs()`, `getActiveCategoriesForSelect()`) and permission-gated CRUD.
-      Needs a visitor controller/service to load active categories with their active FAQs and render
-      them in the existing accordion markup.
+- [x] **FAQ page**: ✅ Done — `visitor.faq` is served by
+      `App\Http\Controllers\Visitor\FaqController` through
+      `App\Services\Visitor\FaqService::getPublishedCategories()`, which returns only active
+      categories that still have active FAQs (ordered, with only active FAQs eager-loaded). The view
+      renders one `ec-faq-container` per category with the theme's existing accordion markup, escaped
+      answers with `nl2br`, a real `route('visitor.index')` breadcrumb, and an empty state. Covered by
+      `VisitorFaqTest` (published content, inactive filtering, ordering, escaping, empty state).
 - [ ] **Homepage section semantics** — `HomeService` currently implements
       `getFeaturedProducts()`, `getTopRatedProducts()`, `getLimitedTimeOffers()` and
       `getFeatureItems()` all as `Product::active()->inStock()->newest()`. `Product::scopeFeatured()`
       (`is_featured`) and `Product::scopeTopRated()` exist but `HomeService` doesn't use them, and
       offers are not derived from the `offers`/coupon data at all. Decide per section: use the real scopes, or rename the
       sections so they don't promise filtering that isn't happening.
-- [ ] **Route cleanup** — `routes/web.php` still defines an `/about` closure that is shadowed by the
-      later-registered `visitor.about` route (`route:list` shows only `HomeController@about`), and
-      `/contact` + `/faq` bypass controllers entirely. Remove the dead closure and move contact/FAQ
-      onto controllers (the FAQ move is required by the item above).
+- [ ] **Route cleanup** — `/faq` and `/contact` now have controllers and their `routes/web.php`
+      closures are gone. Still dead: the `/about` closure in `routes/web.php` is shadowed by the
+      later-registered `visitor.about` route (`route:list` shows only `HomeController@about`). Remove
+      it.
 
 ---
 
@@ -182,14 +188,13 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
 
 ## Suggested Build Order (mirrors admin-todo.md style prioritization)
 
-1. **FAQ page + header nav** (mega-menu, search, wishlist badge) — data/services already exist, all
+1. **Header nav** (mega-menu, search, wishlist badge) — data/services already exist, all
    high-visibility, no schema changes.
-2. **Contact form backend + branding values** — small, removes the last fully static form.
-3. **Homepage section semantics** — use `scopeFeatured` / `scopeTopRated` / real offers instead of
+2. **Homepage section semantics** — use `scopeFeatured` / `scopeTopRated` / real offers instead of
    `newest()` everywhere.
-4. **Guest cart merge** — closes a real data-loss path for signing-in guests.
-5. **Payment gateway beyond COD + transactional emails (queued)** — the launch-blocking pair.
-6. **Sitemap, og: tags, search, N+1 audit** — last before any real launch.
+3. **Guest cart merge** — closes a real data-loss path for signing-in guests.
+4. **Payment gateway beyond COD + transactional emails (queued)** — the launch-blocking pair.
+5. **Sitemap, og: tags, N+1 audit** — last before any real launch.
 
 ---
 

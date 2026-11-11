@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/pages/visitor-product-card-swatch.js',
                 'resources/js/pages/visitor-product-details.js',
                 'resources/js/pages/visitor-checkout.js',
+                'resources/js/pages/visitor-contact.js',
 
                 // ───────────── Account Pages ─────────────
                 'resources/js/pages/visitor-account-address.js',
