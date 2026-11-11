@@ -28,8 +28,7 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
 - Branding (company name, light/dark logos, favicon, SEO title/description/keywords/author,
   footer contact block) resolves from admin Settings via `App\Support\StorefrontBranding`.
 - Still template-static / not wired: header category mega-menu, both header search inputs,
-  wishlist count badge, and the homepage category sidebar widget. The contact page sidebar still
-  hardcodes its address/phone/email.
+  wishlist count badge, and the homepage category sidebar widget.
 - Not implemented at all: payment beyond COD, order-lifecycle emails, sitemap, og:/twitter:
   tags, quick-view, recently viewed, compare, guest→account cart merge, storefront search.
 - Coverage relevant to this surface: `VisitorCheckoutTest`, `VisitorOrderCancellationTest`,
@@ -60,9 +59,9 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       The form now posts with CSRF, keeps old input, shows validation errors and a success/error
       flash, and the righthand map still uses `setting('company', 'map_embed_url')`. Covered by
       `VisitorContactTest` (wiring, valid send, validation, low score, action mismatch, fallback).
-- [ ] **Contact page sidebar details** — the address, `+44 0123 456 789` and `example@ec-email.com` in
-      the right column are still hardcoded instead of using `company` settings (same values the
-      footer already resolves through `StorefrontBranding`).
+- [x] **Contact page sidebar details**: ✅ Done — the address, phone and email now come from
+      `setting('company', ...)` with the template values as fallbacks, matching the footer, and are
+      covered by `StorefrontBrandingTest` (custom values render, hardcoded defaults disappear).
 - [x] **CMS-backed policy pages**: ✅ Done — cached `CmsPageService::getPage()` renders admin-edited,
       HTML-sanitized content; per-page meta overrides `<head>`.
 - [x] **Offers page**: ✅ Done — `HomeController@offer` renders `HomeService::getOfferList()`
@@ -195,7 +194,7 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
    `newest()` everywhere.
 3. **Guest cart merge** — closes a real data-loss path for signing-in guests.
 4. **Payment gateway beyond COD + transactional emails (queued)** — the launch-blocking pair.
-5. **Sitemap, og: tags, N+1 audit, contact sidebar branding values** — last before any real launch.
+5. **Sitemap, og: tags, N+1 audit** — last before any real launch.
 
 ---
 

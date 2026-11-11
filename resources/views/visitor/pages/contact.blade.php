@@ -124,15 +124,13 @@
                             <h1 class="ec_contact_info_head">Contact us</h1>
                             <ul class="align-items-center">
                                 <li class="ec-contact-item"><i class="ecicon eci-map-marker"
-                                        aria-hidden="true"></i><span>Address :</span>71 Pilgrim Avenue Chevy Chase, east
-                                    california. east california. MD
-                                    20815, USA</li>
+                                        aria-hidden="true"></i><span>Address :</span>{{ setting('company', 'address', '71 Pilgrim Avenue Chevy Chase, east california.') }}</li>
                                 <li class="ec-contact-item align-items-center"><i class="ecicon eci-phone"
-                                        aria-hidden="true"></i><span>Call Us :</span><a href="tel:+440123456789">+44 0123
-                                        456 789</a></li>
+                                        aria-hidden="true"></i><span>Call Us :</span><a
+                                        href="tel:{{ setting('company', 'phone', '+440123456789') }}">{{ setting('company', 'phone', '+44 0123 456 789') }}</a></li>
                                 <li class="ec-contact-item align-items-center"><i class="ecicon eci-envelope"
                                         aria-hidden="true"></i><span>Email :</span><a
-                                        href="mailto:example@ec-email.com">example@ec-email.com</a></li>
+                                        href="mailto:{{ setting('company', 'email', 'example@ec-email.com') }}">{{ setting('company', 'email', 'example@ec-email.com') }}</a></li>
                             </ul>
                         </div>
                     </div>
