@@ -18,10 +18,6 @@ Route::get('about', function () {
     return view('visitor.pages.about');
 })->name('visitor.about');
 
-Route::get('contact', function () {
-    return view('visitor.pages.contact');
-})->name('visitor.contact');
-
 Route::get('/widgets', function () {
     return view('admin.widgets');
 });

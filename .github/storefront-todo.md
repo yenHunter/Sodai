@@ -27,13 +27,13 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
   `user-reviews`, `header` (mini-cart via `CartComposer`), `footer`.
 - Branding (company name, light/dark logos, favicon, SEO title/description/keywords/author,
   footer contact block) resolves from admin Settings via `App\Support\StorefrontBranding`.
-- Still template-static / not wired: `contact` (form posts to `#`), header category
-  mega-menu, both header search inputs, wishlist count badge, and the homepage category
-  sidebar widget.
+- Still template-static / not wired: header category mega-menu, both header search inputs,
+  wishlist count badge, and the homepage category sidebar widget. The contact page sidebar still
+  hardcodes its address/phone/email.
 - Not implemented at all: payment beyond COD, order-lifecycle emails, sitemap, og:/twitter:
   tags, quick-view, recently viewed, compare, guest→account cart merge, storefront search.
 - Coverage relevant to this surface: `VisitorCheckoutTest`, `VisitorOrderCancellationTest`,
-  `VisitorFaqTest`, `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
+  `VisitorFaqTest`, `VisitorContactTest`, `StorefrontBrandingTest`, `CartModuleTest`, `CartReminderSchedulerTest`, `FaqModuleTest`,
   `OfferModuleTest`, `SecurityHardeningTest`.
 
 ---
@@ -51,11 +51,18 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       transaction, cart cleared after placement.
 - [x] **Order confirmation** (`visitor/pages/order-confirm.blade.php`): ✅ Done — real order data from
       the session's `last_order_id`.
-- [ ] **About / Contact pages**: About is CMS-backed (`HomeController@about`). The contact form
-      still posts to `#` with no route/controller, and the right-hand column hardcodes a US address,
-      `+44 0123 456 789` and `example@ec-email.com` instead of the Settings company/contact values
-      (the map itself does use `setting('company', 'map_embed_url')`). Needs a POST route + validation
-      + reCAPTCHA verification, delivering to `admin_alert_email` or storing a lead.
+- [x] **About page**: ✅ Done — CMS-backed through `HomeController@about`.
+- [x] **Contact page**: ✅ Done — `visitor.contact` (GET) and `visitor.contact.store` (POST,
+      `throttle:5,1`) are served by `App\Http\Controllers\Visitor\ContactController`.
+      `ContactRequest` validates names/email/phone/message and verifies a reCAPTCHA v3 token for the
+      `customer_contact` action; a valid submission is sent to `admin_alert_email` (falling back to
+      the company email) via `App\Mail\Admin\ContactMessageMail`, with `replyTo` set to the visitor.
+      The form now posts with CSRF, keeps old input, shows validation errors and a success/error
+      flash, and the righthand map still uses `setting('company', 'map_embed_url')`. Covered by
+      `VisitorContactTest` (wiring, valid send, validation, low score, action mismatch, fallback).
+- [ ] **Contact page sidebar details** — the address, `+44 0123 456 789` and `example@ec-email.com` in
+      the right column are still hardcoded instead of using `company` settings (same values the
+      footer already resolves through `StorefrontBranding`).
 - [x] **CMS-backed policy pages**: ✅ Done — cached `CmsPageService::getPage()` renders admin-edited,
       HTML-sanitized content; per-page meta overrides `<head>`.
 - [x] **Offers page**: ✅ Done — `HomeController@offer` renders `HomeService::getOfferList()`
@@ -73,10 +80,10 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       (`is_featured`) and `Product::scopeTopRated()` exist but `HomeService` doesn't use them, and
       offers are not derived from the `offers`/coupon data at all. Decide per section: use the real scopes, or rename the
       sections so they don't promise filtering that isn't happening.
-- [ ] **Route cleanup** — `/faq` now has a controller and its `routes/web.php` closure is gone. Still
-      dead: the `/about` closure in `routes/web.php` is shadowed by the later-registered `visitor.about`
-      route (`route:list` shows only `HomeController@about`), and `/contact` still bypasses controllers
-      entirely. Remove the dead closure and move contact onto a controller.
+- [ ] **Route cleanup** — `/faq` and `/contact` now have controllers and their `routes/web.php`
+      closures are gone. Still dead: the `/about` closure in `routes/web.php` is shadowed by the
+      later-registered `visitor.about` route (`route:list` shows only `HomeController@about`). Remove
+      it.
 
 ---
 
@@ -184,12 +191,11 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
 
 1. **Header nav** (mega-menu, search, wishlist badge) — data/services already exist, all
    high-visibility, no schema changes.
-2. **Contact form backend + branding values** — small, removes the last fully static form.
-3. **Homepage section semantics** — use `scopeFeatured` / `scopeTopRated` / real offers instead of
+2. **Homepage section semantics** — use `scopeFeatured` / `scopeTopRated` / real offers instead of
    `newest()` everywhere.
-4. **Guest cart merge** — closes a real data-loss path for signing-in guests.
-5. **Payment gateway beyond COD + transactional emails (queued)** — the launch-blocking pair.
-6. **Sitemap, og: tags, search, N+1 audit** — last before any real launch.
+3. **Guest cart merge** — closes a real data-loss path for signing-in guests.
+4. **Payment gateway beyond COD + transactional emails (queued)** — the launch-blocking pair.
+5. **Sitemap, og: tags, N+1 audit, contact sidebar branding values** — last before any real launch.
 
 ---
 

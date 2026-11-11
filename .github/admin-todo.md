@@ -92,8 +92,8 @@ Grouped by how blocking they are to calling this a real, launchable e-commerce a
    `Mail::queue()`, but password reset / set-password mail is still sent synchronously, no Mailable
    implements `ShouldQueue`, and there is no retry/failed-job monitoring story. Finish this before
    adding lifecycle emails.
-4. **Remaining storefront wiring** — category mega-menu, live search, wishlist count badge and the
-   contact form backend. These are the last template-static public surfaces; details live in
+4. **Remaining storefront wiring** — category mega-menu, live search and the wishlist count badge.
+   These are the last template-static public surfaces; details live in
    `.github/storefront-todo.md` (Parts 1–2).
 5. **Sitemap + social share tags** — no `sitemap.xml` route/controller, and `<head>` has no
    `og:`/`twitter:` tags (`og_image` setting exists but is unused). Title, description, keywords,

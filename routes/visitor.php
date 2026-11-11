@@ -6,6 +6,7 @@ use App\Http\Controllers\Visitor\AuthController;
 use App\Http\Controllers\Visitor\CartController;
 use App\Http\Controllers\Visitor\CheckoutController;
 use App\Http\Controllers\Visitor\CmsPageController;
+use App\Http\Controllers\Visitor\ContactController;
 use App\Http\Controllers\Visitor\FaqController;
 use App\Http\Controllers\Visitor\HomeController;
 use App\Http\Controllers\Visitor\OrderConfirmController;
@@ -20,6 +21,10 @@ Route::get('/', [HomeController::class, 'index'])->name('index');
 Route::get('about', [HomeController::class, 'about'])->name('about');
 Route::get('offers', [HomeController::class, 'offer'])->name('offers');
 Route::get('faq', [FaqController::class, 'index'])->name('faq');
+
+// ── Contact (public form; throttled because every submission sends mail) ──
+Route::get('contact', [ContactController::class, 'index'])->name('contact');
+Route::post('contact', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:5,1');
 
 // ── Product Catalog (public) ──
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

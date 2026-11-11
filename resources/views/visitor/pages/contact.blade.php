@@ -9,6 +9,10 @@
     <link rel="stylesheet" id="bg-switcher-css" href="{{ asset('visitor/css/backgrounds/bg-4.css') }}">
 @endsection
 
+@push('head')
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+@endpush
+
 @section('content')
     <!-- Ec breadcrumb start -->
     <div class="sticky-header-next-sec  ec-breadcrumb section-space-mb">
@@ -22,7 +26,7 @@
                         <div class="col-md-6 col-sm-12">
                             <!-- ec-breadcrumb-list start -->
                             <ul class="ec-breadcrumb-list">
-                                <li class="ec-breadcrumb-item"><a href="index.html">Home</a></li>
+                                <li class="ec-breadcrumb-item"><a href="{{ route('visitor.index') }}">Home</a></li>
                                 <li class="ec-breadcrumb-item active">Contact Us</li>
                             </ul>
                             <!-- ec-breadcrumb-list end -->
@@ -41,41 +45,65 @@
                 <div class="ec-common-wrapper">
                     <div class="ec-contact-leftside">
                         <div class="ec-contact-container">
+                            @if (session('success'))
+                                <div class="alert alert-success mb-4" role="alert">{{ session('success') }}</div>
+                            @endif
+                            @if (session('error'))
+                                <div class="alert alert-danger mb-4" role="alert">{{ session('error') }}</div>
+                            @endif
+
                             <div class="ec-contact-form">
-                                <form action="#" method="post">
+                                <form id="contactForm" action="{{ route('visitor.contact.store') }}" method="post">
+                                    @csrf
                                     <span class="ec-contact-wrap">
-                                        <label>First Name*</label>
-                                        <input type="text" name="firstname" placeholder="Enter your first name"
-                                            required />
+                                        <label for="contactFirstName">First Name*</label>
+                                        <input id="contactFirstName" type="text" name="first_name"
+                                            value="{{ old('first_name') }}" placeholder="Enter your first name" required />
+                                        @error('first_name')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap">
-                                        <label>Last Name*</label>
-                                        <input type="text" name="lastname" placeholder="Enter your last name" required />
+                                        <label for="contactLastName">Last Name*</label>
+                                        <input id="contactLastName" type="text" name="last_name"
+                                            value="{{ old('last_name') }}" placeholder="Enter your last name" required />
+                                        @error('last_name')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap">
-                                        <label>Email*</label>
-                                        <input type="email" name="email" placeholder="Enter your email address"
-                                            required />
+                                        <label for="contactEmail">Email*</label>
+                                        <input id="contactEmail" type="email" name="email" value="{{ old('email') }}"
+                                            placeholder="Enter your email address" required />
+                                        @error('email')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap">
-                                        <label>Phone Number*</label>
-                                        <input type="text" name="phonenumber" placeholder="Enter your phone number"
-                                            required />
+                                        <label for="contactPhone">Phone Number*</label>
+                                        <input id="contactPhone" type="text" name="phone" value="{{ old('phone') }}"
+                                            placeholder="Enter your phone number" required />
+                                        @error('phone')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap">
-                                        <label>Comments/Questions*</label>
-                                        <textarea name="address" placeholder="Please leave your comments here.."></textarea>
+                                        <label for="contactMessage">Comments/Questions*</label>
+                                        <textarea id="contactMessage" name="message" placeholder="Please leave your comments here.." required>{{ old('message') }}</textarea>
+                                        @error('message')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap ec-recaptcha">
-                                        <span class="g-recaptcha" data-sitekey="6LfKURIUAAAAAO50vlwWZkyK_G2ywqE52NU7YO0S"
-                                            data-callback="verifyRecaptchaCallback"
-                                            data-expired-callback="expiredRecaptchaCallback"></span>
-                                        <input class="form-control d-none" data-recaptcha="true" required
-                                            data-error="Please complete the Captcha">
-                                        <span class="help-block with-errors"></span>
+                                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                                        <input type="hidden" id="recaptchaSiteKey"
+                                            value="{{ config('services.recaptcha.site_key') }}">
+                                        @error('g-recaptcha-response')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
                                     </span>
                                     <span class="ec-contact-wrap ec-contact-btn">
-                                        <button class="btn btn-primary" type="submit">Submit</button>
+                                        <button class="btn btn-primary" type="submit" id="contactSubmitBtn">Submit</button>
                                     </span>
                                 </form>
                             </div>
@@ -115,4 +143,5 @@
 @endsection
 
 @section('scripts')
+    @vite(['resources/js/pages/visitor-contact.js'])
 @endsection
