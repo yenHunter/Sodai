@@ -19,7 +19,6 @@ function initAddressToggle() {
 }
 
 function initCouponBox() {
-    const toggle = document.getElementById('toggleCoupon')
     const box = document.getElementById('couponBox')
     const applyBtn = document.getElementById('applyCouponBtn')
     const input = document.getElementById('couponCodeInput')
@@ -28,13 +27,11 @@ function initCouponBox() {
     const subtotalEl = document.getElementById('summarySubtotal')
     const totalEl = document.getElementById('summaryTotal')
 
-    if (!toggle || !box) return
+    if (!box || !applyBtn) return
 
-    toggle.addEventListener('click', () => {
-        box.style.display = box.style.display === 'none' ? 'block' : 'none'
-    })
-
-    if (!applyBtn) return
+    // The theme's main.js already slides this box with the `ec-checkout-coupan`
+    // link; a second toggle handler here fights that animation and closes the
+    // box again immediately after it opens.
 
     applyBtn.addEventListener('click', async () => {
         const code = input.value.trim()

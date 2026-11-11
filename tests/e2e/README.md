@@ -35,6 +35,14 @@ The MFA admin's TOTP secret and recovery codes are fixed in
 codes from that secret. **These are test-only credentials** — the seeder
 requires `E2E_SEED=true` and refuses to run in production.
 
+The same seeder creates the checkout fixtures used by `checkout.spec.js`:
+
+| Fixture | Value |
+|---|---|
+| Product | `/products/e2e-checkout-product` ($100, 50 in stock) |
+| Coupon | `E2ECHECKOUT` (10% off) |
+| Guest checkout | enabled via the `order.allow_guest_checkout` setting |
+
 ## CI
 
 The `e2e` job in `.github/workflows/laravel.yml` starts from a fresh SQLite
