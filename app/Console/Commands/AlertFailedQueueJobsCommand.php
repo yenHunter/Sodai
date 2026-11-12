@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\Admin\QueueFailedJobsAlertMail;
+use App\Mail\Admin\QueueFailedJobsRecoveredMail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -26,9 +27,15 @@ class AlertFailedQueueJobsCommand extends Command
 
         if ($current === 0) {
             // The incident is over; the next failure starts a new alert cycle.
+            $wasIncident = (bool) Cache::get(self::INCIDENT_KEY, false);
             Cache::forget(self::INCIDENT_KEY);
             Cache::forever(self::CACHE_KEY, 0);
-            $this->components->info('Failed-job backlog is clear.');
+
+            if ($wasIncident) {
+                $this->sendRecoveryNotice($previous);
+            } else {
+                $this->components->info('Failed-job backlog is clear.');
+            }
 
             return self::SUCCESS;
         }
@@ -92,5 +99,36 @@ class AlertFailedQueueJobsCommand extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    private function sendRecoveryNotice(int $previous): void
+    {
+        $recipient = setting('notification', 'admin_alert_email');
+
+        if (empty($recipient)) {
+            Log::error('Failed-job backlog recovered but no admin alert email is configured.', [
+                'previous' => $previous,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($recipient)->send(new QueueFailedJobsRecoveredMail(previousCount: $previous));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send failed-job recovery notice.', [
+                'previous' => $previous,
+                'exception' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        Log::info('Failed-job backlog recovered; notice sent.', [
+            'previous' => $previous,
+            'recipient' => $recipient,
+        ]);
+
+        $this->components->info("Failed-job backlog cleared from {$previous}; recovery notice sent to {$recipient}.");
     }
 }

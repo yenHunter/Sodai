@@ -196,7 +196,8 @@ The scheduler already registers two checks every ten minutes:
   queue per **Queue Alert Cooldown** (default 60 minutes).
 - `queue:alert-failed-jobs`, which emails the store notification address once per
   incident. It alerts on the first increase after the backlog was zero, stays quiet while
-  the same backlog keeps growing, and resets after `failed_jobs` returns to zero.
+  the same backlog keeps growing, and sends a one-time recovery notice after
+  `failed_jobs` returns to zero.
 
 Both require Laravel's scheduler to be running, normally via this cron entry on the host:
 

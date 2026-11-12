@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\Admin\QueueBusyAlertMail;
 use App\Mail\Admin\QueueFailedJobsAlertMail;
+use App\Mail\Admin\QueueFailedJobsRecoveredMail;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Queue\Events\QueueBusy;
@@ -82,6 +83,24 @@ class QueueMonitoringTest extends TestCase
         });
     }
 
+    public function test_sends_one_recovery_notice_when_the_backlog_returns_to_zero(): void
+    {
+        $this->recordFailedJob();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        DB::table('failed_jobs')->delete();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsRecoveredMail::class, function (QueueFailedJobsRecoveredMail $mail) {
+            return $mail->hasTo('ops@example.com')
+                && $mail->previousCount === 1;
+        });
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsRecoveredMail::class, 1);
+    }
+
     public function test_shrinking_backlog_updates_the_baseline_without_an_alert(): void
     {
         $this->recordFailedJob();
@@ -97,6 +116,15 @@ class QueueMonitoringTest extends TestCase
         Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
             return $mail->currentCount === 1 && $mail->previousCount === 0;
         });
+    }
+
+    public function test_recovery_email_renders_the_cleared_backlog_details(): void
+    {
+        $html = (new QueueFailedJobsRecoveredMail(previousCount: 6))->render();
+
+        $this->assertStringContainsString('returned to zero', $html);
+        $this->assertStringContainsString('before recovery: <strong>6</strong>', $html);
+        $this->assertStringContainsString('php artisan queue:failed', $html);
     }
 
     public function test_alert_email_renders_the_counts_and_recovery_commands(): void
