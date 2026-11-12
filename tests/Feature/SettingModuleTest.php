@@ -348,6 +348,27 @@ class SettingModuleTest extends TestCase
         $this->assertEquals('30', (string) Setting::get('notification', 'queue_alert_cooldown_minutes'));
     }
 
+    public function test_notification_settings_page_renders_saved_queue_alert_values(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'alerts@sodai.com',
+            'queue_depth_threshold' => '250',
+            'queue_alert_cooldown_minutes' => '30',
+        ]);
+
+        $admin = $this->createAdminWithPermissions(['setting.view']);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.settings.notification'))
+            ->assertOk()
+            ->assertSee('Queue Depth Threshold')
+            ->assertSee('Queue Alert Cooldown (minutes)')
+            ->assertSee('name="queue_depth_threshold"', false)
+            ->assertSee('value="250"', false)
+            ->assertSee('name="queue_alert_cooldown_minutes"', false)
+            ->assertSee('value="30"', false);
+    }
+
     public function test_queue_alert_settings_must_be_positive(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
