@@ -17,14 +17,36 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const CACHE_KEY = 'queue.failed_jobs.last_count';
 
+    private const INCIDENT_KEY = 'queue.failed_jobs.incident_active';
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
         $previous = (int) Cache::get(self::CACHE_KEY, 0);
 
+        if ($current === 0) {
+            // The incident is over; the next failure starts a new alert cycle.
+            Cache::forget(self::INCIDENT_KEY);
+            Cache::forever(self::CACHE_KEY, 0);
+            $this->components->info('Failed-job backlog is clear.');
+
+            return self::SUCCESS;
+        }
+
         if ($current <= $previous) {
             Cache::forever(self::CACHE_KEY, $current);
             $this->components->info("Failed-job backlog did not grow ({$current}, previous {$previous}).");
+
+            return self::SUCCESS;
+        }
+
+        if (Cache::get(self::INCIDENT_KEY, false)) {
+            // A burst can add several failures before the backlog clears; keep
+            // the baseline current but send only one notification per incident.
+            Cache::forever(self::CACHE_KEY, $current);
+            $this->components->info(
+                "Failed-job backlog grew to {$current}, but this incident was already alerted."
+            );
 
             return self::SUCCESS;
         }
@@ -57,8 +79,9 @@ class AlertFailedQueueJobsCommand extends Command
         }
 
         Cache::forever(self::CACHE_KEY, $current);
+        Cache::forever(self::INCIDENT_KEY, true);
 
-        Log::warning('Failed-job backlog grew; alert sent.', [
+        Log::warning('Failed-job backlog grew; incident alert sent.', [
             'current' => $current,
             'previous' => $previous,
             'recipient' => $recipient,

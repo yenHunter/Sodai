@@ -193,8 +193,9 @@ The scheduler already registers two checks every ten minutes:
   `storage/logs/queue-monitor.log`. When a queue exceeds the threshold, its `QueueBusy`
   event emails the store notification address with the depth details, at most once per
   queue per hour.
-- `queue:alert-failed-jobs`, which emails the store notification address only when the
-  `failed_jobs` count increases, and records the new baseline in the cache.
+- `queue:alert-failed-jobs`, which emails the store notification address once per
+  incident. It alerts on the first increase after the backlog was zero, stays quiet while
+  the same backlog keeps growing, and resets after `failed_jobs` returns to zero.
 
 Both require Laravel's scheduler to be running, normally via this cron entry on the host:
 

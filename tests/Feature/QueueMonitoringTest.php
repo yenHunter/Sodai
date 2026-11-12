@@ -53,16 +53,32 @@ class QueueMonitoringTest extends TestCase
         Mail::assertSent(QueueFailedJobsAlertMail::class, 1);
     }
 
-    public function test_alerts_again_when_the_backlog_grows_further(): void
+    public function test_alerts_once_per_incident_while_the_burst_grows(): void
     {
         $this->recordFailedJob();
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
 
         $this->recordFailedJob();
+        $this->recordFailedJob();
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
 
+        Mail::assertSent(QueueFailedJobsAlertMail::class, 1);
+    }
+
+    public function test_a_new_incident_alerts_after_the_backlog_returns_to_zero(): void
+    {
+        $this->recordFailedJob();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        DB::table('failed_jobs')->delete();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        $this->recordFailedJob();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsAlertMail::class, 2);
         Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
-            return $mail->currentCount === 2 && $mail->previousCount === 1;
+            return $mail->currentCount === 1 && $mail->previousCount === 0;
         });
     }
 
