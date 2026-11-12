@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\Admin\QueueBusyAlertMail;
 use App\Mail\Admin\QueueFailedJobsAlertMail;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Events\QueueBusy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -91,6 +94,49 @@ class QueueMonitoringTest extends TestCase
         $this->assertStringContainsString('Current count: <strong>4</strong>', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
         $this->assertStringContainsString('php artisan queue:retry', $html);
+    }
+
+    public function test_queue_busy_event_emails_the_admin_with_depth_details(): void
+    {
+        Event::dispatch(new QueueBusy('database', 'default', 150));
+
+        Mail::assertSent(QueueBusyAlertMail::class, function (QueueBusyAlertMail $mail) {
+            return $mail->hasTo('ops@example.com')
+                && $mail->connectionName === 'database'
+                && $mail->queueName === 'default'
+                && $mail->size === 150;
+        });
+    }
+
+    public function test_queue_busy_alert_is_limited_to_once_per_hour_per_queue(): void
+    {
+        Event::dispatch(new QueueBusy('database', 'default', 150));
+        Event::dispatch(new QueueBusy('database', 'default', 200));
+
+        Mail::assertSent(QueueBusyAlertMail::class, 1);
+    }
+
+    public function test_queue_busy_alert_skips_when_no_recipient_is_configured(): void
+    {
+        Setting::setMany('notification', ['admin_alert_email' => '']);
+
+        Event::dispatch(new QueueBusy('database', 'default', 150));
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_queue_busy_alert_email_renders_the_depth_details(): void
+    {
+        $html = (new QueueBusyAlertMail(
+            connectionName: 'database',
+            queueName: 'emails',
+            size: 250,
+        ))->render();
+
+        $this->assertStringContainsString('database', $html);
+        $this->assertStringContainsString('emails', $html);
+        $this->assertStringContainsString('250', $html);
+        $this->assertStringContainsString('sudo supervisorctl status', $html);
     }
 
     public function test_queue_monitor_and_failed_jobs_alert_are_scheduled(): void

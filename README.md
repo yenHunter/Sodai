@@ -190,7 +190,9 @@ php artisan queue:monitor database:default --max=100
 The scheduler already registers two checks every ten minutes:
 
 - `queue:monitor database:default --max=100`, with output appended to
-  `storage/logs/queue-monitor.log`.
+  `storage/logs/queue-monitor.log`. When a queue exceeds the threshold, its `QueueBusy`
+  event emails the store notification address with the depth details, at most once per
+  queue per hour.
 - `queue:alert-failed-jobs`, which emails the store notification address only when the
   `failed_jobs` count increases, and records the new baseline in the cache.
 

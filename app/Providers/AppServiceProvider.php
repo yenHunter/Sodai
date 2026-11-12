@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Listeners\SendQueueBusyAlert;
 use App\View\Composers\CartComposer;
+use Illuminate\Queue\Events\QueueBusy;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -51,5 +54,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer(['visitor.include.header', 'visitor.pages.cart'], CartComposer::class);
+
+        // The scheduled queue:monitor command emits this when a queue exceeds
+        // its threshold; the listener emails the store notification address.
+        Event::listen(QueueBusy::class, SendQueueBusyAlert::class);
     }
 }
