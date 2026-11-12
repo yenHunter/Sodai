@@ -187,6 +187,19 @@ alert when it exceeds a threshold:
 php artisan queue:monitor database:default --max=100
 ```
 
+The scheduler already registers two checks every ten minutes:
+
+- `queue:monitor database:default --max=100`, with output appended to
+  `storage/logs/queue-monitor.log`.
+- `queue:alert-failed-jobs`, which emails the store notification address only when the
+  `failed_jobs` count increases, and records the new baseline in the cache.
+
+Both require Laravel's scheduler to be running, normally via this cron entry on the host:
+
+```cron
+* * * * * cd /var/www/sodai && php artisan schedule:run >> /dev/null 2>&1
+```
+
 Retries can duplicate an email if the provider accepted it but the job failed afterward,
 so confirm the order notification state before bulk-retrying `all`.
 
