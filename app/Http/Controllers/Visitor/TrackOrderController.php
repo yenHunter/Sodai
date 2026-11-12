@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Visitor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Visitor\TrackOrderRequest;
 use App\Models\Order;
+use Illuminate\Http\Request;
 
 class TrackOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('visitor.pages.track-order');
+        return view('visitor.pages.track-order', [
+            'orderNumber' => (string) $request->query('order_number', ''),
+        ]);
     }
 
     public function lookup(TrackOrderRequest $request)

@@ -56,7 +56,8 @@
                                     <div class="col-md-6">
                                         <label for="trackOrderNumber" class="form-label">Order Number*</label>
                                         <input type="text" class="form-control" id="trackOrderNumber"
-                                            name="order_number" value="{{ old('order_number') }}"
+                                            name="order_number"
+                                            value="{{ old('order_number', $orderNumber ?? '') }}"
                                             placeholder="e.g. ORD-000123" required>
                                     </div>
                                     <div class="col-md-6">

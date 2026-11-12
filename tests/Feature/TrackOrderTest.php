@@ -19,6 +19,13 @@ class TrackOrderTest extends TestCase
             ->assertSee('trackOrderNumber', false);
     }
 
+    public function test_track_order_form_prefills_order_number_from_the_confirmation_link(): void
+    {
+        $this->get(route('visitor.track-order', ['order_number' => 'ORD-123456']))
+            ->assertOk()
+            ->assertSee('value="ORD-123456"', false);
+    }
+
     public function test_guest_can_look_up_order_by_number_and_email(): void
     {
         $order = Order::factory()->create([

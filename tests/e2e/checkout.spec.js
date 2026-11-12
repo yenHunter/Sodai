@@ -79,9 +79,16 @@ test.describe('guest checkout', () => {
         await expect(page.locator('.ec-thank-content')).toContainText(orderNumber);
         await expect(page.locator('.ec-vendor-card-body')).toContainText('Shipping: $0.00');
 
-        // The public lookup needs both the order number and the checkout email.
-        await page.goto('/track-order', { waitUntil: 'domcontentloaded' });
-        await page.fill('#trackOrderNumber', orderNumber);
+        // The guest confirmation links to the public form with the order
+        // number already filled in; the email is still required.
+        const trackOrderLink = page.locator('#trackOrderLink');
+        await expect(trackOrderLink).toHaveAttribute(
+            'href',
+            new RegExp(`/track-order\\?order_number=${orderNumber}$`),
+        );
+        await trackOrderLink.click();
+
+        await expect(page.locator('#trackOrderNumber')).toHaveValue(orderNumber);
         await page.fill('#trackOrderEmail', email);
         await page.click('#trackOrderBtn');
 
