@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addProductToCart, COUPON_CODE, PRODUCT_SLUG } from './support/storefront';
+import { addProductToCart, COUPON_CODE, placeGuestOrder, PRODUCT_SLUG } from './support/storefront';
 
 const appOrigin = new URL(
     process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${process.env.PLAYWRIGHT_PORT ?? 8000}`,
@@ -50,23 +50,55 @@ test.describe('guest checkout', () => {
         await expect(page.locator('#couponCodeHidden')).toHaveValue(COUPON_CODE);
 
         // ── Guest shipping details + COD ──
-        await page.fill('input[name="shipping_name"]', 'Guest E2E');
-        await page.fill('input[name="shipping_email"]', `guest-e2e-${Date.now()}@example.com`);
-        await page.fill('input[name="shipping_phone"]', '+8801700000099');
-        await page.fill('input[name="shipping_address"]', '12 Test Street');
-        await page.fill('input[name="shipping_city"]', 'Dhaka');
-        await page.fill('input[name="shipping_state"]', 'Dhaka');
-        await page.fill('input[name="shipping_zip"]', '1207');
-        await page.fill('input[name="shipping_country"]', 'Bangladesh');
+        const orderNumber = await placeGuestOrder(page, { email: `guest-e2e-${Date.now()}@example.com` });
 
-        await page.click('#placeOrderBtn');
-
-        await expect(page).toHaveURL(/\/order-confirm$/);
         await expect(page.locator('.ec-thank-content')).toContainText(/placed successfully/i);
-        await expect(page.locator('.ec-thank-content')).toContainText(/ORD-/);
+        await expect(page.locator('.ec-thank-content')).toContainText(orderNumber);
 
         // 10% of the $100 product, proving the submitted coupon reached the order.
         await expect(page.locator('.ec-vendor-card-body')).toContainText('Discount: -$10.00');
         await expect(page.locator('.ec-vendor-card-body')).toContainText('Total: $90.00');
+    });
+
+    test('a guest can look up their order again but another session cannot', async ({ page, browser }) => {
+        await addProductToCart(page);
+        await page.goto('/checkout', { waitUntil: 'domcontentloaded' });
+
+        const orderNumber = await placeGuestOrder(page, {
+            email: `guest-lookup-${Date.now()}@example.com`,
+        });
+
+        // The confirmation page is the guest's order lookup: their session
+        // holds the order id, not a guessable id in the URL.
+        await expect(page.locator('.ec-thank-content')).toContainText(orderNumber);
+        await expect(page.locator('.ec-vendor-card-body')).toContainText('E2E Checkout Product');
+        await expect(page.locator('.ec-vendor-card-body')).toContainText('Total: $100.00');
+
+        await page.reload({ waitUntil: 'domcontentloaded' });
+
+        await expect(page).toHaveURL(/\/order-confirm$/);
+        await expect(page.locator('.ec-thank-content')).toContainText(orderNumber);
+        await expect(page.locator('.ec-vendor-card-body')).toContainText('Shipping: $0.00');
+
+        // A different guest session has no last_order_id, so it must not see
+        // this order even if it visits the same confirmation URL.
+        const strangerContext = await browser.newContext();
+        const stranger = await strangerContext.newPage();
+
+        await stranger.route('**/*', (route) => {
+            const url = route.request().url();
+
+            return url.startsWith(appOrigin) || url.startsWith('data:')
+                ? route.continue()
+                : route.abort();
+        });
+
+        await stranger.goto('/order-confirm', { waitUntil: 'domcontentloaded' });
+
+        await expect(stranger.locator('.ec-thank-content')).toContainText('For Shopping with us.');
+        await expect(stranger.locator('.ec-vendor-dashboard-card')).toHaveCount(0);
+        await expect(stranger.locator('body')).not.toContainText(orderNumber);
+
+        await strangerContext.close();
     });
 });

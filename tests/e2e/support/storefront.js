@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 export const PRODUCT_SLUG = 'e2e-checkout-product';
 export const COUPON_CODE = 'E2ECHECKOUT';
 
@@ -27,4 +29,29 @@ export async function addProductToCart(page) {
     }
 
     await page.waitForURL(new RegExp(`/products/${PRODUCT_SLUG}$`));
+}
+
+/**
+ * Fill the guest billing details, place a COD order and return its number.
+ * The caller must already be on the checkout page with a populated cart.
+ */
+export async function placeGuestOrder(page, {
+    email,
+    name = 'Guest E2E',
+    phone = `+8801${String(Date.now()).slice(-9)}`,
+}) {
+    await page.fill('input[name="shipping_name"]', name);
+    await page.fill('input[name="shipping_email"]', email);
+    await page.fill('input[name="shipping_phone"]', phone);
+    await page.fill('input[name="shipping_address"]', '12 Test Street');
+    await page.fill('input[name="shipping_city"]', 'Dhaka');
+    await page.fill('input[name="shipping_state"]', 'Dhaka');
+    await page.fill('input[name="shipping_zip"]', '1207');
+    await page.fill('input[name="shipping_country"]', 'Bangladesh');
+
+    await page.click('#placeOrderBtn');
+
+    await expect(page).toHaveURL(/\/order-confirm$/);
+
+    return (await page.locator('.ec-thank-content strong').innerText()).trim().replace(/^#/, '');
 }
