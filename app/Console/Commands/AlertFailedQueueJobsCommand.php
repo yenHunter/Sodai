@@ -30,6 +30,8 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_JOB_CLASSES_KEY = 'queue.failed_jobs.incident_job_classes';
 
+    private const SUMMARY_LIMIT = 500;
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -94,7 +96,10 @@ class AlertFailedQueueJobsCommand extends Command
             return self::FAILURE;
         }
 
-        $failedJobs = DB::table('failed_jobs')->get(['queue', 'payload', 'exception']);
+        $failedJobs = DB::table('failed_jobs')
+            ->orderByDesc('id')
+            ->limit(self::SUMMARY_LIMIT)
+            ->get(['queue', 'payload', 'exception']);
         $topException = $this->mostCommonFailure($failedJobs->pluck('exception'));
         $queueSummary = $this->summarizeQueues($failedJobs);
         $jobClassSummary = $this->summarizeJobClasses($failedJobs);
@@ -106,6 +111,7 @@ class AlertFailedQueueJobsCommand extends Command
                 topException: $topException,
                 queueSummary: $queueSummary,
                 jobClassSummary: $jobClassSummary,
+                summarizedCount: $failedJobs->count(),
             ));
         } catch (\Throwable $e) {
             // Leave the cached baseline unchanged so the next run retries the alert.

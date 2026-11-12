@@ -200,7 +200,8 @@ The scheduler already registers two checks every ten minutes:
   the same backlog keeps growing, and sends a one-time recovery notice after
   `failed_jobs` returns to zero. Both emails include the most common failure exception
   and the affected queues and job classes; the recovery notice also includes when the
-  incident started and how long it lasted.
+  incident started and how long it lasted. Alert details are summarized from the newest
+  500 failed jobs so a very large backlog is not loaded in full.
 
 Both require Laravel's scheduler to be running, normally via this cron entry on the host:
 

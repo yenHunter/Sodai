@@ -45,7 +45,8 @@ class QueueMonitoringTest extends TestCase
                 && $mail->previousCount === 0
                 && $mail->topException === 'SMTP timeout'
                 && $mail->queueSummary === 'default (1)'
-                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)';
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)'
+                && $mail->summarizedCount === 1;
         });
     }
 
@@ -59,7 +60,22 @@ class QueueMonitoringTest extends TestCase
 
         Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
             return $mail->queueSummary === 'default (2), emails (1)'
-                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (2), App\\Mail\\Admin\\QueueBusyAlertMail (1)';
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (2), App\\Mail\\Admin\\QueueBusyAlertMail (1)'
+                && $mail->summarizedCount === 3;
+        });
+    }
+
+    public function test_alert_summarizes_only_the_latest_five_hundred_failed_jobs(): void
+    {
+        for ($i = 0; $i < 501; $i++) {
+            $this->recordFailedJob();
+        }
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
+            return $mail->currentCount === 501
+                && $mail->summarizedCount === 500;
         });
     }
 
@@ -190,6 +206,7 @@ class QueueMonitoringTest extends TestCase
             topException: 'SMTP timeout',
             queueSummary: 'default (3), emails (1)',
             jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (3), App\\Mail\\Admin\\QueueBusyAlertMail (1)',
+            summarizedCount: 4,
         ))->render();
 
         $this->assertStringContainsString('Previous count: <strong>2</strong>', $html);
@@ -202,6 +219,21 @@ class QueueMonitoringTest extends TestCase
         $this->assertStringContainsString('App\\Mail\\Customer\\OrderConfirmationMail (3)', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
         $this->assertStringContainsString('php artisan queue:retry', $html);
+    }
+
+    public function test_alert_email_notes_when_failure_details_are_sampled(): void
+    {
+        $html = (new QueueFailedJobsAlertMail(
+            currentCount: 900,
+            previousCount: 800,
+            topException: 'SMTP timeout',
+            queueSummary: 'default (500)',
+            jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (500)',
+            summarizedCount: 500,
+        ))->render();
+
+        $this->assertStringContainsString('Failure details are based on the most recent', $html);
+        $this->assertStringContainsString('500 of 900 failed jobs', $html);
     }
 
     public function test_queue_busy_event_emails_the_admin_with_depth_details(): void

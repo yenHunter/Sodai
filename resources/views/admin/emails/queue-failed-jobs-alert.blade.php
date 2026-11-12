@@ -28,6 +28,11 @@
                 <div>Current count: <strong>{{ $currentCount }}</strong></div>
             </div>
 
+            @if ($summarizedCount < $currentCount)
+                <p class="muted">Failure details are based on the most recent
+                    {{ number_format($summarizedCount) }} of {{ number_format($currentCount) }} failed jobs.</p>
+            @endif
+
             <p><strong>Most common failure:</strong><br>
                 <code>{{ $topException }}</code></p>
 
