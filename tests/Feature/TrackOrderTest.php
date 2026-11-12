@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class TrackOrderTest extends TestCase
@@ -115,5 +116,27 @@ class TrackOrderTest extends TestCase
         $response = $this->from(route('visitor.track-order'))->post(route('visitor.track-order.lookup'), []);
 
         $response->assertSessionHasErrors(['order_number', 'email']);
+    }
+
+    public function test_lookup_is_rate_limited(): void
+    {
+        // Other tests in this class also call the lookup endpoint, so start
+        // from a clean limiter state rather than depending on test order.
+        Cache::flush();
+
+        $payload = [
+            'order_number' => 'ORD-000000',
+            'email' => 'nobody@example.com',
+        ];
+
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
+            $this->post(route('visitor.track-order.lookup'), $payload)
+                ->assertRedirect(route('visitor.track-order'));
+        }
+
+        $this->post(route('visitor.track-order.lookup'), $payload)
+            ->assertStatus(429);
+
+        Cache::flush();
     }
 }
