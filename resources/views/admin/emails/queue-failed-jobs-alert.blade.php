@@ -28,6 +28,9 @@
                 <div>Current count: <strong>{{ $currentCount }}</strong></div>
             </div>
 
+            <p><strong>Most common failure:</strong><br>
+                <code>{{ $topException }}</code></p>
+
             <p>
                 This usually means queued work — including guest order confirmation emails — is
                 failing. Check the failure details with:

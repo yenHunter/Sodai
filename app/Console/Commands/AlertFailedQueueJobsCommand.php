@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AlertFailedQueueJobsCommand extends Command
 {
@@ -23,6 +24,8 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_STARTED_KEY = 'queue.failed_jobs.incident_started_at';
 
+    private const INCIDENT_EXCEPTION_KEY = 'queue.failed_jobs.incident_exception';
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -32,15 +35,18 @@ class AlertFailedQueueJobsCommand extends Command
             // The incident is over; the next failure starts a new alert cycle.
             $wasIncident = (bool) Cache::get(self::INCIDENT_KEY, false);
             $startedAt = Cache::get(self::INCIDENT_STARTED_KEY);
+            $topException = (string) Cache::get(self::INCIDENT_EXCEPTION_KEY, 'Unknown failure');
 
             Cache::forget(self::INCIDENT_KEY);
             Cache::forget(self::INCIDENT_STARTED_KEY);
+            Cache::forget(self::INCIDENT_EXCEPTION_KEY);
             Cache::forever(self::CACHE_KEY, 0);
 
             if ($wasIncident) {
                 $this->sendRecoveryNotice(
                     previous: $previous,
                     startedAt: $startedAt ? Carbon::parse($startedAt) : null,
+                    topException: $topException,
                 );
             } else {
                 $this->components->info('Failed-job backlog is clear.');
@@ -78,10 +84,15 @@ class AlertFailedQueueJobsCommand extends Command
             return self::FAILURE;
         }
 
+        $topException = $this->mostCommonFailure(
+            DB::table('failed_jobs')->pluck('exception')
+        );
+
         try {
             Mail::to($recipient)->send(new QueueFailedJobsAlertMail(
                 currentCount: $current,
                 previousCount: $previous,
+                topException: $topException,
             ));
         } catch (\Throwable $e) {
             // Leave the cached baseline unchanged so the next run retries the alert.
@@ -97,11 +108,13 @@ class AlertFailedQueueJobsCommand extends Command
         Cache::forever(self::CACHE_KEY, $current);
         Cache::forever(self::INCIDENT_KEY, true);
         Cache::forever(self::INCIDENT_STARTED_KEY, now()->toIso8601String());
+        Cache::forever(self::INCIDENT_EXCEPTION_KEY, $topException);
 
         Log::warning('Failed-job backlog grew; incident alert sent.', [
             'current' => $current,
             'previous' => $previous,
             'recipient' => $recipient,
+            'top_exception' => $topException,
         ]);
 
         $this->components->warn(
@@ -111,7 +124,7 @@ class AlertFailedQueueJobsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function sendRecoveryNotice(int $previous, ?Carbon $startedAt): void
+    private function sendRecoveryNotice(int $previous, ?Carbon $startedAt, string $topException): void
     {
         $recipient = setting('notification', 'admin_alert_email');
 
@@ -128,6 +141,7 @@ class AlertFailedQueueJobsCommand extends Command
                 previousCount: $previous,
                 startedAt: $startedAt,
                 recoveredAt: now(),
+                topException: $topException,
             ));
         } catch (\Throwable $e) {
             Log::error('Failed to send failed-job recovery notice.', [
@@ -144,5 +158,37 @@ class AlertFailedQueueJobsCommand extends Command
         ]);
 
         $this->components->info("Failed-job backlog cleared from {$previous}; recovery notice sent to {$recipient}.");
+    }
+
+    /**
+     * @param  iterable<int, string|null>  $exceptions
+     */
+    private function mostCommonFailure(iterable $exceptions): string
+    {
+        $counts = [];
+
+        foreach ($exceptions as $exception) {
+            $summary = $this->summarizeException($exception);
+            $counts[$summary] = ($counts[$summary] ?? 0) + 1;
+        }
+
+        if ($counts === []) {
+            return 'Unknown failure';
+        }
+
+        arsort($counts);
+
+        return (string) array_key_first($counts);
+    }
+
+    private function summarizeException(?string $exception): string
+    {
+        $firstLine = trim(preg_split('/\r\n|\r|\n/', $exception ?? '', 2)[0] ?? '');
+
+        if ($firstLine === '') {
+            return 'Unknown failure';
+        }
+
+        return Str::limit($firstLine, 300);
     }
 }

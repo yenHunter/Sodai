@@ -34,6 +34,9 @@
                 @endif
             </div>
 
+            <p><strong>Most common failure:</strong><br>
+                <code>{{ $topException }}</code></p>
+
             <p>
                 Guest order confirmation emails and other queued work should be flowing again.
                 Confirm the worker is healthy and no new failures arrive:

@@ -15,6 +15,7 @@ class QueueFailedJobsAlertMail extends Mailable
     public function __construct(
         public int $currentCount,
         public int $previousCount,
+        public string $topException,
     ) {}
 
     public function envelope(): Envelope

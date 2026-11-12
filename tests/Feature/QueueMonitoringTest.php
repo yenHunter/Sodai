@@ -41,7 +41,21 @@ class QueueMonitoringTest extends TestCase
         Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
             return $mail->hasTo('ops@example.com')
                 && $mail->currentCount === 1
-                && $mail->previousCount === 0;
+                && $mail->previousCount === 0
+                && $mail->topException === 'SMTP timeout';
+        });
+    }
+
+    public function test_alert_reports_the_most_common_failure_exception(): void
+    {
+        $this->recordFailedJob('SMTP timeout');
+        $this->recordFailedJob('SQLSTATE[HY000]: database is locked');
+        $this->recordFailedJob('SMTP timeout');
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
+            return $mail->topException === 'SMTP timeout';
         });
     }
 
@@ -99,7 +113,8 @@ class QueueMonitoringTest extends TestCase
             return $mail->hasTo('ops@example.com')
                 && $mail->previousCount === 1
                 && $mail->startedAt?->timestamp === $startedAt->timestamp
-                && $mail->duration === '35 minutes';
+                && $mail->duration === '35 minutes'
+                && $mail->topException === 'SMTP timeout';
         });
 
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
@@ -130,12 +145,15 @@ class QueueMonitoringTest extends TestCase
             previousCount: 6,
             startedAt: Carbon::parse('2026-11-12 10:00:00'),
             recoveredAt: Carbon::parse('2026-11-12 10:45:00'),
+            topException: 'SMTP timeout',
         ))->render();
 
         $this->assertStringContainsString('returned to zero', $html);
         $this->assertStringContainsString('before recovery: <strong>6</strong>', $html);
         $this->assertStringContainsString('Incident started: <strong>12 Nov 2026, 10:00</strong>', $html);
         $this->assertStringContainsString('Duration: <strong>45 minutes</strong>', $html);
+        $this->assertStringContainsString('Most common failure:', $html);
+        $this->assertStringContainsString('SMTP timeout', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
     }
 
@@ -144,10 +162,13 @@ class QueueMonitoringTest extends TestCase
         $html = (new QueueFailedJobsAlertMail(
             currentCount: 4,
             previousCount: 2,
+            topException: 'SMTP timeout',
         ))->render();
 
         $this->assertStringContainsString('Previous count: <strong>2</strong>', $html);
         $this->assertStringContainsString('Current count: <strong>4</strong>', $html);
+        $this->assertStringContainsString('Most common failure:', $html);
+        $this->assertStringContainsString('SMTP timeout', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
         $this->assertStringContainsString('php artisan queue:retry', $html);
     }
@@ -243,14 +264,14 @@ class QueueMonitoringTest extends TestCase
             ->assertExitCode(0);
     }
 
-    private function recordFailedJob(): void
+    private function recordFailedJob(string $exception = 'SMTP timeout'): void
     {
         DB::table('failed_jobs')->insert([
             'uuid' => (string) Str::uuid(),
             'connection' => 'database',
             'queue' => 'default',
             'payload' => json_encode(['displayName' => 'App\\Mail\\Customer\\OrderConfirmationMail']),
-            'exception' => 'SMTP timeout',
+            'exception' => $exception,
             'failed_at' => now(),
         ]);
     }
