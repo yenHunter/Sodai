@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Listeners\SendQueueBusyAlert;
 use App\Mail\Admin\QueueBusyAlertMail;
 use App\Mail\Admin\QueueFailedJobsAlertMail;
 use App\Mail\Admin\QueueFailedJobsRecoveredMail;
@@ -261,6 +262,38 @@ class QueueMonitoringTest extends TestCase
         });
     }
 
+    public function test_queue_depth_monitor_clears_the_cooldown_below_the_threshold(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_depth_threshold' => 2,
+        ]);
+
+        $key = SendQueueBusyAlert::cooldownKey('database', 'default');
+        Cache::put($key, true, now()->addHour());
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(0);
+
+        $this->assertFalse(Cache::has($key));
+    }
+
+    public function test_queue_depth_monitor_keeps_the_cooldown_at_the_threshold(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_depth_threshold' => 1,
+        ]);
+
+        $this->recordQueuedJob();
+
+        $key = SendQueueBusyAlert::cooldownKey('database', 'default');
+        Cache::put($key, true, now()->addHour());
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(0);
+
+        $this->assertTrue(Cache::has($key));
+    }
+
     public function test_queue_busy_alert_skips_when_no_recipient_is_configured(): void
     {
         Setting::setMany('notification', ['admin_alert_email' => '']);
@@ -292,6 +325,18 @@ class QueueMonitoringTest extends TestCase
             ->expectsOutputToContain('queue:monitor-depth')
             ->expectsOutputToContain('queue:alert-failed-jobs')
             ->assertExitCode(0);
+    }
+
+    private function recordQueuedJob(string $queue = 'default'): void
+    {
+        DB::table('jobs')->insert([
+            'queue' => $queue,
+            'payload' => json_encode(['displayName' => 'TestJob']),
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => now()->timestamp,
+            'created_at' => now()->timestamp,
+        ]);
     }
 
     private function recordFailedJob(

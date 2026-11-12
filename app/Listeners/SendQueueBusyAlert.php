@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Mail;
 
 class SendQueueBusyAlert
 {
+    public static function cooldownKey(string $connectionName, string $queue): string
+    {
+        return "queue.busy.alerted.{$connectionName}.{$queue}";
+    }
+
     public function handle(QueueBusy $event): void
     {
         $recipient = setting('notification', 'admin_alert_email');
@@ -28,7 +33,7 @@ class SendQueueBusyAlert
         // limit the email to one per queue per configured cooldown window.
         $cooldownMinutes = max(1, (int) setting('notification', 'queue_alert_cooldown_minutes', 60));
         $threshold = max(1, (int) setting('notification', 'queue_depth_threshold', 100));
-        $cooldownKey = "queue.busy.alerted.{$event->connectionName}.{$event->queue}";
+        $cooldownKey = self::cooldownKey($event->connectionName, $event->queue);
 
         if (! Cache::add($cooldownKey, true, now()->addMinutes($cooldownMinutes))) {
             return;

@@ -193,7 +193,8 @@ The scheduler already registers two checks every ten minutes:
   from Settings → Notification (default 100), and appends output to
   `storage/logs/queue-monitor.log`. When a queue reaches the threshold, its `QueueBusy`
   event emails the store notification address with the depth details, at most once per
-  queue per **Queue Alert Cooldown** (default 60 minutes).
+  queue per **Queue Alert Cooldown** (default 60 minutes). When the queue falls below
+  the threshold, the cooldown is cleared so a new incident alerts immediately.
 - `queue:alert-failed-jobs`, which emails the store notification address once per
   incident. It alerts on the first increase after the backlog was zero, stays quiet while
   the same backlog keeps growing, and sends a one-time recovery notice after
