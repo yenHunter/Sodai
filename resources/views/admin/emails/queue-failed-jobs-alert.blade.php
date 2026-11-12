@@ -31,6 +31,10 @@
             <p><strong>Most common failure:</strong><br>
                 <code>{{ $topException }}</code></p>
 
+            <p><strong>Affected queues:</strong><br>{{ $queueSummary }}</p>
+
+            <p><strong>Job classes:</strong><br>{{ $jobClassSummary }}</p>
+
             <p>
                 This usually means queued work — including guest order confirmation emails — is
                 failing. Check the failure details with:

@@ -16,6 +16,8 @@ class QueueFailedJobsAlertMail extends Mailable
         public int $currentCount,
         public int $previousCount,
         public string $topException,
+        public string $queueSummary,
+        public string $jobClassSummary,
     ) {}
 
     public function envelope(): Envelope

@@ -42,7 +42,23 @@ class QueueMonitoringTest extends TestCase
             return $mail->hasTo('ops@example.com')
                 && $mail->currentCount === 1
                 && $mail->previousCount === 0
-                && $mail->topException === 'SMTP timeout';
+                && $mail->topException === 'SMTP timeout'
+                && $mail->queueSummary === 'default (1)'
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)';
+        });
+    }
+
+    public function test_alert_reports_the_affected_queues_and_job_classes(): void
+    {
+        $this->recordFailedJob('SMTP timeout', 'default', 'App\\Mail\\Customer\\OrderConfirmationMail');
+        $this->recordFailedJob('SMTP timeout', 'emails', 'App\\Mail\\Admin\\QueueBusyAlertMail');
+        $this->recordFailedJob('SMTP timeout', 'default', 'App\\Mail\\Customer\\OrderConfirmationMail');
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
+            return $mail->queueSummary === 'default (2), emails (1)'
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (2), App\\Mail\\Admin\\QueueBusyAlertMail (1)';
         });
     }
 
@@ -163,12 +179,18 @@ class QueueMonitoringTest extends TestCase
             currentCount: 4,
             previousCount: 2,
             topException: 'SMTP timeout',
+            queueSummary: 'default (3), emails (1)',
+            jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (3), App\\Mail\\Admin\\QueueBusyAlertMail (1)',
         ))->render();
 
         $this->assertStringContainsString('Previous count: <strong>2</strong>', $html);
         $this->assertStringContainsString('Current count: <strong>4</strong>', $html);
         $this->assertStringContainsString('Most common failure:', $html);
         $this->assertStringContainsString('SMTP timeout', $html);
+        $this->assertStringContainsString('Affected queues:', $html);
+        $this->assertStringContainsString('default (3), emails (1)', $html);
+        $this->assertStringContainsString('Job classes:', $html);
+        $this->assertStringContainsString('App\\Mail\\Customer\\OrderConfirmationMail (3)', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
         $this->assertStringContainsString('php artisan queue:retry', $html);
     }
@@ -264,13 +286,16 @@ class QueueMonitoringTest extends TestCase
             ->assertExitCode(0);
     }
 
-    private function recordFailedJob(string $exception = 'SMTP timeout'): void
-    {
+    private function recordFailedJob(
+        string $exception = 'SMTP timeout',
+        string $queue = 'default',
+        string $jobClass = 'App\\Mail\\Customer\\OrderConfirmationMail',
+    ): void {
         DB::table('failed_jobs')->insert([
             'uuid' => (string) Str::uuid(),
             'connection' => 'database',
-            'queue' => 'default',
-            'payload' => json_encode(['displayName' => 'App\\Mail\\Customer\\OrderConfirmationMail']),
+            'queue' => $queue,
+            'payload' => json_encode(['displayName' => $jobClass]),
             'exception' => $exception,
             'failed_at' => now(),
         ]);

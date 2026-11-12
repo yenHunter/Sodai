@@ -84,15 +84,16 @@ class AlertFailedQueueJobsCommand extends Command
             return self::FAILURE;
         }
 
-        $topException = $this->mostCommonFailure(
-            DB::table('failed_jobs')->pluck('exception')
-        );
+        $failedJobs = DB::table('failed_jobs')->get(['queue', 'payload', 'exception']);
+        $topException = $this->mostCommonFailure($failedJobs->pluck('exception'));
 
         try {
             Mail::to($recipient)->send(new QueueFailedJobsAlertMail(
                 currentCount: $current,
                 previousCount: $previous,
                 topException: $topException,
+                queueSummary: $this->summarizeQueues($failedJobs),
+                jobClassSummary: $this->summarizeJobClasses($failedJobs),
             ));
         } catch (\Throwable $e) {
             // Leave the cached baseline unchanged so the next run retries the alert.
@@ -190,5 +191,73 @@ class AlertFailedQueueJobsCommand extends Command
         }
 
         return Str::limit($firstLine, 300);
+    }
+
+    /**
+     * @param  iterable<int, object{queue: string|null, payload: string|null}>  $failedJobs
+     */
+    private function summarizeQueues(iterable $failedJobs): string
+    {
+        $counts = [];
+
+        foreach ($failedJobs as $job) {
+            $queue = trim((string) ($job->queue ?? ''));
+            $queue = $queue === '' ? 'default' : $queue;
+            $counts[$queue] = ($counts[$queue] ?? 0) + 1;
+        }
+
+        return $this->formatCountSummary($counts);
+    }
+
+    /**
+     * @param  iterable<int, object{payload: string|null}>  $failedJobs
+     */
+    private function summarizeJobClasses(iterable $failedJobs): string
+    {
+        $counts = [];
+
+        foreach ($failedJobs as $job) {
+            $class = $this->jobClassFromPayload($job->payload ?? null);
+            $counts[$class] = ($counts[$class] ?? 0) + 1;
+        }
+
+        return $this->formatCountSummary($counts);
+    }
+
+    private function jobClassFromPayload(?string $payload): string
+    {
+        $data = json_decode($payload ?? '', true);
+
+        if (! is_array($data)) {
+            return 'Unknown job';
+        }
+
+        $class = $data['displayName'] ?? $data['job'] ?? null;
+
+        return is_string($class) && trim($class) !== '' ? trim($class) : 'Unknown job';
+    }
+
+    /**
+     * @param  array<string, int>  $counts
+     */
+    private function formatCountSummary(array $counts, int $limit = 5): string
+    {
+        if ($counts === []) {
+            return 'Unknown';
+        }
+
+        arsort($counts);
+        $total = count($counts);
+        $parts = [];
+
+        foreach (array_slice($counts, 0, $limit, true) as $name => $count) {
+            $parts[] = "{$name} ({$count})";
+        }
+
+        if ($total > $limit) {
+            $parts[] = sprintf('+%d more', $total - $limit);
+        }
+
+        return implode(', ', $parts);
     }
 }
