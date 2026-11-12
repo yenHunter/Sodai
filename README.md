@@ -150,6 +150,46 @@ sudo supervisorctl start sodai-queue-worker:*
 Ensure `/var/log/sodai` exists and is writable by the worker user. After each release,
 run `sudo supervisorctl restart sodai-queue-worker:*` to load the new code immediately.
 
+### Monitoring and retrying failed jobs
+
+The Supervisor command retries a job up to three times (`--tries=3`). A job that still
+fails is moved to the `failed_jobs` table; checkout is unaffected, but that confirmation
+email was not delivered. Failed queued mail appears as an
+`Illuminate\Mail\SendQueuedMailable` job whose payload contains the order confirmation.
+
+```bash
+# Worker process state (restarts are automatic)
+sudo supervisorctl status sodai-queue-worker:*
+
+# Failed jobs: UUID, connection, queue, job class, failure time
+php artisan queue:failed
+
+# Retry one job, or every failed job (a running worker picks them up)
+php artisan queue:retry <uuid>
+php artisan queue:retry all
+
+# Remove a permanently failed job (bad address, obsolete order)
+php artisan queue:forget <uuid>
+
+# Destructive: removes every failed job
+php artisan queue:flush
+```
+
+Check the worker log at `/var/log/sodai/queue-worker.log` and application errors in
+`storage/logs/laravel.log`. If queueing itself fails during checkout, the checkout
+service logs the order ID and exception; worker-side delivery failures are recorded in
+`failed_jobs`.
+
+For backlog monitoring, run the queue-size check from cron or your monitoring tool and
+alert when it exceeds a threshold:
+
+```bash
+php artisan queue:monitor database:default --max=100
+```
+
+Retries can duplicate an email if the provider accepted it but the job failed afterward,
+so confirm the order notification state before bulk-retrying `all`.
+
 Default seeded accounts (see `database/seeders/AdminSeeder.php` / `CustomerSeeder.php`
 for current values — change these before any shared/public deployment).
 
