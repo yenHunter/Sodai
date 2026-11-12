@@ -136,6 +136,20 @@ php artisan queue:work
 Without a running worker, checkouts still succeed but confirmation emails are not
 delivered. Monitor the failed-jobs table (`php artisan queue:failed`) after deploying.
 
+For production, [`deploy/supervisor/sodai-queue-worker.conf`](deploy/supervisor/sodai-queue-worker.conf)
+provides a Supervisor program that restarts the worker and recycles it hourly. Update its
+`directory`, `command`, and `user` values for the host, then install it:
+
+```bash
+sudo cp deploy/supervisor/sodai-queue-worker.conf /etc/supervisor/conf.d/sodai-queue-worker.conf
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start sodai-queue-worker:*
+```
+
+Ensure `/var/log/sodai` exists and is writable by the worker user. After each release,
+run `sudo supervisorctl restart sodai-queue-worker:*` to load the new code immediately.
+
 Default seeded accounts (see `database/seeders/AdminSeeder.php` / `CustomerSeeder.php`
 for current values — change these before any shared/public deployment).
 
