@@ -64,9 +64,8 @@ test.describe('guest checkout', () => {
         await addProductToCart(page);
         await page.goto('/checkout', { waitUntil: 'domcontentloaded' });
 
-        const orderNumber = await placeGuestOrder(page, {
-            email: `guest-lookup-${Date.now()}@example.com`,
-        });
+        const email = `guest-lookup-${Date.now()}@example.com`;
+        const orderNumber = await placeGuestOrder(page, { email });
 
         // The confirmation page is the guest's order lookup: their session
         // holds the order id, not a guessable id in the URL.
@@ -79,6 +78,16 @@ test.describe('guest checkout', () => {
         await expect(page).toHaveURL(/\/order-confirm$/);
         await expect(page.locator('.ec-thank-content')).toContainText(orderNumber);
         await expect(page.locator('.ec-vendor-card-body')).toContainText('Shipping: $0.00');
+
+        // The public lookup needs both the order number and the checkout email.
+        await page.goto('/track-order', { waitUntil: 'domcontentloaded' });
+        await page.fill('#trackOrderNumber', orderNumber);
+        await page.fill('#trackOrderEmail', email);
+        await page.click('#trackOrderBtn');
+
+        await expect(page.locator('#trackOrderResult')).toContainText(orderNumber);
+        await expect(page.locator('#trackOrderResult')).toContainText('E2E Checkout Product');
+        await expect(page.locator('#trackOrderResult')).toContainText('Total: $100.00');
 
         // A different guest session has no last_order_id, so it must not see
         // this order even if it visits the same confirmation URL.

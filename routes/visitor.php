@@ -13,6 +13,7 @@ use App\Http\Controllers\Visitor\OrderConfirmController;
 use App\Http\Controllers\Visitor\OrderController;
 use App\Http\Controllers\Visitor\ProductController;
 use App\Http\Controllers\Visitor\ReviewController;
+use App\Http\Controllers\Visitor\TrackOrderController;
 use App\Http\Controllers\Visitor\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,12 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:20,1');
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon')->middleware('throttle:20,1');
 Route::get('/order-confirm', [OrderConfirmController::class, 'show'])->name('order-confirm');
+
+// ── Order Tracking (public; the order number + checkout email are the secret) ──
+Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-order');
+Route::post('/track-order', [TrackOrderController::class, 'lookup'])
+    ->name('track-order.lookup')
+    ->middleware('throttle:10,1');
 
 // ── CMS Static Pages (public) ──
 Route::get('/privacy-policy', [CmsPageController::class, 'show'])->name('privacy-policy')->defaults('slug', 'privacy-policy');

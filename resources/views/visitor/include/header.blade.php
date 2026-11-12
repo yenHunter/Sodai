@@ -384,7 +384,7 @@
                                     <li><a href="user-profile.html">User Profile</a></li>
                                     <li><a href="user-history.html">User History</a></li>
                                     <li><a href="wishlist.html">Wishlist</a></li>
-                                    <li><a href="track-order.html">Track Order</a></li>
+                                    <li><a href="{{ route('visitor.track-order') }}">Track Order</a></li>
                                     <li><a href="user-invoice.html">User Invoice</a></li>
                                 </ul>
                             </li>
@@ -413,7 +413,7 @@
                             <li><a href="faq.html">FAQ</a></li>
                             <li><a href="login.html">Login</a></li>
                             <li><a href="register.html">Register</a></li>
-                            <li><a href="track-order.html">Track Order</a></li>
+                            <li><a href="{{ route('visitor.track-order') }}">Track Order</a></li>
                             <li><a href="terms-condition.html">Terms Condition</a></li>
                             <li><a href="privacy-policy.html">Privacy Policy</a></li>
                         </ul>
