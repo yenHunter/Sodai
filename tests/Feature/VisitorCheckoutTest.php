@@ -207,8 +207,8 @@ class VisitorCheckoutTest extends TestCase
         // Set-password mail sent for account bootstrap.
         Mail::assertSent(CustomerSetPasswordMail::class, 1);
 
-        // Guest order confirmation includes a prefilled tracking link.
-        Mail::assertSent(OrderConfirmationMail::class, function (OrderConfirmationMail $mail) {
+        // Guest order confirmation is queued with a prefilled tracking link.
+        Mail::assertQueued(OrderConfirmationMail::class, function (OrderConfirmationMail $mail) {
             return $mail->hasTo('newguest@example.com')
                 && str_contains($mail->trackingUrl, 'order_number=')
                 && str_contains($mail->trackingUrl, $mail->order->order_number);

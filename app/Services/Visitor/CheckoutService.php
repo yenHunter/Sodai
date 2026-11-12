@@ -127,23 +127,23 @@ class CheckoutService
         // Send after the transaction commits so a mail failure can never roll
         // back an order, and an order is never emailed if the commit fails.
         if ($isGuest) {
-            $this->sendOrderConfirmation($order);
+            $this->queueOrderConfirmation($order);
         }
 
         return $order;
     }
 
-    private function sendOrderConfirmation(Order $order): void
+    private function queueOrderConfirmation(Order $order): void
     {
         try {
-            Mail::to($order->shipping_email)->send(new OrderConfirmationMail(
+            Mail::to($order->shipping_email)->queue(new OrderConfirmationMail(
                 order: $order,
                 trackingUrl: route('visitor.track-order', [
                     'order_number' => $order->order_number,
                 ]),
             ));
         } catch (\Exception $e) {
-            Log::error('Failed to send guest order confirmation email.', [
+            Log::error('Failed to queue guest order confirmation email.', [
                 'order_id' => $order->id,
                 'exception' => $e->getMessage(),
             ]);
