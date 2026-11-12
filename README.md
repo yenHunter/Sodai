@@ -197,9 +197,9 @@ The scheduler already registers two checks every ten minutes:
 - `queue:alert-failed-jobs`, which emails the store notification address once per
   incident. It alerts on the first increase after the backlog was zero, stays quiet while
   the same backlog keeps growing, and sends a one-time recovery notice after
-  `failed_jobs` returns to zero. Both emails include the most common failure exception;
-  the alert also lists affected queues and job classes, and the recovery notice includes
-  when the incident started and how long it lasted.
+  `failed_jobs` returns to zero. Both emails include the most common failure exception
+  and the affected queues and job classes; the recovery notice also includes when the
+  incident started and how long it lasted.
 
 Both require Laravel's scheduler to be running, normally via this cron entry on the host:
 

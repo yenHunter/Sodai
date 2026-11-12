@@ -37,6 +37,10 @@
             <p><strong>Most common failure:</strong><br>
                 <code>{{ $topException }}</code></p>
 
+            <p><strong>Affected queues:</strong><br>{{ $queueSummary }}</p>
+
+            <p><strong>Job classes:</strong><br>{{ $jobClassSummary }}</p>
+
             <p>
                 Guest order confirmation emails and other queued work should be flowing again.
                 Confirm the worker is healthy and no new failures arrive:

@@ -130,7 +130,9 @@ class QueueMonitoringTest extends TestCase
                 && $mail->previousCount === 1
                 && $mail->startedAt?->timestamp === $startedAt->timestamp
                 && $mail->duration === '35 minutes'
-                && $mail->topException === 'SMTP timeout';
+                && $mail->topException === 'SMTP timeout'
+                && $mail->queueSummary === 'default (1)'
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)';
         });
 
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
@@ -162,6 +164,8 @@ class QueueMonitoringTest extends TestCase
             startedAt: Carbon::parse('2026-11-12 10:00:00'),
             recoveredAt: Carbon::parse('2026-11-12 10:45:00'),
             topException: 'SMTP timeout',
+            queueSummary: 'default (5), emails (1)',
+            jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (5), App\\Mail\\Admin\\QueueBusyAlertMail (1)',
         ))->render();
 
         $this->assertStringContainsString('returned to zero', $html);
@@ -170,6 +174,10 @@ class QueueMonitoringTest extends TestCase
         $this->assertStringContainsString('Duration: <strong>45 minutes</strong>', $html);
         $this->assertStringContainsString('Most common failure:', $html);
         $this->assertStringContainsString('SMTP timeout', $html);
+        $this->assertStringContainsString('Affected queues:', $html);
+        $this->assertStringContainsString('default (5), emails (1)', $html);
+        $this->assertStringContainsString('Job classes:', $html);
+        $this->assertStringContainsString('App\\Mail\\Customer\\OrderConfirmationMail (5)', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
     }
 

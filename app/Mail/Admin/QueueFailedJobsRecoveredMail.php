@@ -21,6 +21,8 @@ class QueueFailedJobsRecoveredMail extends Mailable
         public ?Carbon $startedAt,
         public Carbon $recoveredAt,
         public string $topException,
+        public string $queueSummary,
+        public string $jobClassSummary,
     ) {
         $this->duration = $startedAt
             ? $startedAt->diffForHumans($recoveredAt, [

@@ -26,6 +26,10 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_EXCEPTION_KEY = 'queue.failed_jobs.incident_exception';
 
+    private const INCIDENT_QUEUES_KEY = 'queue.failed_jobs.incident_queues';
+
+    private const INCIDENT_JOB_CLASSES_KEY = 'queue.failed_jobs.incident_job_classes';
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -36,10 +40,14 @@ class AlertFailedQueueJobsCommand extends Command
             $wasIncident = (bool) Cache::get(self::INCIDENT_KEY, false);
             $startedAt = Cache::get(self::INCIDENT_STARTED_KEY);
             $topException = (string) Cache::get(self::INCIDENT_EXCEPTION_KEY, 'Unknown failure');
+            $queueSummary = (string) Cache::get(self::INCIDENT_QUEUES_KEY, 'Unknown');
+            $jobClassSummary = (string) Cache::get(self::INCIDENT_JOB_CLASSES_KEY, 'Unknown job');
 
             Cache::forget(self::INCIDENT_KEY);
             Cache::forget(self::INCIDENT_STARTED_KEY);
             Cache::forget(self::INCIDENT_EXCEPTION_KEY);
+            Cache::forget(self::INCIDENT_QUEUES_KEY);
+            Cache::forget(self::INCIDENT_JOB_CLASSES_KEY);
             Cache::forever(self::CACHE_KEY, 0);
 
             if ($wasIncident) {
@@ -47,6 +55,8 @@ class AlertFailedQueueJobsCommand extends Command
                     previous: $previous,
                     startedAt: $startedAt ? Carbon::parse($startedAt) : null,
                     topException: $topException,
+                    queueSummary: $queueSummary,
+                    jobClassSummary: $jobClassSummary,
                 );
             } else {
                 $this->components->info('Failed-job backlog is clear.');
@@ -86,14 +96,16 @@ class AlertFailedQueueJobsCommand extends Command
 
         $failedJobs = DB::table('failed_jobs')->get(['queue', 'payload', 'exception']);
         $topException = $this->mostCommonFailure($failedJobs->pluck('exception'));
+        $queueSummary = $this->summarizeQueues($failedJobs);
+        $jobClassSummary = $this->summarizeJobClasses($failedJobs);
 
         try {
             Mail::to($recipient)->send(new QueueFailedJobsAlertMail(
                 currentCount: $current,
                 previousCount: $previous,
                 topException: $topException,
-                queueSummary: $this->summarizeQueues($failedJobs),
-                jobClassSummary: $this->summarizeJobClasses($failedJobs),
+                queueSummary: $queueSummary,
+                jobClassSummary: $jobClassSummary,
             ));
         } catch (\Throwable $e) {
             // Leave the cached baseline unchanged so the next run retries the alert.
@@ -110,6 +122,8 @@ class AlertFailedQueueJobsCommand extends Command
         Cache::forever(self::INCIDENT_KEY, true);
         Cache::forever(self::INCIDENT_STARTED_KEY, now()->toIso8601String());
         Cache::forever(self::INCIDENT_EXCEPTION_KEY, $topException);
+        Cache::forever(self::INCIDENT_QUEUES_KEY, $queueSummary);
+        Cache::forever(self::INCIDENT_JOB_CLASSES_KEY, $jobClassSummary);
 
         Log::warning('Failed-job backlog grew; incident alert sent.', [
             'current' => $current,
@@ -125,8 +139,13 @@ class AlertFailedQueueJobsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function sendRecoveryNotice(int $previous, ?Carbon $startedAt, string $topException): void
-    {
+    private function sendRecoveryNotice(
+        int $previous,
+        ?Carbon $startedAt,
+        string $topException,
+        string $queueSummary,
+        string $jobClassSummary,
+    ): void {
         $recipient = setting('notification', 'admin_alert_email');
 
         if (empty($recipient)) {
@@ -143,6 +162,8 @@ class AlertFailedQueueJobsCommand extends Command
                 startedAt: $startedAt,
                 recoveredAt: now(),
                 topException: $topException,
+                queueSummary: $queueSummary,
+                jobClassSummary: $jobClassSummary,
             ));
         } catch (\Throwable $e) {
             Log::error('Failed to send failed-job recovery notice.', [
