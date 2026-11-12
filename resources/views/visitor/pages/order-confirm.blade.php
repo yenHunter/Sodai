@@ -73,6 +73,9 @@
                                     </div>
                                     @auth('customer')
                                         <a href="{{ route('visitor.account.orders.show', $order) }}" class="btn btn-primary mt-2">Track Order</a>
+                                    @else
+                                        <a href="{{ route('visitor.track-order', ['order_number' => $order->order_number]) }}"
+                                            class="btn btn-primary mt-2" id="trackOrderLink">Track Order</a>
                                     @endauth
                                 </div>
                             </div>

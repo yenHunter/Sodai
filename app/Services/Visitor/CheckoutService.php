@@ -2,6 +2,7 @@
 
 namespace App\Services\Visitor;
 
+use App\Mail\Customer\OrderConfirmationMail;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
@@ -14,6 +15,7 @@ use App\Services\Shared\PricingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CheckoutService
@@ -37,7 +39,9 @@ class CheckoutService
             throw new \Exception('Your cart is empty.');
         }
 
-        return DB::transaction(function () use ($cart, $customer, $data) {
+        $isGuest = $customer === null;
+
+        $order = DB::transaction(function () use ($cart, $customer, $data) {
 
             $shipping = $this->resolveShippingDetails($customer, $data);
 
@@ -119,6 +123,31 @@ class CheckoutService
 
             return $order->fresh(['items', 'user', 'coupon']);
         });
+
+        // Send after the transaction commits so a mail failure can never roll
+        // back an order, and an order is never emailed if the commit fails.
+        if ($isGuest) {
+            $this->queueOrderConfirmation($order);
+        }
+
+        return $order;
+    }
+
+    private function queueOrderConfirmation(Order $order): void
+    {
+        try {
+            Mail::to($order->shipping_email)->queue(new OrderConfirmationMail(
+                order: $order,
+                trackingUrl: route('visitor.track-order', [
+                    'order_number' => $order->order_number,
+                ]),
+            ));
+        } catch (\Exception $e) {
+            Log::error('Failed to queue guest order confirmation email.', [
+                'order_id' => $order->id,
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 
     // ─────────────────────────────────────────────

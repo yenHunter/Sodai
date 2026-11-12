@@ -18,7 +18,7 @@ modules previously marked pending in older versions of this doc are already buil
 - **Project Name:** Sodai (Single Vendor E-Commerce)
 - **Stage:** Active development, pre-production. Storefront is now wired end-to-end
   (browse → cart → coupon → COD checkout → order confirmation/tracking); payments beyond
-  COD and transactional lifecycle emails remain open.
+  COD and shipment/delivery lifecycle emails remain open.
 - **Backend:** Laravel 13.36, PHP 8.3
 - **Frontend:** Blade + Bootstrap 5.3 (UBold admin theme by Coderthemes) + Vite
 - **DB (dev):** SQLite (`database/database.sqlite`), MySQL-ready via `config/database.php`
@@ -139,8 +139,9 @@ ProductImage      — product_id + nullable product_variant_id (null = shared ga
 ### 2.8 Known Inconsistencies / Tech Debt (fix opportunistically)
 1. Currency is hardcoded as `$` in ~20+ Blade files despite `Setting::get('company','currency')`
    defaulting to BDT. Introduce a `money()` / `format_price()` helper and replace hardcoded `$`.
-2. No queued jobs anywhere — all mail sends and heavy operations run synchronously in the request.
-   Fine for dev, must be addressed before production (`QUEUE_CONNECTION=database` is already configured).
+2. Queued guest order confirmations are the only queued job; other mail sends and heavy
+   operations still run synchronously in the request. Keep a worker running and move
+   remaining mail to the queue before production (`QUEUE_CONNECTION=database` is configured).
 3. `routes/web.php` still contains ~150 lines of unused UBold template demo routes
    (charts, tables, layouts, plugins showcase). Safe to prune once no longer needed as reference.
 4. No `.env.testing` — `phpunit.xml` inlines test env vars instead, which is fine but worth
@@ -246,8 +247,7 @@ See Part 5 (To-Do List & Missing Modules) of the accompanying analysis for the p
 - Reports module
 - Visitor/storefront view wiring to real data
 - Payment gateway integration
-- Transactional customer emails (order confirmation, shipped, delivered)
-- Queue-based email dispatch
+- Transactional customer emails beyond the queued guest order confirmation (shipped, delivered)
 - API layer
 
 ---

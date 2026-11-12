@@ -8,6 +8,7 @@
 5. Run `php artisan key:generate`
 6. Run `php artisan migrate`
 7. Run `npm run dev`
+8. Run `php artisan queue:work` in a separate terminal (guest order confirmation emails are queued)
 
 A single command does steps 3–7: `composer run setup`
 

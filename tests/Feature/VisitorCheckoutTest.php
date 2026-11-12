@@ -3,16 +3,19 @@
 namespace Tests\Feature;
 
 use App\Mail\Admin\CustomerSetPasswordMail;
+use App\Mail\Customer\OrderConfirmationMail;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Transport\ArrayTransport;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -204,6 +207,13 @@ class VisitorCheckoutTest extends TestCase
 
         // Set-password mail sent for account bootstrap.
         Mail::assertSent(CustomerSetPasswordMail::class, 1);
+
+        // Guest order confirmation is queued with a prefilled tracking link.
+        Mail::assertQueued(OrderConfirmationMail::class, function (OrderConfirmationMail $mail) {
+            return $mail->hasTo('newguest@example.com')
+                && str_contains($mail->trackingUrl, 'order_number=')
+                && str_contains($mail->trackingUrl, $mail->order->order_number);
+        });
     }
 
     public function test_guest_checkout_with_existing_email_reuses_account_instead_of_duplicating(): void
@@ -427,6 +437,72 @@ class VisitorCheckoutTest extends TestCase
         // Every cart row for this customer is gone.
         $this->assertSame(0, CartItem::whereHas('cart', fn ($q) => $q->where('user_id', $customer->id))->count());
         $this->assertSame(8, (int) $v1->refresh()->stock_quantity); // 10 − 2
+    }
+
+    public function test_guest_order_confirmation_email_renders_the_tracking_link(): void
+    {
+        $order = Order::factory()->create([
+            'order_number' => 'ORD-555555',
+            'shipping_name' => 'Email Guest',
+            'total_amount' => 120,
+        ]);
+
+        OrderItem::factory()->for($order)->create([
+            'product_name' => 'Rendered Product',
+        ]);
+
+        $html = (new OrderConfirmationMail(
+            order: $order->load('items'),
+            trackingUrl: route('visitor.track-order', ['order_number' => $order->order_number]),
+        ))->render();
+
+        $this->assertStringContainsString('Track My Order', $html);
+        $this->assertStringContainsString('order_number=ORD-555555', $html);
+        $this->assertStringContainsString('Rendered Product', $html);
+    }
+
+    public function test_queued_order_confirmation_is_delivered_by_a_worker(): void
+    {
+        config([
+            'queue.default' => 'database',
+            'mail.default' => 'array',
+        ]);
+
+        $this->seedStoreSettings();
+
+        [, $variant] = $this->makeProduct(price: 50, stock: 5);
+        $cart = $this->cartForContext(null);
+        $this->fillCart($cart, $variant, quantity: 1);
+
+        $this->post(route('visitor.checkout.store'), $this->checkoutPayload([
+            'shipping_email' => 'queued@example.com',
+        ]))->assertRedirect(route('visitor.order-confirm'));
+
+        // Guest checkout also sends the set-password mail synchronously, so
+        // only the queued confirmation should remain in the jobs table.
+        $this->assertDatabaseCount('jobs', 1);
+
+        $this->artisan('queue:work', ['--once' => true])->assertExitCode(0);
+
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertDatabaseCount('failed_jobs', 0);
+
+        $order = Order::where('shipping_email', 'queued@example.com')->firstOrFail();
+        $transport = Mail::mailer()->getSymfonyTransport();
+
+        $this->assertInstanceOf(ArrayTransport::class, $transport);
+
+        $messages = $transport->messages()->filter(function ($message) use ($order) {
+            return str_contains($message->getOriginalMessage()->getSubject(), $order->order_number);
+        });
+
+        $this->assertCount(1, $messages);
+
+        $email = $messages->first()->getOriginalMessage();
+
+        $this->assertSame('queued@example.com', $email->getTo()[0]->getAddress());
+        $this->assertStringContainsString('Track My Order', $email->getHtmlBody());
+        $this->assertStringContainsString('order_number='.$order->order_number, $email->getHtmlBody());
     }
 
     public function test_order_confirm_page_shows_last_placed_order(): void
