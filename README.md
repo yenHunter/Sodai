@@ -28,8 +28,8 @@ feature-complete for core catalog and order operations, and the customer storefr
 wired end-to-end: browse → cart → coupon → COD checkout → order confirmation and tracking.
 
 This is a **learning and portfolio project** — it is not deployed to production. Payment
-integration is intentionally limited to Cash On Delivery, and transactional customer
-emails are limited to order-relevant admin summaries. See
+integration is intentionally limited to Cash On Delivery. Guest order confirmation
+emails are queued; order-relevant admin summaries continue to send as before. See
 [`.github/project-instructions.md`](.github/project-instructions.md) for a detailed,
 continuously-updated breakdown of what's built vs. what's planned.
 
@@ -123,6 +123,19 @@ Run the dev environment (server + queue listener + logs + Vite, all at once):
 composer run dev
 ```
 
+### Queue worker
+
+Guest order confirmation emails are queued, and the default `QUEUE_CONNECTION=database`
+stores them in the `jobs` table until a worker processes them. `composer run dev` starts a
+queue listener locally. In any other environment, run a supervised worker:
+
+```bash
+php artisan queue:work
+```
+
+Without a running worker, checkouts still succeed but confirmation emails are not
+delivered. Monitor the failed-jobs table (`php artisan queue:failed`) after deploying.
+
 Default seeded accounts (see `database/seeders/AdminSeeder.php` / `CustomerSeeder.php`
 for current values — change these before any shared/public deployment).
 
@@ -157,7 +170,7 @@ up-to-date backlog. Near-term priorities:
 
 1. Payment gateway integration (COD is the only payment method today)
 2. Admin dashboard KPIs (reports module is shipped, dashboard view is still placeholder)
-3. Transactional customer emails (order confirmation, shipment updates) + queueing
+3. Shipment update emails and broader queued customer notifications (guest order confirmation is shipped)
 4. Storefront header polish: real category mega-menu, live search, wishlist count badge
 5. 2FA for admin accounts
 
