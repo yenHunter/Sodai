@@ -67,6 +67,20 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="queue_monitor_queues">
+                                Monitored Queues
+                            </label>
+                            <input type="text" class="form-control @error('queue_monitor_queues') is-invalid @enderror"
+                                id="queue_monitor_queues" name="queue_monitor_queues"
+                                value="{{ old('queue_monitor_queues', $settings['queue_monitor_queues'] ?? 'database:default') }}">
+                            @error('queue_monitor_queues')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">
+                                Comma-separated <code>connection:queue</code> pairs, such as
+                                <code>database:default, database:emails</code>.
+                            </div>
+                        </div>
+
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" role="switch" value="1"
                                 id="notify_new_order" name="notify_new_order"

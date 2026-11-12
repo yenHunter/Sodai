@@ -180,16 +180,16 @@ Check the worker log at `/var/log/sodai/queue-worker.log` and application errors
 service logs the order ID and exception; worker-side delivery failures are recorded in
 `failed_jobs`.
 
-For a manual queue-size check, run the built-in monitor with the same threshold configured
-in Settings → Notification:
+For a manual queue-size check, run the wrapper with the configured threshold and queues:
 
 ```bash
-php artisan queue:monitor database:default --max=100
+php artisan queue:monitor-depth
 ```
 
 The scheduler already registers two checks every ten minutes:
 
-- `queue:monitor-depth`, which runs the built-in monitor with the **Queue Depth Threshold**
+- `queue:monitor-depth`, which checks every `connection:queue` pair in the **Monitored
+  Queues** setting (default `database:default`) against the **Queue Depth Threshold**
   from Settings → Notification (default 100), and appends output to
   `storage/logs/queue-monitor.log`. When a queue reaches the threshold, its `QueueBusy`
   event emails the store notification address with the depth details, at most once per

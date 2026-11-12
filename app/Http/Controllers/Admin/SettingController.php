@@ -324,6 +324,7 @@ class SettingController extends Controller
             $data['abandoned_cart_hours'] = $data['abandoned_cart_hours'] ?? 24;
             $data['queue_depth_threshold'] = $data['queue_depth_threshold'] ?? 100;
             $data['queue_alert_cooldown_minutes'] = $data['queue_alert_cooldown_minutes'] ?? 60;
+            $data['queue_monitor_queues'] = $data['queue_monitor_queues'] ?? 'database:default';
             $data['weekly_sales_summary_enabled'] = $request->boolean('weekly_sales_summary_enabled');
             $data['monthly_sales_summary_enabled'] = $request->boolean('monthly_sales_summary_enabled');
 

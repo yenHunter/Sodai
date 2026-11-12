@@ -262,6 +262,34 @@ class QueueMonitoringTest extends TestCase
         });
     }
 
+    public function test_queue_depth_monitor_checks_every_configured_queue(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_depth_threshold' => 1,
+            'queue_monitor_queues' => 'database:default, database:emails',
+        ]);
+
+        $this->recordQueuedJob('default');
+        $this->recordQueuedJob('emails');
+
+        Event::fake([QueueBusy::class]);
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(0);
+
+        Event::assertDispatched(QueueBusy::class, function (QueueBusy $event) {
+            return $event->connectionName === 'database'
+                && $event->queue === 'default'
+                && $event->size === 1;
+        });
+
+        Event::assertDispatched(QueueBusy::class, function (QueueBusy $event) {
+            return $event->connectionName === 'database'
+                && $event->queue === 'emails'
+                && $event->size === 1;
+        });
+    }
+
     public function test_queue_depth_monitor_clears_the_cooldown_below_the_threshold(): void
     {
         Setting::setMany('notification', [
