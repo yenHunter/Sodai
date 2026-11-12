@@ -13,9 +13,10 @@ Schedule::command('carts:send-reminders')->everyThirtyMinutes()->withoutOverlapp
 Schedule::command('reports:send-weekly-summary')->weeklyOn(1, '8:00');
 
 // ── Queue health ──
-// The built-in monitor logs queue depth and dispatches QueueBusy when a queue
-// exceeds the threshold. The custom alert only emails when failed_jobs grows.
-Schedule::command('queue:monitor database:default --max=100')
+// The wrapper reads the depth threshold from Settings, logs queue depth and
+// dispatches QueueBusy when a queue reaches it. The failed-jobs alert only
+// emails when the backlog starts a new incident.
+Schedule::command('queue:monitor-depth')
     ->everyTenMinutes()
     ->appendOutputTo(storage_path('logs/queue-monitor.log'));
 

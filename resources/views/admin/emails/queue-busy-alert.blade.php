@@ -21,7 +21,7 @@
             <h1>Queue Depth Alert</h1>
         </div>
         <div class="body">
-            <p>The queue monitor found more than 100 pending jobs.</p>
+            <p>The queue monitor found at least the configured {{ $threshold }}-job threshold.</p>
 
             <div class="count">
                 <div>Connection: <strong>{{ $connectionName }}</strong></div>
@@ -36,7 +36,7 @@
             <p><code>sudo supervisorctl status sodai-queue-worker:*</code></p>
 
             <p>Then inspect queue depth and failed jobs:</p>
-            <p><code>php artisan queue:monitor {{ $connectionName }}:{{ $queueName }} --max=100</code><br>
+            <p><code>php artisan queue:monitor {{ $connectionName }}:{{ $queueName }} --max={{ $threshold }}</code><br>
                 <code>php artisan queue:failed</code></p>
 
             <p class="muted">

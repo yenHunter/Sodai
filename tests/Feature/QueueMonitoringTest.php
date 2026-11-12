@@ -120,16 +120,54 @@ class QueueMonitoringTest extends TestCase
             return $mail->hasTo('ops@example.com')
                 && $mail->connectionName === 'database'
                 && $mail->queueName === 'default'
-                && $mail->size === 150;
+                && $mail->size === 150
+                && $mail->threshold === 100;
         });
     }
 
-    public function test_queue_busy_alert_is_limited_to_once_per_hour_per_queue(): void
+    public function test_queue_busy_alert_uses_the_configured_cooldown(): void
     {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_alert_cooldown_minutes' => 5,
+        ]);
+
         Event::dispatch(new QueueBusy('database', 'default', 150));
         Event::dispatch(new QueueBusy('database', 'default', 200));
 
         Mail::assertSent(QueueBusyAlertMail::class, 1);
+
+        $this->travel(6)->minutes();
+        Event::dispatch(new QueueBusy('database', 'default', 250));
+
+        Mail::assertSent(QueueBusyAlertMail::class, 2);
+    }
+
+    public function test_queue_depth_monitor_uses_the_configured_threshold(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_depth_threshold' => 1,
+        ]);
+
+        DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => json_encode(['displayName' => 'TestJob']),
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => now()->timestamp,
+            'created_at' => now()->timestamp,
+        ]);
+
+        Event::fake([QueueBusy::class]);
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(0);
+
+        Event::assertDispatched(QueueBusy::class, function (QueueBusy $event) {
+            return $event->connectionName === 'database'
+                && $event->queue === 'default'
+                && $event->size === 1;
+        });
     }
 
     public function test_queue_busy_alert_skips_when_no_recipient_is_configured(): void
@@ -147,18 +185,20 @@ class QueueMonitoringTest extends TestCase
             connectionName: 'database',
             queueName: 'emails',
             size: 250,
+            threshold: 200,
         ))->render();
 
         $this->assertStringContainsString('database', $html);
         $this->assertStringContainsString('emails', $html);
         $this->assertStringContainsString('250', $html);
+        $this->assertStringContainsString('200-job threshold', $html);
         $this->assertStringContainsString('sudo supervisorctl status', $html);
     }
 
     public function test_queue_monitor_and_failed_jobs_alert_are_scheduled(): void
     {
         $this->artisan('schedule:list')
-            ->expectsOutputToContain('queue:monitor database:default --max=100')
+            ->expectsOutputToContain('queue:monitor-depth')
             ->expectsOutputToContain('queue:alert-failed-jobs')
             ->assertExitCode(0);
     }

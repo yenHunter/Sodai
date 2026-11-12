@@ -180,8 +180,8 @@ Check the worker log at `/var/log/sodai/queue-worker.log` and application errors
 service logs the order ID and exception; worker-side delivery failures are recorded in
 `failed_jobs`.
 
-For backlog monitoring, run the queue-size check from cron or your monitoring tool and
-alert when it exceeds a threshold:
+For a manual queue-size check, run the built-in monitor with the same threshold configured
+in Settings → Notification:
 
 ```bash
 php artisan queue:monitor database:default --max=100
@@ -189,10 +189,11 @@ php artisan queue:monitor database:default --max=100
 
 The scheduler already registers two checks every ten minutes:
 
-- `queue:monitor database:default --max=100`, with output appended to
-  `storage/logs/queue-monitor.log`. When a queue exceeds the threshold, its `QueueBusy`
+- `queue:monitor-depth`, which runs the built-in monitor with the **Queue Depth Threshold**
+  from Settings → Notification (default 100), and appends output to
+  `storage/logs/queue-monitor.log`. When a queue reaches the threshold, its `QueueBusy`
   event emails the store notification address with the depth details, at most once per
-  queue per hour.
+  queue per **Queue Alert Cooldown** (default 60 minutes).
 - `queue:alert-failed-jobs`, which emails the store notification address once per
   incident. It alerts on the first increase after the backlog was zero, stays quiet while
   the same backlog keeps growing, and resets after `failed_jobs` returns to zero.

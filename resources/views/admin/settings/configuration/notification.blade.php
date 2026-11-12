@@ -46,6 +46,27 @@
                                 per-admin login).</div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold" for="queue_depth_threshold">
+                                    Queue Depth Threshold
+                                </label>
+                                <input type="number" class="form-control" min="1" max="100000"
+                                    id="queue_depth_threshold" name="queue_depth_threshold"
+                                    value="{{ old('queue_depth_threshold', $settings['queue_depth_threshold'] ?? 100) }}">
+                                <div class="form-text">Alert when pending jobs reach this number.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold" for="queue_alert_cooldown_minutes">
+                                    Queue Alert Cooldown (minutes)
+                                </label>
+                                <input type="number" class="form-control" min="1" max="10080"
+                                    id="queue_alert_cooldown_minutes" name="queue_alert_cooldown_minutes"
+                                    value="{{ old('queue_alert_cooldown_minutes', $settings['queue_alert_cooldown_minutes'] ?? 60) }}">
+                                <div class="form-text">Minimum time between depth alerts for the same queue.</div>
+                            </div>
+                        </div>
+
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" role="switch" value="1"
                                 id="notify_new_order" name="notify_new_order"

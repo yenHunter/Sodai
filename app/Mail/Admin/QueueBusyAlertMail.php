@@ -16,6 +16,7 @@ class QueueBusyAlertMail extends Mailable
         public string $connectionName,
         public string $queueName,
         public int $size,
+        public int $threshold,
     ) {}
 
     public function envelope(): Envelope

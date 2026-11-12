@@ -332,6 +332,41 @@ class SettingModuleTest extends TestCase
         $this->assertEquals('alerts@sodai.com', Setting::get('notification', 'admin_alert_email'));
     }
 
+    public function test_admin_can_update_queue_alert_settings(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_depth_threshold' => 250,
+                'queue_alert_cooldown_minutes' => 30,
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('250', (string) Setting::get('notification', 'queue_depth_threshold'));
+        $this->assertEquals('30', (string) Setting::get('notification', 'queue_alert_cooldown_minutes'));
+    }
+
+    public function test_queue_alert_settings_must_be_positive(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_depth_threshold' => 0,
+            ])
+            ->assertSessionHasErrors('queue_depth_threshold');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_alert_cooldown_minutes' => 0,
+            ])
+            ->assertSessionHasErrors('queue_alert_cooldown_minutes');
+    }
+
     public function test_notification_requires_valid_email(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
