@@ -95,6 +95,13 @@ test.describe('guest checkout', () => {
         await expect(page.locator('#trackOrderResult')).toContainText(orderNumber);
         await expect(page.locator('#trackOrderResult')).toContainText('E2E Checkout Product');
         await expect(page.locator('#trackOrderResult')).toContainText('Total: $100.00');
+        await expect(page.locator('#trackOrderResult .ec-track-title')).toHaveText([
+            'Order Placed',
+            'Confirmed',
+            'Processing',
+            'Shipped',
+            'Delivered',
+        ]);
 
         // A different guest session has no last_order_id, so it must not see
         // this order even if it visits the same confirmation URL.

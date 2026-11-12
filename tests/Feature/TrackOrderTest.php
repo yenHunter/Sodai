@@ -53,7 +53,28 @@ class TrackOrderTest extends TestCase
         $response->assertOk()
             ->assertSee('ORD-123456')
             ->assertSee('Tracked Product')
-            ->assertSee('Total: $90.00');
+            ->assertSee('Total: $90.00')
+            ->assertSee('Order Placed')
+            ->assertSee('Delivered')
+            ->assertSee('step0 active', false);
+    }
+
+    public function test_cancelled_order_shows_a_notice_instead_of_the_timeline(): void
+    {
+        Order::factory()->create([
+            'order_number' => 'ORD-999999',
+            'shipping_email' => 'cancelled@example.com',
+            'status' => 'cancelled',
+        ]);
+
+        $response = $this->post(route('visitor.track-order.lookup'), [
+            'order_number' => 'ORD-999999',
+            'email' => 'cancelled@example.com',
+        ]);
+
+        $response->assertOk()
+            ->assertSee('no longer in progress')
+            ->assertDontSee('ec-progressbar', false);
     }
 
     public function test_lookup_matches_order_number_and_email_case_insensitively(): void

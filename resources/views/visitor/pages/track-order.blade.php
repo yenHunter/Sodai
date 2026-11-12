@@ -88,6 +88,23 @@
                                     <div class="alert alert-secondary mt-3 mb-0">
                                         This order was {{ $order->status }} and is no longer in progress.
                                     </div>
+                                @else
+                                    <div class="ec-trackorder-bottom mt-4">
+                                        <div class="ec-progress-track">
+                                            <ul id="ec-progressbar">
+                                                @foreach ($trackingSteps as $step)
+                                                    <li class="step0 {{ $step['active'] ? 'active' : '' }}">
+                                                        <span class="ec-track-icon">
+                                                            <img src="{{ asset('visitor/images/icons/track_' . $step['icon'] . '.png') }}"
+                                                                alt="{{ $step['label'] }}">
+                                                        </span>
+                                                        <span class="ec-progressbar-track"></span>
+                                                        <span class="ec-track-title">{{ $step['label'] }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
                                 @endif
 
                                 <div class="ec-vendor-card-table mt-3">
