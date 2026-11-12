@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Mail\Admin\QueueFailedJobsAlertMail;
 use App\Mail\Admin\QueueFailedJobsRecoveredMail;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,8 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_KEY = 'queue.failed_jobs.incident_active';
 
+    private const INCIDENT_STARTED_KEY = 'queue.failed_jobs.incident_started_at';
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -28,11 +31,17 @@ class AlertFailedQueueJobsCommand extends Command
         if ($current === 0) {
             // The incident is over; the next failure starts a new alert cycle.
             $wasIncident = (bool) Cache::get(self::INCIDENT_KEY, false);
+            $startedAt = Cache::get(self::INCIDENT_STARTED_KEY);
+
             Cache::forget(self::INCIDENT_KEY);
+            Cache::forget(self::INCIDENT_STARTED_KEY);
             Cache::forever(self::CACHE_KEY, 0);
 
             if ($wasIncident) {
-                $this->sendRecoveryNotice($previous);
+                $this->sendRecoveryNotice(
+                    previous: $previous,
+                    startedAt: $startedAt ? Carbon::parse($startedAt) : null,
+                );
             } else {
                 $this->components->info('Failed-job backlog is clear.');
             }
@@ -87,6 +96,7 @@ class AlertFailedQueueJobsCommand extends Command
 
         Cache::forever(self::CACHE_KEY, $current);
         Cache::forever(self::INCIDENT_KEY, true);
+        Cache::forever(self::INCIDENT_STARTED_KEY, now()->toIso8601String());
 
         Log::warning('Failed-job backlog grew; incident alert sent.', [
             'current' => $current,
@@ -101,7 +111,7 @@ class AlertFailedQueueJobsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function sendRecoveryNotice(int $previous): void
+    private function sendRecoveryNotice(int $previous, ?Carbon $startedAt): void
     {
         $recipient = setting('notification', 'admin_alert_email');
 
@@ -114,7 +124,11 @@ class AlertFailedQueueJobsCommand extends Command
         }
 
         try {
-            Mail::to($recipient)->send(new QueueFailedJobsRecoveredMail(previousCount: $previous));
+            Mail::to($recipient)->send(new QueueFailedJobsRecoveredMail(
+                previousCount: $previous,
+                startedAt: $startedAt,
+                recoveredAt: now(),
+            ));
         } catch (\Throwable $e) {
             Log::error('Failed to send failed-job recovery notice.', [
                 'previous' => $previous,

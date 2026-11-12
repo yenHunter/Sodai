@@ -8,6 +8,7 @@ use App\Mail\Admin\QueueFailedJobsRecoveredMail;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Queue\Events\QueueBusy;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -85,15 +86,20 @@ class QueueMonitoringTest extends TestCase
 
     public function test_sends_one_recovery_notice_when_the_backlog_returns_to_zero(): void
     {
+        $startedAt = now()->copy();
+
         $this->recordFailedJob();
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
 
+        $this->travel(35)->minutes();
         DB::table('failed_jobs')->delete();
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
 
-        Mail::assertSent(QueueFailedJobsRecoveredMail::class, function (QueueFailedJobsRecoveredMail $mail) {
+        Mail::assertSent(QueueFailedJobsRecoveredMail::class, function (QueueFailedJobsRecoveredMail $mail) use ($startedAt) {
             return $mail->hasTo('ops@example.com')
-                && $mail->previousCount === 1;
+                && $mail->previousCount === 1
+                && $mail->startedAt?->timestamp === $startedAt->timestamp
+                && $mail->duration === '35 minutes';
         });
 
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
@@ -120,10 +126,16 @@ class QueueMonitoringTest extends TestCase
 
     public function test_recovery_email_renders_the_cleared_backlog_details(): void
     {
-        $html = (new QueueFailedJobsRecoveredMail(previousCount: 6))->render();
+        $html = (new QueueFailedJobsRecoveredMail(
+            previousCount: 6,
+            startedAt: Carbon::parse('2026-11-12 10:00:00'),
+            recoveredAt: Carbon::parse('2026-11-12 10:45:00'),
+        ))->render();
 
         $this->assertStringContainsString('returned to zero', $html);
         $this->assertStringContainsString('before recovery: <strong>6</strong>', $html);
+        $this->assertStringContainsString('Incident started: <strong>12 Nov 2026, 10:00</strong>', $html);
+        $this->assertStringContainsString('Duration: <strong>45 minutes</strong>', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
     }
 

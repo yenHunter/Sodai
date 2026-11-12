@@ -26,6 +26,12 @@
             <div class="count">
                 <div>Backlog before recovery: <strong>{{ $previousCount }}</strong></div>
                 <div>Current backlog: <strong>0</strong></div>
+                @if ($startedAt)
+                    <div>Incident started: <strong>{{ $startedAt->format('d M Y, H:i') }}</strong></div>
+                    <div>Duration: <strong>{{ $duration }}</strong></div>
+                @else
+                    <div>Incident start time: <strong>unknown</strong></div>
+                @endif
             </div>
 
             <p>
