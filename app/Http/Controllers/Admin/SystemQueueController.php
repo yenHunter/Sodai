@@ -75,14 +75,30 @@ class SystemQueueController extends Controller
         ));
     }
 
-    public function failed()
+    public function failed(Request $request)
     {
         $this->ensureSuperAdmin();
 
+        $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
+        $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
+
         $failedJobs = DB::table('failed_jobs')
+            ->when($queue !== '', fn ($query) => $query->where('queue', $queue))
+            ->when($jobClass !== '', fn ($query) => $query->where('payload', 'like', '%'.$jobClass.'%'))
             ->orderByDesc('failed_at')
             ->orderByDesc('id')
-            ->paginate(25);
+            ->paginate(25)
+            ->withQueryString();
+
+        $queues = DB::table('failed_jobs')
+            ->select('queue')
+            ->distinct()
+            ->orderBy('queue')
+            ->pluck('queue');
+
+        if ($queue !== '' && ! $queues->contains($queue)) {
+            $queues = $queues->push($queue)->sort()->values();
+        }
 
         $failedJobs->getCollection()->transform(function ($job) {
             $payload = json_decode((string) $job->payload, true);
@@ -101,7 +117,12 @@ class SystemQueueController extends Controller
             return $job;
         });
 
-        return view('admin.system.failed-jobs.index', compact('failedJobs'));
+        return view('admin.system.failed-jobs.index', compact(
+            'failedJobs',
+            'queues',
+            'queue',
+            'jobClass',
+        ));
     }
 
     private function ensureSuperAdmin(): void

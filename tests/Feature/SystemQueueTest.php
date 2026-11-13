@@ -42,6 +42,32 @@ class SystemQueueTest extends TestCase
             ->assertDontSee('Stack trace');
     }
 
+    public function test_super_admin_can_filter_failed_jobs_by_queue(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob('emails', 'App\\Mail\\Customer\\PaymentConfirmationMail');
+        $this->recordFailedJob('default', 'App\\Mail\\Admin\\QueueBusyAlertMail');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index', ['queue' => 'default']))
+            ->assertOk()
+            ->assertSee('QueueBusyAlertMail')
+            ->assertDontSee('PaymentConfirmationMail');
+    }
+
+    public function test_super_admin_can_filter_failed_jobs_by_job_class(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob('emails', 'App\\Mail\\Customer\\PaymentConfirmationMail');
+        $this->recordFailedJob('default', 'App\\Mail\\Admin\\QueueBusyAlertMail');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index', ['job_class' => 'PaymentConfirmationMail']))
+            ->assertOk()
+            ->assertSee('PaymentConfirmationMail')
+            ->assertDontSee('QueueBusyAlertMail');
+    }
+
     public function test_non_super_admin_cannot_view_failed_jobs(): void
     {
         $admin = $this->createAdminWithPermissions(['admin.view']);

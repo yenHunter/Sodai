@@ -15,6 +15,39 @@
                     </span>
                 </div>
                 <div class="card-body">
+                    <form action="{{ route('admin.system.failed-jobs.index') }}" method="GET"
+                        class="row g-2 align-items-end mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" for="queueFilter">Queue</label>
+                            <select class="form-select" id="queueFilter" name="queue">
+                                <option value="">All Queues</option>
+                                @foreach ($queues as $queueOption)
+                                    <option value="{{ $queueOption }}" @selected($queue === $queueOption)>
+                                        {{ $queueOption }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold" for="jobClassFilter">Job Class</label>
+                            <div class="app-search">
+                                <input type="search" class="form-control" id="jobClassFilter" name="job_class"
+                                    value="{{ $jobClass }}" placeholder="Filter by job class...">
+                                <i class="app-search-icon text-muted" data-lucide="search"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fs-sm me-1" data-lucide="filter"></i> Filter
+                            </button>
+                            @if ($queue !== '' || $jobClass !== '')
+                                <a href="{{ route('admin.system.failed-jobs.index') }}" class="btn btn-light">
+                                    Reset
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table table-striped dt-responsive align-middle mb-0">
                             <thead>
@@ -43,7 +76,11 @@
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center text-muted py-4">
-                                            No failed jobs found.
+                                            @if ($queue !== '' || $jobClass !== '')
+                                                No failed jobs match these filters.
+                                            @else
+                                                No failed jobs found.
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
