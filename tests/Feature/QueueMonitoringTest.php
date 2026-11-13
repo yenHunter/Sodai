@@ -472,6 +472,20 @@ class QueueMonitoringTest extends TestCase
         Event::assertNotDispatched(QueueBusy::class);
     }
 
+    public function test_queue_depth_monitor_fails_when_no_queues_are_configured(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_monitor_queues' => '',
+        ]);
+
+        Event::fake([QueueBusy::class]);
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(1);
+
+        Event::assertNotDispatched(QueueBusy::class);
+    }
+
     public function test_queue_depth_monitor_clears_the_cooldown_below_the_threshold(): void
     {
         Setting::setMany('notification', [
