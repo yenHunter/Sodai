@@ -51,6 +51,7 @@ class SystemQueueTest extends TestCase
             ->assertSee('bulkRetryForm', false)
             ->assertSee('data-failed-job-checkbox', false)
             ->assertSee('Retry selected')
+            ->assertSee('name="tab" value="failed"', false)
             ->assertSee('Stack trace: #0 {main}');
     }
 

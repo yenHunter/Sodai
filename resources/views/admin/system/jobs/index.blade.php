@@ -227,6 +227,7 @@
                         <div class="card-body">
                             <form action="{{ route('admin.system.queued-jobs.index', ['tab' => 'failed']) }}"
                                 method="GET" class="row g-2 align-items-end mb-3">
+                                <input type="hidden" name="tab" value="failed">
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold" for="failedQueueFilter">Queue</label>
                                     <select class="form-select" id="failedQueueFilter" name="failed_queue">
