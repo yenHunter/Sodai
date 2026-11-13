@@ -178,6 +178,24 @@ class QueueMonitoringTest extends TestCase
         Mail::assertSent(QueueFailedJobsRecoveredMail::class, 1);
     }
 
+    public function test_recovery_handles_legacy_incidents_without_sampling_counts(): void
+    {
+        Cache::forever('queue.failed_jobs.incident_active', true);
+        Cache::forever('queue.failed_jobs.incident_exception', 'SMTP timeout');
+        Cache::forever('queue.failed_jobs.incident_queues', 'default (1)');
+        Cache::forever('queue.failed_jobs.incident_job_classes', 'App\\Mail\\Customer\\OrderConfirmationMail (1)');
+        Cache::forever('queue.failed_jobs.last_count', 1);
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsRecoveredMail::class, function (QueueFailedJobsRecoveredMail $mail) {
+            return $mail->previousCount === 1
+                && $mail->summarizedCount === 0
+                && $mail->incidentCount === 0
+                && ! str_contains((string) $mail->render(), 'Failure details are based on');
+        });
+    }
+
     public function test_recovery_email_tracks_when_incident_details_were_sampled(): void
     {
         Setting::setMany('notification', [
