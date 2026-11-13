@@ -407,6 +407,27 @@ class SettingModuleTest extends TestCase
             ->assertSessionHasErrors('queue_failed_jobs_sample_size');
     }
 
+    public function test_failed_jobs_sample_size_is_capped_at_five_thousand(): void
+    {
+        $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_failed_jobs_sample_size' => 5001,
+            ])
+            ->assertSessionHasErrors('queue_failed_jobs_sample_size');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_failed_jobs_sample_size' => 5000,
+            ])
+            ->assertRedirect(route('admin.settings.notification'));
+
+        $this->assertEquals('5000', (string) Setting::get('notification', 'queue_failed_jobs_sample_size'));
+    }
+
     public function test_monitored_queues_must_use_connection_queue_format(): void
     {
         $admin = $this->createAdminWithPermissions(['setting.view', 'setting.edit']);
