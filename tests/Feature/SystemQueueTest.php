@@ -26,6 +26,7 @@ class SystemQueueTest extends TestCase
             ->assertSee('id="queued-jobs-pane"', false)
             ->assertSee('id="failed-jobs-pane"', false)
             ->assertSee('system-jobs-table', false)
+            ->assertSee('jobs-sticky-column', false)
             ->assertSee('default')
             ->assertSee('OrderConfirmationMail')
             ->assertSee('Pending');
@@ -53,6 +54,7 @@ class SystemQueueTest extends TestCase
             ->assertSee('data-failed-job-checkbox', false)
             ->assertSee('Retry selected')
             ->assertSee('system-jobs-table--failed', false)
+            ->assertSee('jobs-sticky-column', false)
             ->assertSee('name="tab" value="failed"', false)
             ->assertSee('Stack trace: #0 {main}');
     }

@@ -15,6 +15,18 @@
             white-space: nowrap;
             word-break: normal;
         }
+
+        .system-jobs-table .jobs-sticky-column {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background-color: var(--theme-secondary-bg, #fff);
+            border-right: 1px solid var(--theme-border-color, #e7e9eb);
+        }
+
+        .system-jobs-table thead .jobs-sticky-column {
+            z-index: 2;
+        }
     </style>
 @endsection
 
@@ -115,7 +127,7 @@
                                         <tr>
                                             <th width="70">ID</th>
                                             <th width="130">Queue</th>
-                                            <th>Job</th>
+                                            <th class="jobs-sticky-column">Job</th>
                                             <th width="90">Attempts</th>
                                             <th width="110">Status</th>
                                             <th width="150">Available</th>
@@ -130,7 +142,8 @@
                                                     <span
                                                         class="badge bg-secondary-subtle text-secondary">{{ $job->queue }}</span>
                                                 </td>
-                                                <td><code class="text-break">{{ $job->job_class }}</code></td>
+                                                <td class="jobs-sticky-column"><code
+                                                        class="text-break">{{ $job->job_class }}</code></td>
                                                 <td>{{ $job->attempts }}</td>
                                                 <td>
                                                     <span
@@ -303,7 +316,7 @@
                                             </th>
                                             <th width="70">ID</th>
                                             <th width="130">Queue</th>
-                                            <th>Job</th>
+                                            <th class="jobs-sticky-column">Job</th>
                                             <th>Exception</th>
                                             <th width="150">Failed At</th>
                                             <th width="100">Actions</th>
@@ -323,7 +336,8 @@
                                                     <span
                                                         class="badge bg-secondary-subtle text-secondary">{{ $job->queue }}</span>
                                                 </td>
-                                                <td><code class="text-break">{{ $job->job_class }}</code></td>
+                                                <td class="jobs-sticky-column"><code
+                                                        class="text-break">{{ $job->job_class }}</code></td>
                                                 <td>
                                                     <div
                                                         class="d-flex align-items-start justify-content-between gap-2">
