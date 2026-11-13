@@ -41,7 +41,7 @@
 
             <p class="muted">
                 Sent when the scheduled <code>queue:monitor</code> check exceeded its threshold.
-                Alerts are limited to one per queue per hour.
+                Alerts are limited to one per queue per configured cooldown.
             </p>
         </div>
     </div>

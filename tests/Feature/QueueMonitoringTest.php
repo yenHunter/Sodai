@@ -561,6 +561,7 @@ class QueueMonitoringTest extends TestCase
         $this->assertStringContainsString('emails', $html);
         $this->assertStringContainsString('250', $html);
         $this->assertStringContainsString('200-job threshold', $html);
+        $this->assertStringContainsString('one per queue per configured cooldown', $html);
         $this->assertStringContainsString('sudo supervisorctl status', $html);
     }
 
