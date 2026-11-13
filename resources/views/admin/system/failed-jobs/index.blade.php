@@ -19,6 +19,23 @@
         </div>
     @endif
 
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show mb-3">
+            <i class="me-2" data-lucide="triangle-alert"></i>{{ session('warning') }}
+            <button class="btn-close" data-bs-dismiss="alert" type="button"></button>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-3">
+            <i class="me-2" data-lucide="triangle-alert"></i>
+            @foreach ($errors->all() as $error)
+                <div>{{ $error }}</div>
+            @endforeach
+            <button class="btn-close" data-bs-dismiss="alert" type="button"></button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -62,10 +79,26 @@
                         </div>
                     </form>
 
+                    <form id="bulkRetryForm" action="{{ route('admin.system.failed-jobs.bulk-retry') }}"
+                        method="POST"
+                        onsubmit="return confirm('Retry the selected failed jobs? They will be pushed back onto the queue.')">
+                        @csrf
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <span class="text-muted" id="bulkRetryCount">0 selected</span>
+                            <button class="btn btn-sm btn-primary" type="submit">
+                                <i class="fs-sm me-1" data-lucide="rotate-ccw"></i> Retry selected
+                            </button>
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table table-striped dt-responsive align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th width="40">
+                                        <input class="form-check-input" id="selectAllFailedJobs" type="checkbox"
+                                            aria-label="Select all failed jobs">
+                                    </th>
                                     <th width="70">ID</th>
                                     <th width="130">Queue</th>
                                     <th>Job</th>
@@ -77,6 +110,12 @@
                             <tbody>
                                 @forelse ($failedJobs as $job)
                                     <tr>
+                                        <td>
+                                            <input class="form-check-input" form="bulkRetryForm" name="ids[]"
+                                                type="checkbox" value="{{ $job->uuid }}"
+                                                data-failed-job-checkbox
+                                                aria-label="Select failed job {{ $job->id }}">
+                                        </td>
                                         <td>{{ $job->id }}</td>
                                         <td>
                                             <span
@@ -109,7 +148,7 @@
                                         </td>
                                     </tr>
                                     <tr class="collapse" id="failure-details-{{ $job->id }}">
-                                        <td colspan="6" class="bg-light">
+                                        <td colspan="7" class="bg-light">
                                             <div class="p-2">
                                                 <div
                                                     class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
@@ -133,7 +172,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
+                                        <td colspan="7" class="text-center text-muted py-4">
                                             @if ($queue !== '' || $jobClass !== '')
                                                 No failed jobs match these filters.
                                             @else
@@ -168,6 +207,35 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const jobCheckboxes = Array.from(document.querySelectorAll('[data-failed-job-checkbox]'))
+            const selectAll = document.getElementById('selectAllFailedJobs')
+            const bulkRetryCount = document.getElementById('bulkRetryCount')
+
+            if (jobCheckboxes.length > 0 && selectAll && bulkRetryCount) {
+                const refreshSelection = function() {
+                    const selected = jobCheckboxes.filter(function(checkbox) {
+                        return checkbox.checked
+                    }).length
+
+                    bulkRetryCount.textContent = selected + ' selected'
+                    selectAll.checked = selected === jobCheckboxes.length
+                    selectAll.indeterminate = selected > 0 && selected < jobCheckboxes.length
+                }
+
+                selectAll.addEventListener('change', function() {
+                    jobCheckboxes.forEach(function(checkbox) {
+                        checkbox.checked = selectAll.checked
+                    })
+                    refreshSelection()
+                })
+
+                jobCheckboxes.forEach(function(checkbox) {
+                    checkbox.addEventListener('change', refreshSelection)
+                })
+
+                refreshSelection()
+            }
+
             document.querySelectorAll('[data-copy-failure]').forEach(function(button) {
                 button.addEventListener('click', async function() {
                     const target = document.getElementById(button.dataset.copyTarget)

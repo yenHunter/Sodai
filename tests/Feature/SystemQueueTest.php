@@ -46,6 +46,9 @@ class SystemQueueTest extends TestCase
             ->assertSee('data-copy-target="failure-exception-1"', false)
             ->assertSee('id="failure-exception-1"', false)
             ->assertSee('Copy exception')
+            ->assertSee('bulkRetryForm', false)
+            ->assertSee('data-failed-job-checkbox', false)
+            ->assertSee('Retry selected')
             ->assertSee('Stack trace: #0 {main}')
             ->assertSee(route('admin.system.queued-jobs.index'), false);
     }
@@ -97,6 +100,75 @@ class SystemQueueTest extends TestCase
             ->assertSessionHas('success', 'Failed job queued for retry.');
 
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $uuid]);
+    }
+
+    public function test_super_admin_can_bulk_retry_failed_jobs(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $firstUuid = $this->recordFailedJob('emails', 'App\\Jobs\\FirstJob');
+        $secondUuid = $this->recordFailedJob('default', 'App\\Jobs\\SecondJob');
+
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:retry', ['id' => [$firstUuid, $secondUuid]])
+            ->andReturnUsing(function () use ($firstUuid, $secondUuid) {
+                DB::table('failed_jobs')->whereIn('uuid', [$firstUuid, $secondUuid])->delete();
+
+                return 0;
+            });
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => [$firstUuid, $secondUuid]])
+            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertSessionHas('success', '2 failed jobs queued for retry.');
+
+        $this->assertDatabaseMissing('failed_jobs', ['uuid' => $firstUuid]);
+        $this->assertDatabaseMissing('failed_jobs', ['uuid' => $secondUuid]);
+    }
+
+    public function test_bulk_retry_reports_partial_failure(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $firstUuid = $this->recordFailedJob('emails', 'App\\Jobs\\FirstJob');
+        $secondUuid = $this->recordFailedJob('default', 'App\\Jobs\\SecondJob');
+
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:retry', ['id' => [$firstUuid, $secondUuid]])
+            ->andReturnUsing(function () use ($firstUuid) {
+                DB::table('failed_jobs')->where('uuid', $firstUuid)->delete();
+
+                return 0;
+            });
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => [$firstUuid, $secondUuid]])
+            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertSessionHas('warning', '1 failed job queued for retry; 1 could not be queued.');
+
+        $this->assertDatabaseMissing('failed_jobs', ['uuid' => $firstUuid]);
+        $this->assertDatabaseHas('failed_jobs', ['uuid' => $secondUuid]);
+    }
+
+    public function test_bulk_retry_requires_at_least_one_selection(): void
+    {
+        $admin = $this->createSuperAdmin();
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => []])
+            ->assertSessionHasErrors('ids');
+    }
+
+    public function test_non_super_admin_cannot_bulk_retry_failed_jobs(): void
+    {
+        $admin = $this->createAdminWithPermissions(['admin.view']);
+        $uuid = $this->recordFailedJob();
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => [$uuid]])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('failed_jobs', ['uuid' => $uuid]);
     }
 
     public function test_retry_failure_keeps_the_failed_job(): void
@@ -248,9 +320,11 @@ class SystemQueueTest extends TestCase
     private function recordFailedJob(
         string $queue = 'emails',
         string $jobClass = 'App\\Mail\\Customer\\PaymentConfirmationMail',
-    ): void {
+    ): string {
+        $uuid = (string) str()->uuid();
+
         DB::table('failed_jobs')->insert([
-            'uuid' => (string) str()->uuid(),
+            'uuid' => $uuid,
             'connection' => 'database',
             'queue' => $queue,
             'payload' => json_encode([
@@ -260,6 +334,8 @@ class SystemQueueTest extends TestCase
             'exception' => "RuntimeException: SMTP connection failed\nStack trace: #0 {main}",
             'failed_at' => now(),
         ]);
+
+        return $uuid;
     }
 
     private function recordQueuedJob(

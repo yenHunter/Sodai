@@ -127,6 +127,60 @@ class SystemQueueController extends Controller
         ));
     }
 
+    public function bulkRetry(Request $request)
+    {
+        $this->ensureSuperAdmin();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['string', 'uuid', 'distinct'],
+        ]);
+
+        $ids = array_values($validated['ids']);
+        $existing = DB::table('failed_jobs')
+            ->whereIn('uuid', $ids)
+            ->orderBy('id')
+            ->pluck('uuid')
+            ->all();
+
+        if ($existing === []) {
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'No retryable failed jobs were found.');
+        }
+
+        try {
+            Artisan::call('queue:retry', ['id' => $existing]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'The failed jobs could not be queued for retry.');
+        }
+
+        $remaining = DB::table('failed_jobs')->whereIn('uuid', $existing)->count();
+        $retried = count($existing) - $remaining;
+
+        if ($retried === 0) {
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'The failed jobs could not be queued for retry.');
+        }
+
+        $message = $retried.' '.Str::plural('failed job', $retried).' queued for retry';
+
+        if ($remaining > 0) {
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('warning', $message.'; '.$remaining.' could not be queued.');
+        }
+
+        return redirect()
+            ->route('admin.system.failed-jobs.index')
+            ->with('success', $message.'.');
+    }
+
     public function retry(string $uuid)
     {
         $this->ensureSuperAdmin();

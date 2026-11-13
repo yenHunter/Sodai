@@ -281,6 +281,8 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     Route::prefix('system')->name('system.')->group(function () {
         Route::get('queued-jobs', [SystemQueueController::class, 'index'])->name('queued-jobs.index');
         Route::get('failed-jobs', [SystemQueueController::class, 'failed'])->name('failed-jobs.index');
+        Route::post('failed-jobs/bulk-retry', [SystemQueueController::class, 'bulkRetry'])
+            ->name('failed-jobs.bulk-retry');
         Route::post('failed-jobs/{uuid}/retry', [SystemQueueController::class, 'retry'])
             ->name('failed-jobs.retry');
     });
