@@ -61,13 +61,17 @@
                 </div>
                 @foreach ($queueSummary as $summary)
                     <div class="col-xl-3 col-md-6">
-                        <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none"
-                            href="{{ route('admin.system.failed-jobs.index', ['queue' => $summary->queue]) }}">
+                        <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none @if ($queue === $summary->queue) border-primary bg-primary-subtle @endif"
+                            href="{{ route('admin.system.failed-jobs.index', ['queue' => $summary->queue]) }}"
+                            @if ($queue === $summary->queue) aria-current="true" @endif>
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <span class="avatar-sm rounded bg-secondary-subtle text-secondary d-inline-flex align-items-center justify-content-center">
                                     <i class="fs-lg" data-lucide="layers"></i>
                                 </span>
                                 <span class="text-muted text-break">{{ $summary->queue }}</span>
+                                @if ($queue === $summary->queue)
+                                    <span class="badge bg-primary ms-auto">Active</span>
+                                @endif
                             </div>
                             <div class="d-flex justify-content-between align-items-end gap-2">
                                 <h3 class="mb-0">{{ number_format($summary->total) }}</h3>
