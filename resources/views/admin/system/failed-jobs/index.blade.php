@@ -36,6 +36,40 @@
         </div>
     @endif
 
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Failed Jobs by Queue</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-xl-3 col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="avatar-sm rounded bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center">
+                                <i class="fs-lg" data-lucide="circle-alert"></i>
+                            </span>
+                            <span class="text-muted">All Failed Jobs</span>
+                        </div>
+                        <h3 class="mb-0">{{ number_format($totalFailedJobs) }}</h3>
+                    </div>
+                </div>
+                @foreach ($queueSummary as $summary)
+                    <div class="col-xl-3 col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="avatar-sm rounded bg-secondary-subtle text-secondary d-inline-flex align-items-center justify-content-center">
+                                    <i class="fs-lg" data-lucide="layers"></i>
+                                </span>
+                                <span class="text-muted text-break">{{ $summary->queue }}</span>
+                            </div>
+                            <h3 class="mb-0">{{ number_format($summary->total) }}</h3>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card">

@@ -53,6 +53,24 @@ class SystemQueueTest extends TestCase
             ->assertSee(route('admin.system.queued-jobs.index'), false);
     }
 
+    public function test_failed_jobs_summary_counts_jobs_by_queue(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob('emails', 'App\\Jobs\\FirstJob');
+        $this->recordFailedJob('emails', 'App\\Jobs\\SecondJob');
+        $this->recordFailedJob('default', 'App\\Jobs\\ThirdJob');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index'))
+            ->assertOk()
+            ->assertSee('Failed Jobs by Queue')
+            ->assertSee('All Failed Jobs')
+            ->assertViewHas('totalFailedJobs', 3)
+            ->assertViewHas('queueSummary', function ($summary) {
+                return $summary->pluck('total', 'queue')->all() === ['emails' => 2, 'default' => 1];
+            });
+    }
+
     public function test_super_admin_can_filter_failed_jobs_by_queue(): void
     {
         $admin = $this->createSuperAdmin();

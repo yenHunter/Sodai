@@ -93,6 +93,16 @@ class SystemQueueController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        $queueSummary = DB::table('failed_jobs')
+            ->select('queue')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('queue')
+            ->orderByDesc('total')
+            ->orderBy('queue')
+            ->get();
+
+        $totalFailedJobs = $queueSummary->sum('total');
+
         $queues = DB::table('failed_jobs')
             ->select('queue')
             ->distinct()
@@ -131,6 +141,8 @@ class SystemQueueController extends Controller
             'queue',
             'jobClass',
             'failedJobFilters',
+            'queueSummary',
+            'totalFailedJobs',
         ));
     }
 
