@@ -202,7 +202,7 @@ The scheduler already registers two checks every ten minutes:
   and the affected queues and job classes; the recovery notice also includes when the
   incident started and how long it lasted. Alert details are summarized from the newest
   **Failed Jobs Sample Size** failures (default 500) so a very large backlog is not
-  loaded in full.
+  loaded in full; the recovery notice notes when those incident details were sampled.
 
 Both require Laravel's scheduler to be running, normally via this cron entry on the host:
 

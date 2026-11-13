@@ -34,6 +34,10 @@
                 @endif
             </div>
 
+            @if ($summarizedCount > 0 && $summarizedCount < $incidentCount)
+                <p class="muted">Failure details are based on the most recent {{ number_format($summarizedCount) }} of {{ number_format($incidentCount) }} failed jobs when this incident was alerted.</p>
+            @endif
+
             <p><strong>Most common failure:</strong><br>
                 <code>{{ $topException }}</code></p>
 

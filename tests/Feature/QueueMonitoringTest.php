@@ -168,12 +168,34 @@ class QueueMonitoringTest extends TestCase
                 && $mail->duration === '35 minutes'
                 && $mail->topException === 'SMTP timeout'
                 && $mail->queueSummary === 'default (1)'
-                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)';
+                && $mail->jobClassSummary === 'App\\Mail\\Customer\\OrderConfirmationMail (1)'
+                && $mail->summarizedCount === 1
+                && $mail->incidentCount === 1;
         });
 
         $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
 
         Mail::assertSent(QueueFailedJobsRecoveredMail::class, 1);
+    }
+
+    public function test_recovery_email_tracks_when_incident_details_were_sampled(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_failed_jobs_sample_size' => 1,
+        ]);
+
+        $this->recordFailedJob();
+        $this->recordFailedJob();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        DB::table('failed_jobs')->delete();
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsRecoveredMail::class, function (QueueFailedJobsRecoveredMail $mail) {
+            return $mail->summarizedCount === 1
+                && $mail->incidentCount === 2;
+        });
     }
 
     public function test_shrinking_backlog_updates_the_baseline_without_an_alert(): void
@@ -202,6 +224,8 @@ class QueueMonitoringTest extends TestCase
             topException: 'SMTP timeout',
             queueSummary: 'default (5), emails (1)',
             jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (5), App\\Mail\\Admin\\QueueBusyAlertMail (1)',
+            summarizedCount: 6,
+            incidentCount: 6,
         ))->render();
 
         $this->assertStringContainsString('returned to zero', $html);
@@ -215,6 +239,25 @@ class QueueMonitoringTest extends TestCase
         $this->assertStringContainsString('Job classes:', $html);
         $this->assertStringContainsString('App\\Mail\\Customer\\OrderConfirmationMail (5)', $html);
         $this->assertStringContainsString('php artisan queue:failed', $html);
+    }
+
+    public function test_recovery_email_notes_when_incident_details_were_sampled(): void
+    {
+        $html = (new QueueFailedJobsRecoveredMail(
+            previousCount: 2,
+            startedAt: Carbon::parse('2026-11-12 10:00:00'),
+            recoveredAt: Carbon::parse('2026-11-12 10:20:00'),
+            topException: 'SMTP timeout',
+            queueSummary: 'default (1)',
+            jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (1)',
+            summarizedCount: 1,
+            incidentCount: 2,
+        ))->render();
+
+        $this->assertStringContainsString(
+            'Failure details are based on the most recent 1 of 2 failed jobs when this incident was alerted.',
+            $html
+        );
     }
 
     public function test_alert_email_renders_the_counts_and_recovery_commands(): void

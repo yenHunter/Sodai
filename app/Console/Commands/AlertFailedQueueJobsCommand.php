@@ -30,6 +30,10 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_JOB_CLASSES_KEY = 'queue.failed_jobs.incident_job_classes';
 
+    private const INCIDENT_SUMMARIZED_KEY = 'queue.failed_jobs.incident_summarized_count';
+
+    private const INCIDENT_TOTAL_KEY = 'queue.failed_jobs.incident_total_count';
+
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -42,12 +46,16 @@ class AlertFailedQueueJobsCommand extends Command
             $topException = (string) Cache::get(self::INCIDENT_EXCEPTION_KEY, 'Unknown failure');
             $queueSummary = (string) Cache::get(self::INCIDENT_QUEUES_KEY, 'Unknown');
             $jobClassSummary = (string) Cache::get(self::INCIDENT_JOB_CLASSES_KEY, 'Unknown job');
+            $summarizedCount = (int) Cache::get(self::INCIDENT_SUMMARIZED_KEY, 0);
+            $incidentCount = (int) Cache::get(self::INCIDENT_TOTAL_KEY, 0);
 
             Cache::forget(self::INCIDENT_KEY);
             Cache::forget(self::INCIDENT_STARTED_KEY);
             Cache::forget(self::INCIDENT_EXCEPTION_KEY);
             Cache::forget(self::INCIDENT_QUEUES_KEY);
             Cache::forget(self::INCIDENT_JOB_CLASSES_KEY);
+            Cache::forget(self::INCIDENT_SUMMARIZED_KEY);
+            Cache::forget(self::INCIDENT_TOTAL_KEY);
             Cache::forever(self::CACHE_KEY, 0);
 
             if ($wasIncident) {
@@ -57,6 +65,8 @@ class AlertFailedQueueJobsCommand extends Command
                     topException: $topException,
                     queueSummary: $queueSummary,
                     jobClassSummary: $jobClassSummary,
+                    summarizedCount: $summarizedCount,
+                    incidentCount: $incidentCount,
                 );
             } else {
                 $this->components->info('Failed-job backlog is clear.');
@@ -102,6 +112,7 @@ class AlertFailedQueueJobsCommand extends Command
         $topException = $this->mostCommonFailure($failedJobs->pluck('exception'));
         $queueSummary = $this->summarizeQueues($failedJobs);
         $jobClassSummary = $this->summarizeJobClasses($failedJobs);
+        $summarizedCount = $failedJobs->count();
 
         try {
             Mail::to($recipient)->send(new QueueFailedJobsAlertMail(
@@ -110,7 +121,7 @@ class AlertFailedQueueJobsCommand extends Command
                 topException: $topException,
                 queueSummary: $queueSummary,
                 jobClassSummary: $jobClassSummary,
-                summarizedCount: $failedJobs->count(),
+                summarizedCount: $summarizedCount,
             ));
         } catch (\Throwable $e) {
             // Leave the cached baseline unchanged so the next run retries the alert.
@@ -129,6 +140,8 @@ class AlertFailedQueueJobsCommand extends Command
         Cache::forever(self::INCIDENT_EXCEPTION_KEY, $topException);
         Cache::forever(self::INCIDENT_QUEUES_KEY, $queueSummary);
         Cache::forever(self::INCIDENT_JOB_CLASSES_KEY, $jobClassSummary);
+        Cache::forever(self::INCIDENT_SUMMARIZED_KEY, $summarizedCount);
+        Cache::forever(self::INCIDENT_TOTAL_KEY, $current);
 
         Log::warning('Failed-job backlog grew; incident alert sent.', [
             'current' => $current,
@@ -150,6 +163,8 @@ class AlertFailedQueueJobsCommand extends Command
         string $topException,
         string $queueSummary,
         string $jobClassSummary,
+        int $summarizedCount,
+        int $incidentCount,
     ): void {
         $recipient = setting('notification', 'admin_alert_email');
 
@@ -169,6 +184,8 @@ class AlertFailedQueueJobsCommand extends Command
                 topException: $topException,
                 queueSummary: $queueSummary,
                 jobClassSummary: $jobClassSummary,
+                summarizedCount: $summarizedCount,
+                incidentCount: $incidentCount,
             ));
         } catch (\Throwable $e) {
             Log::error('Failed to send failed-job recovery notice.', [
