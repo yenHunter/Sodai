@@ -65,6 +65,9 @@ class SystemQueueTest extends TestCase
             ->assertOk()
             ->assertSee('Failed Jobs by Queue')
             ->assertSee('All Failed Jobs')
+            ->assertSee(route('admin.system.failed-jobs.index'), false)
+            ->assertSee(route('admin.system.failed-jobs.index', ['queue' => 'emails']), false)
+            ->assertSee(route('admin.system.failed-jobs.index', ['queue' => 'default']), false)
             ->assertViewHas('totalFailedJobs', 3)
             ->assertViewHas('queueSummary', function ($summary) {
                 return $summary->pluck('total', 'queue')->all() === ['emails' => 2, 'default' => 1];

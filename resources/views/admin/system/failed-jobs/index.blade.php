@@ -43,27 +43,39 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-xl-3 col-md-6">
-                    <div class="border rounded p-3 h-100">
+                    <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none"
+                        href="{{ route('admin.system.failed-jobs.index') }}">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="avatar-sm rounded bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center">
                                 <i class="fs-lg" data-lucide="circle-alert"></i>
                             </span>
                             <span class="text-muted">All Failed Jobs</span>
                         </div>
-                        <h3 class="mb-0">{{ number_format($totalFailedJobs) }}</h3>
-                    </div>
+                        <div class="d-flex justify-content-between align-items-end gap-2">
+                            <h3 class="mb-0">{{ number_format($totalFailedJobs) }}</h3>
+                            <span class="text-primary fs-sm text-nowrap">
+                                View all <i class="fs-sm" data-lucide="arrow-right"></i>
+                            </span>
+                        </div>
+                    </a>
                 </div>
                 @foreach ($queueSummary as $summary)
                     <div class="col-xl-3 col-md-6">
-                        <div class="border rounded p-3 h-100">
+                        <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none"
+                            href="{{ route('admin.system.failed-jobs.index', ['queue' => $summary->queue]) }}">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <span class="avatar-sm rounded bg-secondary-subtle text-secondary d-inline-flex align-items-center justify-content-center">
                                     <i class="fs-lg" data-lucide="layers"></i>
                                 </span>
                                 <span class="text-muted text-break">{{ $summary->queue }}</span>
                             </div>
-                            <h3 class="mb-0">{{ number_format($summary->total) }}</h3>
-                        </div>
+                            <div class="d-flex justify-content-between align-items-end gap-2">
+                                <h3 class="mb-0">{{ number_format($summary->total) }}</h3>
+                                <span class="text-primary fs-sm text-nowrap">
+                                    View jobs <i class="fs-sm" data-lucide="arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
                     </div>
                 @endforeach
             </div>
