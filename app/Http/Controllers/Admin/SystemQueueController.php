@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -119,11 +120,17 @@ class SystemQueueController extends Controller
             return $job;
         });
 
+        $failedJobFilters = array_filter([
+            'queue' => $queue,
+            'job_class' => $jobClass,
+        ], fn ($value) => $value !== '');
+
         return view('admin.system.failed-jobs.index', compact(
             'failedJobs',
             'queues',
             'queue',
             'jobClass',
+            'failedJobFilters',
         ));
     }
 
@@ -144,8 +151,7 @@ class SystemQueueController extends Controller
             ->all();
 
         if ($existing === []) {
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'No retryable failed jobs were found.');
         }
 
@@ -154,8 +160,7 @@ class SystemQueueController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'The failed jobs could not be queued for retry.');
         }
 
@@ -163,31 +168,27 @@ class SystemQueueController extends Controller
         $retried = count($existing) - $remaining;
 
         if ($retried === 0) {
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'The failed jobs could not be queued for retry.');
         }
 
         $message = $retried.' '.Str::plural('failed job', $retried).' queued for retry';
 
         if ($remaining > 0) {
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('warning', $message.'; '.$remaining.' could not be queued.');
         }
 
-        return redirect()
-            ->route('admin.system.failed-jobs.index')
+        return $this->failedJobsRedirect($request)
             ->with('success', $message.'.');
     }
 
-    public function retry(string $uuid)
+    public function retry(Request $request, string $uuid)
     {
         $this->ensureSuperAdmin();
 
         if (! DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'Failed job not found.');
         }
 
@@ -196,20 +197,32 @@ class SystemQueueController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'The failed job could not be queued for retry.');
         }
 
         if (DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
-            return redirect()
-                ->route('admin.system.failed-jobs.index')
+            return $this->failedJobsRedirect($request)
                 ->with('error', 'The failed job could not be queued for retry.');
         }
 
-        return redirect()
-            ->route('admin.system.failed-jobs.index')
+        return $this->failedJobsRedirect($request)
             ->with('success', 'Failed job queued for retry.');
+    }
+
+    private function failedJobsRedirect(Request $request): RedirectResponse
+    {
+        $filters = [];
+
+        foreach (['queue' => 100, 'job_class' => 255] as $key => $limit) {
+            $value = $request->query($key);
+
+            if (is_string($value) && trim($value) !== '') {
+                $filters[$key] = mb_substr(trim($value), 0, $limit);
+            }
+        }
+
+        return redirect()->route('admin.system.failed-jobs.index', $filters);
     }
 
     private function ensureSuperAdmin(): void

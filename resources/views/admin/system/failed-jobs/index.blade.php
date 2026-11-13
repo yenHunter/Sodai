@@ -79,7 +79,8 @@
                         </div>
                     </form>
 
-                    <form id="bulkRetryForm" action="{{ route('admin.system.failed-jobs.bulk-retry') }}"
+                    <form id="bulkRetryForm"
+                        action="{{ route('admin.system.failed-jobs.bulk-retry', $failedJobFilters) }}"
                         method="POST"
                         onsubmit="return confirm('Retry the selected failed jobs? They will be pushed back onto the queue.')">
                         @csrf
@@ -137,7 +138,8 @@
                                         </td>
                                         <td><span class="text-nowrap">{{ $job->failed_at_display }}</span></td>
                                         <td>
-                                            <form action="{{ route('admin.system.failed-jobs.retry', $job->uuid) }}"
+                                            <form
+                                                action="{{ route('admin.system.failed-jobs.retry', ['uuid' => $job->uuid] + $failedJobFilters) }}"
                                                 method="POST"
                                                 onsubmit="return confirm('Retry this job? It will be pushed back onto the queue.')">
                                                 @csrf

@@ -102,6 +102,28 @@ class SystemQueueTest extends TestCase
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $uuid]);
     }
 
+    public function test_retry_preserves_failed_job_filters(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob();
+        $uuid = (string) DB::table('failed_jobs')->value('uuid');
+        $filters = ['queue' => 'emails', 'job_class' => 'PaymentConfirmationMail'];
+
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:retry', ['id' => [$uuid]])
+            ->andReturnUsing(function () use ($uuid) {
+                DB::table('failed_jobs')->where('uuid', $uuid)->delete();
+
+                return 0;
+            });
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.retry', ['uuid' => $uuid] + $filters))
+            ->assertRedirect(route('admin.system.failed-jobs.index', $filters))
+            ->assertSessionHas('success', 'Failed job queued for retry.');
+    }
+
     public function test_super_admin_can_bulk_retry_failed_jobs(): void
     {
         $admin = $this->createSuperAdmin();
@@ -117,9 +139,11 @@ class SystemQueueTest extends TestCase
                 return 0;
             });
 
+        $filters = ['queue' => 'emails', 'job_class' => 'PaymentConfirmationMail'];
+
         $this->actingAsAdmin($admin)
-            ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => [$firstUuid, $secondUuid]])
-            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->post(route('admin.system.failed-jobs.bulk-retry', $filters), ['ids' => [$firstUuid, $secondUuid]])
+            ->assertRedirect(route('admin.system.failed-jobs.index', $filters))
             ->assertSessionHas('success', '2 failed jobs queued for retry.');
 
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $firstUuid]);
