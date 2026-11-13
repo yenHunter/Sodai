@@ -1,5 +1,23 @@
 @extends('admin.include.vertical', ['title' => 'Jobs'])
 
+@section('styles')
+    <style>
+        .system-jobs-table {
+            min-width: 960px;
+        }
+
+        .system-jobs-table--failed {
+            min-width: 1100px;
+        }
+
+        .system-jobs-table code {
+            overflow-wrap: normal;
+            white-space: nowrap;
+            word-break: normal;
+        }
+    </style>
+@endsection
+
 @section('content')
     @include('admin.include.partials.page-title', ['subtitle' => 'System', 'title' => 'Jobs'])
 
@@ -92,7 +110,7 @@
                             </form>
 
                             <div class="table-responsive">
-                                <table class="table table-striped dt-responsive align-middle mb-0">
+                                <table class="table table-striped dt-responsive align-middle mb-0 system-jobs-table">
                                     <thead>
                                         <tr>
                                             <th width="70">ID</th>
@@ -275,7 +293,8 @@
                             </form>
 
                             <div class="table-responsive">
-                                <table class="table table-striped dt-responsive align-middle mb-0">
+                                <table
+                                    class="table table-striped dt-responsive align-middle mb-0 system-jobs-table system-jobs-table--failed">
                                     <thead>
                                         <tr>
                                             <th width="40">
