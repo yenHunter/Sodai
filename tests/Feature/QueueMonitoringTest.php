@@ -486,6 +486,27 @@ class QueueMonitoringTest extends TestCase
         Event::assertNotDispatched(QueueBusy::class);
     }
 
+    public function test_queue_depth_monitor_deduplicates_configured_queues(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_depth_threshold' => 1,
+            'queue_monitor_queues' => 'database:default, database:default',
+        ]);
+
+        $this->recordQueuedJob('default');
+
+        Event::fake([QueueBusy::class]);
+
+        $this->artisan('queue:monitor-depth')->assertExitCode(0);
+
+        Event::assertDispatchedTimes(QueueBusy::class, 1);
+        Event::assertDispatched(QueueBusy::class, function (QueueBusy $event) {
+            return $event->connectionName === 'database'
+                && $event->queue === 'default';
+        });
+    }
+
     public function test_queue_depth_monitor_clears_the_cooldown_below_the_threshold(): void
     {
         Setting::setMany('notification', [
