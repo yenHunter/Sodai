@@ -22,7 +22,33 @@ class SystemQueueTest extends TestCase
             ->assertSee('Queued Jobs')
             ->assertSee('default')
             ->assertSee('OrderConfirmationMail')
-            ->assertSee('Pending');
+            ->assertSee('Pending')
+            ->assertSee(route('admin.system.failed-jobs.index'), false);
+    }
+
+    public function test_super_admin_can_view_failed_jobs(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index'))
+            ->assertOk()
+            ->assertSee('Failed Jobs')
+            ->assertSee('emails')
+            ->assertSee('PaymentConfirmationMail')
+            ->assertSee('RuntimeException: SMTP connection failed')
+            ->assertSee(route('admin.system.queued-jobs.index'), false)
+            ->assertDontSee('Stack trace');
+    }
+
+    public function test_non_super_admin_cannot_view_failed_jobs(): void
+    {
+        $admin = $this->createAdminWithPermissions(['admin.view']);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index'))
+            ->assertForbidden();
     }
 
     public function test_super_admin_can_filter_queued_jobs_by_queue(): void
@@ -114,6 +140,29 @@ class SystemQueueTest extends TestCase
     {
         $this->get(route('admin.system.queued-jobs.index'))
             ->assertRedirect(route('admin.login.view'));
+    }
+
+    public function test_guest_is_redirected_from_failed_jobs(): void
+    {
+        $this->get(route('admin.system.failed-jobs.index'))
+            ->assertRedirect(route('admin.login.view'));
+    }
+
+    private function recordFailedJob(
+        string $queue = 'emails',
+        string $jobClass = 'App\\Mail\\Customer\\PaymentConfirmationMail',
+    ): void {
+        DB::table('failed_jobs')->insert([
+            'uuid' => (string) str()->uuid(),
+            'connection' => 'database',
+            'queue' => $queue,
+            'payload' => json_encode([
+                'displayName' => $jobClass,
+                'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
+            ]),
+            'exception' => "RuntimeException: SMTP connection failed\nStack trace: #0 {main}",
+            'failed_at' => now(),
+        ]);
     }
 
     private function recordQueuedJob(

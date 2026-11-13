@@ -280,6 +280,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     // ── System: super-admin only ──
     Route::prefix('system')->name('system.')->group(function () {
         Route::get('queued-jobs', [SystemQueueController::class, 'index'])->name('queued-jobs.index');
+        Route::get('failed-jobs', [SystemQueueController::class, 'failed'])->name('failed-jobs.index');
     });
 
     // ── Admin Management: super-admin only ──

@@ -3,6 +3,8 @@
 @section('content')
     @include('admin.include.partials.page-title', ['subtitle' => 'System', 'title' => 'Queued Jobs'])
 
+    @include('admin.system.partials.tabs')
+
     <div class="row">
         <div class="col-12">
             <div class="card">

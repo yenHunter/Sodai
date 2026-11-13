@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SystemQueueController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(auth('admin')->user()?->isSuperAdmin(), 403);
+        $this->ensureSuperAdmin();
 
         $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
         $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
@@ -72,5 +73,39 @@ class SystemQueueController extends Controller
             'jobClass',
             'status',
         ));
+    }
+
+    public function failed()
+    {
+        $this->ensureSuperAdmin();
+
+        $failedJobs = DB::table('failed_jobs')
+            ->orderByDesc('failed_at')
+            ->orderByDesc('id')
+            ->paginate(25);
+
+        $failedJobs->getCollection()->transform(function ($job) {
+            $payload = json_decode((string) $job->payload, true);
+            $class = is_array($payload) ? ($payload['displayName'] ?? $payload['job'] ?? null) : null;
+
+            $job->job_class = is_string($class) && trim($class) !== ''
+                ? trim($class)
+                : 'Unknown job';
+
+            $exceptionFirstLine = preg_split('/\R/u', trim((string) $job->exception), 2)[0] ?? '';
+            $job->exception_summary = Str::limit(trim($exceptionFirstLine), 180) ?: 'Unknown exception';
+            $job->failed_at_display = $job->failed_at
+                ? Carbon::parse($job->failed_at)->format('d M Y, H:i')
+                : '—';
+
+            return $job;
+        });
+
+        return view('admin.system.failed-jobs.index', compact('failedJobs'));
+    }
+
+    private function ensureSuperAdmin(): void
+    {
+        abort_unless(auth('admin')->user()?->isSuperAdmin(), 403);
     }
 }
