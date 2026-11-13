@@ -69,9 +69,33 @@
                                         </td>
                                         <td><code class="text-break">{{ $job->job_class }}</code></td>
                                         <td>
-                                            <span class="text-danger text-break">{{ $job->exception_summary }}</span>
+                                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                                <span class="text-danger text-break">{{ $job->exception_summary }}</span>
+                                                <button class="btn btn-sm btn-link p-0 text-nowrap" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#failure-details-{{ $job->id }}"
+                                                    aria-expanded="false"
+                                                    aria-controls="failure-details-{{ $job->id }}">
+                                                    View details
+                                                    <i class="fs-sm ms-1" data-lucide="chevron-down"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td><span class="text-nowrap">{{ $job->failed_at_display }}</span></td>
+                                    </tr>
+                                    <tr class="collapse" id="failure-details-{{ $job->id }}">
+                                        <td colspan="5" class="bg-light">
+                                            <div class="p-2">
+                                                <div
+                                                    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                                    <h6 class="mb-0">Failure details</h6>
+                                                    <span class="text-muted fs-12 text-break">
+                                                        UUID: <code>{{ $job->uuid }}</code>
+                                                    </span>
+                                                </div>
+                                                <pre class="mb-0 text-danger text-wrap text-break">{{ $job->exception }}</pre>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>

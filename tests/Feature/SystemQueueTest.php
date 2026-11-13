@@ -38,8 +38,10 @@ class SystemQueueTest extends TestCase
             ->assertSee('emails')
             ->assertSee('PaymentConfirmationMail')
             ->assertSee('RuntimeException: SMTP connection failed')
-            ->assertSee(route('admin.system.queued-jobs.index'), false)
-            ->assertDontSee('Stack trace');
+            ->assertSee('View details')
+            ->assertSee('failure-details-1', false)
+            ->assertSee('Stack trace: #0 {main}')
+            ->assertSee(route('admin.system.queued-jobs.index'), false);
     }
 
     public function test_super_admin_can_filter_failed_jobs_by_queue(): void
