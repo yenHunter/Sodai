@@ -46,6 +46,54 @@
                                 per-admin login).</div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold" for="queue_depth_threshold">
+                                    Queue Depth Threshold
+                                </label>
+                                <input type="number" class="form-control" min="1" max="100000"
+                                    id="queue_depth_threshold" name="queue_depth_threshold"
+                                    value="{{ old('queue_depth_threshold', $settings['queue_depth_threshold'] ?? 100) }}">
+                                <div class="form-text">Alert when pending jobs reach this number.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold" for="queue_alert_cooldown_minutes">
+                                    Queue Alert Cooldown (minutes)
+                                </label>
+                                <input type="number" class="form-control" min="1" max="10080"
+                                    id="queue_alert_cooldown_minutes" name="queue_alert_cooldown_minutes"
+                                    value="{{ old('queue_alert_cooldown_minutes', $settings['queue_alert_cooldown_minutes'] ?? 60) }}">
+                                <div class="form-text">Minimum time between depth alerts for the same queue.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="queue_monitor_queues">
+                                Monitored Queues
+                            </label>
+                            <input type="text" class="form-control @error('queue_monitor_queues') is-invalid @enderror"
+                                id="queue_monitor_queues" name="queue_monitor_queues"
+                                value="{{ old('queue_monitor_queues', $settings['queue_monitor_queues'] ?? 'database:default') }}">
+                            @error('queue_monitor_queues')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">
+                                Comma-separated <code>connection:queue</code> pairs, such as
+                                <code>database:default, database:emails</code>.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="queue_failed_jobs_sample_size">
+                                Failed Jobs Sample Size
+                            </label>
+                            <input type="number" class="form-control" min="1" max="5000"
+                                id="queue_failed_jobs_sample_size" name="queue_failed_jobs_sample_size"
+                                value="{{ old('queue_failed_jobs_sample_size', $settings['queue_failed_jobs_sample_size'] ?? 500) }}">
+                            <div class="form-text">
+                                How many of the newest failed jobs are inspected for the alert summary
+                                (default 500).
+                            </div>
+                        </div>
+
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" role="switch" value="1"
                                 id="notify_new_order" name="notify_new_order"

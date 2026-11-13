@@ -180,11 +180,34 @@ Check the worker log at `/var/log/sodai/queue-worker.log` and application errors
 service logs the order ID and exception; worker-side delivery failures are recorded in
 `failed_jobs`.
 
-For backlog monitoring, run the queue-size check from cron or your monitoring tool and
-alert when it exceeds a threshold:
+For a manual queue-size check, run the wrapper with the configured threshold and queues:
 
 ```bash
-php artisan queue:monitor database:default --max=100
+php artisan queue:monitor-depth
+```
+
+The scheduler already registers two checks every ten minutes:
+
+- `queue:monitor-depth`, which checks every `connection:queue` pair in the **Monitored
+  Queues** setting (default `database:default`) against the **Queue Depth Threshold**
+  from Settings → Notification (default 100), and appends output to
+  `storage/logs/queue-monitor.log`. When a queue reaches the threshold, its `QueueBusy`
+  event emails the store notification address with the depth details, at most once per
+  queue per **Queue Alert Cooldown** (default 60 minutes). When the queue falls below
+  the threshold, the cooldown is cleared so a new incident alerts immediately.
+- `queue:alert-failed-jobs`, which emails the store notification address once per
+  incident. It alerts on the first increase after the backlog was zero, stays quiet while
+  the same backlog keeps growing, and sends a one-time recovery notice after
+  `failed_jobs` returns to zero. Both emails include the most common failure exception
+  and the affected queues and job classes; the recovery notice also includes when the
+  incident started and how long it lasted. Alert details are summarized from the newest
+  **Failed Jobs Sample Size** failures (default 500) so a very large backlog is not
+  loaded in full; the recovery notice notes when those incident details were sampled.
+
+Both require Laravel's scheduler to be running, normally via this cron entry on the host:
+
+```cron
+* * * * * cd /var/www/sodai && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 Retries can duplicate an email if the provider accepted it but the job failed afterward,
