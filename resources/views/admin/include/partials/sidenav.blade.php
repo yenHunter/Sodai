@@ -262,6 +262,14 @@
                         <span class="menu-text" data-lang="apps-file-manager">File Manager</span>
                     </a>
                 </li>
+                @if (auth('admin')->user()?->isSuperAdmin())
+                    <li class="side-nav-item">
+                        <a class="side-nav-link" href="{{ route('admin.system.queued-jobs.index') }}">
+                            <span class="menu-icon"><i data-lucide="list-checks"></i></span>
+                            <span class="menu-text">Queued Jobs</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
     </div>
