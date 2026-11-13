@@ -25,6 +25,32 @@ class SystemQueueTest extends TestCase
             ->assertSee('Pending');
     }
 
+    public function test_super_admin_can_filter_queued_jobs_by_queue(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordQueuedJob('default', 'App\\Mail\\Customer\\OrderConfirmationMail');
+        $this->recordQueuedJob('emails', 'App\\Mail\\Admin\\QueueBusyAlertMail');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.queued-jobs.index', ['queue' => 'emails']))
+            ->assertOk()
+            ->assertSee('QueueBusyAlertMail')
+            ->assertDontSee('OrderConfirmationMail');
+    }
+
+    public function test_super_admin_can_filter_queued_jobs_by_job_class(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordQueuedJob('default', 'App\\Mail\\Customer\\OrderConfirmationMail');
+        $this->recordQueuedJob('emails', 'App\\Mail\\Admin\\QueueBusyAlertMail');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.queued-jobs.index', ['job_class' => 'OrderConfirmationMail']))
+            ->assertOk()
+            ->assertSee('OrderConfirmationMail')
+            ->assertDontSee('QueueBusyAlertMail');
+    }
+
     public function test_non_super_admin_cannot_view_queued_jobs(): void
     {
         $admin = $this->createAdminWithPermissions(['admin.view']);
@@ -56,12 +82,14 @@ class SystemQueueTest extends TestCase
             ->assertRedirect(route('admin.login.view'));
     }
 
-    private function recordQueuedJob(): void
-    {
+    private function recordQueuedJob(
+        string $queue = 'default',
+        string $jobClass = 'App\\Mail\\Customer\\OrderConfirmationMail',
+    ): void {
         DB::table('jobs')->insert([
-            'queue' => 'default',
+            'queue' => $queue,
             'payload' => json_encode([
-                'displayName' => 'App\\Mail\\Customer\\OrderConfirmationMail',
+                'displayName' => $jobClass,
                 'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
             ]),
             'attempts' => 0,

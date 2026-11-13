@@ -3,18 +3,35 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SystemQueueController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         abort_unless(auth('admin')->user()?->isSuperAdmin(), 403);
 
+        $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
+        $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
+
         $jobs = DB::table('jobs')
+            ->when($queue !== '', fn ($query) => $query->where('queue', $queue))
+            ->when($jobClass !== '', fn ($query) => $query->where('payload', 'like', '%'.$jobClass.'%'))
             ->orderByDesc('id')
-            ->paginate(25);
+            ->paginate(25)
+            ->withQueryString();
+
+        $queues = DB::table('jobs')
+            ->select('queue')
+            ->distinct()
+            ->orderBy('queue')
+            ->pluck('queue');
+
+        if ($queue !== '' && ! $queues->contains($queue)) {
+            $queues = $queues->push($queue)->sort()->values();
+        }
 
         $jobs->getCollection()->transform(function ($job) {
             $payload = json_decode((string) $job->payload, true);
@@ -34,6 +51,11 @@ class SystemQueueController extends Controller
             return $job;
         });
 
-        return view('admin.system.queued-jobs.index', compact('jobs'));
+        return view('admin.system.queued-jobs.index', compact(
+            'jobs',
+            'queues',
+            'queue',
+            'jobClass',
+        ));
     }
 }
