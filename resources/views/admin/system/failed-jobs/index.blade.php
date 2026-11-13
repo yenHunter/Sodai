@@ -43,13 +43,17 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-xl-3 col-md-6">
-                    <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none"
-                        href="{{ route('admin.system.failed-jobs.index') }}">
+                    <a class="border rounded p-3 h-100 d-block text-reset text-decoration-none @if ($queue === '') border-primary bg-primary-subtle @endif"
+                        href="{{ route('admin.system.failed-jobs.index') }}"
+                        @if ($queue === '') aria-current="true" @endif>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="avatar-sm rounded bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center">
                                 <i class="fs-lg" data-lucide="circle-alert"></i>
                             </span>
                             <span class="text-muted">All Failed Jobs</span>
+                            @if ($queue === '')
+                                <span class="badge bg-primary ms-auto">Active</span>
+                            @endif
                         </div>
                         <div class="d-flex justify-content-between align-items-end gap-2">
                             <h3 class="mb-0">{{ number_format($totalFailedJobs) }}</h3>

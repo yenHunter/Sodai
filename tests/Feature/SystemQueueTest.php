@@ -74,6 +74,21 @@ class SystemQueueTest extends TestCase
             });
     }
 
+    public function test_all_failed_jobs_summary_card_is_active_without_queue_filter(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob('emails', 'App\\Jobs\\FirstJob');
+        $this->recordFailedJob('default', 'App\\Jobs\\SecondJob');
+
+        $response = $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index'))
+            ->assertOk()
+            ->assertSee('Active')
+            ->assertSee('aria-current="true"', false);
+
+        $this->assertSame(1, substr_count($response->getContent(), 'aria-current="true"'));
+    }
+
     public function test_active_queue_summary_card_is_highlighted(): void
     {
         $admin = $this->createSuperAdmin();
