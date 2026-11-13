@@ -89,11 +89,20 @@
                                                 <div
                                                     class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                                                     <h6 class="mb-0">Failure details</h6>
-                                                    <span class="text-muted fs-12 text-break">
-                                                        UUID: <code>{{ $job->uuid }}</code>
-                                                    </span>
+                                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                                        <span class="text-muted fs-12 text-break">
+                                                            UUID: <code>{{ $job->uuid }}</code>
+                                                        </span>
+                                                        <button class="btn btn-sm btn-light" type="button"
+                                                            data-copy-failure
+                                                            data-copy-target="failure-exception-{{ $job->id }}">
+                                                            <i class="fs-sm me-1" data-lucide="copy"></i>
+                                                            <span data-copy-label>Copy exception</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <pre class="mb-0 text-danger text-wrap text-break">{{ $job->exception }}</pre>
+                                                <pre class="mb-0 text-danger text-wrap text-break"
+                                                    id="failure-exception-{{ $job->id }}">{{ $job->exception }}</pre>
                                             </div>
                                         </td>
                                     </tr>
@@ -132,4 +141,46 @@
 @endsection
 
 @section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-copy-failure]').forEach(function(button) {
+                button.addEventListener('click', async function() {
+                    const target = document.getElementById(button.dataset.copyTarget)
+                    const label = button.querySelector('[data-copy-label]')
+
+                    if (!target) {
+                        return
+                    }
+
+                    try {
+                        if (navigator.clipboard && window.isSecureContext) {
+                            await navigator.clipboard.writeText(target.textContent)
+                        } else {
+                            const textarea = document.createElement('textarea')
+                            textarea.value = target.textContent
+                            textarea.setAttribute('readonly', '')
+                            textarea.style.position = 'fixed'
+                            textarea.style.opacity = '0'
+                            document.body.appendChild(textarea)
+                            textarea.select()
+
+                            if (!document.execCommand('copy')) {
+                                throw new Error('Copy command failed')
+                            }
+
+                            textarea.remove()
+                        }
+
+                        label.textContent = 'Copied'
+                    } catch (error) {
+                        label.textContent = 'Copy failed'
+                    }
+
+                    setTimeout(function() {
+                        label.textContent = 'Copy exception'
+                    }, 2000)
+                })
+            })
+        })
+    </script>
 @endsection

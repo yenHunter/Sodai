@@ -40,6 +40,10 @@ class SystemQueueTest extends TestCase
             ->assertSee('RuntimeException: SMTP connection failed')
             ->assertSee('View details')
             ->assertSee('failure-details-1', false)
+            ->assertSee('data-copy-failure', false)
+            ->assertSee('data-copy-target="failure-exception-1"', false)
+            ->assertSee('id="failure-exception-1"', false)
+            ->assertSee('Copy exception')
             ->assertSee('Stack trace: #0 {main}')
             ->assertSee(route('admin.system.queued-jobs.index'), false);
     }
