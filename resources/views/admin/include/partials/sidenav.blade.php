@@ -266,7 +266,7 @@
                     <li class="side-nav-item">
                         <a class="side-nav-link" href="{{ route('admin.system.queued-jobs.index') }}">
                             <span class="menu-icon"><i data-lucide="list-checks"></i></span>
-                            <span class="menu-text">Queued Jobs</span>
+                            <span class="menu-text">Jobs</span>
                         </a>
                     </li>
                 @endif

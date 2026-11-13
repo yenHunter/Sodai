@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,9 @@ class SystemQueueController extends Controller
     {
         $this->ensureSuperAdmin();
 
-        $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
-        $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
-        $status = strtolower(trim((string) $request->query('status', '')));
+        $queue = $this->queryString($request, 'queue', 100);
+        $jobClass = $this->queryString($request, 'job_class', 255);
+        $status = strtolower($this->queryString($request, 'status', 20));
 
         if (! in_array($status, ['pending', 'delayed', 'reserved'], true)) {
             $status = '';
@@ -38,7 +39,7 @@ class SystemQueueController extends Controller
                 ->whereNull('reserved_at')
                 ->where('available_at', '<=', $now))
             ->orderByDesc('id')
-            ->paginate(25)
+            ->paginate(25, ['*'], 'queued_page')
             ->withQueryString();
 
         $queues = DB::table('jobs')
@@ -51,46 +52,17 @@ class SystemQueueController extends Controller
             $queues = $queues->push($queue)->sort()->values();
         }
 
-        $jobs->getCollection()->transform(function ($job) {
-            $payload = json_decode((string) $job->payload, true);
-            $class = is_array($payload) ? ($payload['displayName'] ?? $payload['job'] ?? null) : null;
+        $this->transformQueuedJobs($jobs);
 
-            $job->job_class = is_string($class) && trim($class) !== ''
-                ? trim($class)
-                : 'Unknown job';
-            $job->status = $job->reserved_at
-                ? 'Reserved'
-                : ($job->available_at > now()->timestamp ? 'Delayed' : 'Pending');
-            $job->available_at_display = Carbon::createFromTimestamp($job->available_at)
-                ->format('d M Y, H:i');
-            $job->created_at_display = Carbon::createFromTimestamp($job->created_at)
-                ->format('d M Y, H:i');
-
-            return $job;
-        });
-
-        return view('admin.system.queued-jobs.index', compact(
-            'jobs',
-            'queues',
-            'queue',
-            'jobClass',
-            'status',
-        ));
-    }
-
-    public function failed(Request $request)
-    {
-        $this->ensureSuperAdmin();
-
-        $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
-        $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
+        $failedQueue = $this->queryString($request, 'failed_queue', 100);
+        $failedJobClass = $this->queryString($request, 'failed_job_class', 255);
 
         $failedJobs = DB::table('failed_jobs')
-            ->when($queue !== '', fn ($query) => $query->where('queue', $queue))
-            ->when($jobClass !== '', fn ($query) => $query->where('payload', 'like', '%'.$jobClass.'%'))
+            ->when($failedQueue !== '', fn ($query) => $query->where('queue', $failedQueue))
+            ->when($failedJobClass !== '', fn ($query) => $query->where('payload', 'like', '%'.$failedJobClass.'%'))
             ->orderByDesc('failed_at')
             ->orderByDesc('id')
-            ->paginate(25)
+            ->paginate(25, ['*'], 'failed_page')
             ->withQueryString();
 
         $queueSummary = DB::table('failed_jobs')
@@ -103,47 +75,67 @@ class SystemQueueController extends Controller
 
         $totalFailedJobs = $queueSummary->sum('total');
 
-        $queues = DB::table('failed_jobs')
+        $failedQueues = DB::table('failed_jobs')
             ->select('queue')
             ->distinct()
             ->orderBy('queue')
             ->pluck('queue');
 
-        if ($queue !== '' && ! $queues->contains($queue)) {
-            $queues = $queues->push($queue)->sort()->values();
+        if ($failedQueue !== '' && ! $failedQueues->contains($failedQueue)) {
+            $failedQueues = $failedQueues->push($failedQueue)->sort()->values();
         }
 
-        $failedJobs->getCollection()->transform(function ($job) {
-            $payload = json_decode((string) $job->payload, true);
-            $class = is_array($payload) ? ($payload['displayName'] ?? $payload['job'] ?? null) : null;
-
-            $job->job_class = is_string($class) && trim($class) !== ''
-                ? trim($class)
-                : 'Unknown job';
-
-            $exceptionFirstLine = preg_split('/\R/u', trim((string) $job->exception), 2)[0] ?? '';
-            $job->exception_summary = Str::limit(trim($exceptionFirstLine), 180) ?: 'Unknown exception';
-            $job->failed_at_display = $job->failed_at
-                ? Carbon::parse($job->failed_at)->format('d M Y, H:i')
-                : '—';
-
-            return $job;
-        });
+        $this->transformFailedJobs($failedJobs);
 
         $failedJobFilters = array_filter([
-            'queue' => $queue,
-            'job_class' => $jobClass,
+            'tab' => 'failed',
+            'failed_queue' => $failedQueue,
+            'failed_job_class' => $failedJobClass,
         ], fn ($value) => $value !== '');
 
-        return view('admin.system.failed-jobs.index', compact(
-            'failedJobs',
+        $activeTab = $request->query('tab') === 'failed' ? 'failed' : 'queued';
+
+        return view('admin.system.jobs.index', compact(
+            'jobs',
             'queues',
             'queue',
             'jobClass',
+            'status',
+            'failedJobs',
+            'failedQueues',
+            'failedQueue',
+            'failedJobClass',
             'failedJobFilters',
             'queueSummary',
             'totalFailedJobs',
+            'activeTab',
         ));
+    }
+
+    public function failed(Request $request): RedirectResponse
+    {
+        $this->ensureSuperAdmin();
+
+        $params = ['tab' => 'failed'];
+
+        $queue = $this->queryString($request, 'queue', 100);
+        $jobClass = $this->queryString($request, 'job_class', 255);
+
+        if ($queue !== '') {
+            $params['failed_queue'] = $queue;
+        }
+
+        if ($jobClass !== '') {
+            $params['failed_job_class'] = $jobClass;
+        }
+
+        $page = $request->query('page');
+
+        if (is_numeric($page) && (int) $page > 0) {
+            $params['failed_page'] = (int) $page;
+        }
+
+        return redirect()->route('admin.system.queued-jobs.index', $params);
     }
 
     public function bulkRetry(Request $request)
@@ -222,11 +214,52 @@ class SystemQueueController extends Controller
             ->with('success', 'Failed job queued for retry.');
     }
 
+    private function transformQueuedJobs(LengthAwarePaginator $jobs): void
+    {
+        $jobs->getCollection()->transform(function ($job) {
+            $payload = json_decode((string) $job->payload, true);
+            $class = is_array($payload) ? ($payload['displayName'] ?? $payload['job'] ?? null) : null;
+
+            $job->job_class = is_string($class) && trim($class) !== ''
+                ? trim($class)
+                : 'Unknown job';
+            $job->status = $job->reserved_at
+                ? 'Reserved'
+                : ($job->available_at > now()->timestamp ? 'Delayed' : 'Pending');
+            $job->available_at_display = Carbon::createFromTimestamp($job->available_at)
+                ->format('d M Y, H:i');
+            $job->created_at_display = Carbon::createFromTimestamp($job->created_at)
+                ->format('d M Y, H:i');
+
+            return $job;
+        });
+    }
+
+    private function transformFailedJobs(LengthAwarePaginator $failedJobs): void
+    {
+        $failedJobs->getCollection()->transform(function ($job) {
+            $payload = json_decode((string) $job->payload, true);
+            $class = is_array($payload) ? ($payload['displayName'] ?? $payload['job'] ?? null) : null;
+
+            $job->job_class = is_string($class) && trim($class) !== ''
+                ? trim($class)
+                : 'Unknown job';
+
+            $exceptionFirstLine = preg_split('/\R/u', trim((string) $job->exception), 2)[0] ?? '';
+            $job->exception_summary = Str::limit(trim($exceptionFirstLine), 180) ?: 'Unknown exception';
+            $job->failed_at_display = $job->failed_at
+                ? Carbon::parse($job->failed_at)->format('d M Y, H:i')
+                : '—';
+
+            return $job;
+        });
+    }
+
     private function failedJobsRedirect(Request $request): RedirectResponse
     {
-        $filters = [];
+        $filters = ['tab' => 'failed'];
 
-        foreach (['queue' => 100, 'job_class' => 255] as $key => $limit) {
+        foreach (['failed_queue' => 100, 'failed_job_class' => 255] as $key => $limit) {
             $value = $request->query($key);
 
             if (is_string($value) && trim($value) !== '') {
@@ -234,7 +267,14 @@ class SystemQueueController extends Controller
             }
         }
 
-        return redirect()->route('admin.system.failed-jobs.index', $filters);
+        return redirect()->route('admin.system.queued-jobs.index', $filters);
+    }
+
+    private function queryString(Request $request, string $key, int $limit): string
+    {
+        $value = $request->query($key);
+
+        return is_string($value) ? mb_substr(trim($value), 0, $limit) : '';
     }
 
     private function ensureSuperAdmin(): void

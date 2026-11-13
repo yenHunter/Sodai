@@ -22,10 +22,12 @@ class SystemQueueTest extends TestCase
             ->get(route('admin.system.queued-jobs.index'))
             ->assertOk()
             ->assertSee('Queued Jobs')
+            ->assertSee('Failed Jobs')
+            ->assertSee('id="queued-jobs-pane"', false)
+            ->assertSee('id="failed-jobs-pane"', false)
             ->assertSee('default')
             ->assertSee('OrderConfirmationMail')
-            ->assertSee('Pending')
-            ->assertSee(route('admin.system.failed-jobs.index'), false);
+            ->assertSee('Pending');
     }
 
     public function test_super_admin_can_view_failed_jobs(): void
@@ -34,7 +36,7 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob();
 
         $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index'))
+            ->get(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertOk()
             ->assertSee('Failed Jobs')
             ->assertSee('emails')
@@ -49,8 +51,25 @@ class SystemQueueTest extends TestCase
             ->assertSee('bulkRetryForm', false)
             ->assertSee('data-failed-job-checkbox', false)
             ->assertSee('Retry selected')
-            ->assertSee('Stack trace: #0 {main}')
-            ->assertSee(route('admin.system.queued-jobs.index'), false);
+            ->assertSee('Stack trace: #0 {main}');
+    }
+
+    public function test_legacy_failed_jobs_route_redirects_to_combined_page(): void
+    {
+        $admin = $this->createSuperAdmin();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.failed-jobs.index', [
+                'queue' => 'emails',
+                'job_class' => 'PaymentConfirmationMail',
+                'page' => 2,
+            ]))
+            ->assertRedirect(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_queue' => 'emails',
+                'failed_job_class' => 'PaymentConfirmationMail',
+                'failed_page' => 2,
+            ]));
     }
 
     public function test_failed_jobs_summary_counts_jobs_by_queue(): void
@@ -61,13 +80,19 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob('default', 'App\\Jobs\\ThirdJob');
 
         $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index'))
+            ->get(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertOk()
             ->assertSee('Failed Jobs by Queue')
             ->assertSee('All Failed Jobs')
-            ->assertSee(route('admin.system.failed-jobs.index'), false)
-            ->assertSee(route('admin.system.failed-jobs.index', ['queue' => 'emails']), false)
-            ->assertSee(route('admin.system.failed-jobs.index', ['queue' => 'default']), false)
+            ->assertSee(e(route('admin.system.queued-jobs.index', ['tab' => 'failed'])), false)
+            ->assertSee(e(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_queue' => 'emails',
+            ])), false)
+            ->assertSee(e(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_queue' => 'default',
+            ])), false)
             ->assertViewHas('totalFailedJobs', 3)
             ->assertViewHas('queueSummary', function ($summary) {
                 return $summary->pluck('total', 'queue')->all() === ['emails' => 2, 'default' => 1];
@@ -81,7 +106,7 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob('default', 'App\\Jobs\\SecondJob');
 
         $response = $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index'))
+            ->get(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertOk()
             ->assertSee('Active')
             ->assertSee('aria-current="true"', false);
@@ -96,7 +121,10 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob('default', 'App\\Jobs\\SecondJob');
 
         $response = $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index', ['queue' => 'emails']))
+            ->get(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_queue' => 'emails',
+            ]))
             ->assertOk()
             ->assertSee('Active')
             ->assertSee('aria-current="true"', false);
@@ -111,7 +139,10 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob('default', 'App\\Mail\\Admin\\QueueBusyAlertMail');
 
         $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index', ['queue' => 'default']))
+            ->get(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_queue' => 'default',
+            ]))
             ->assertOk()
             ->assertSee('QueueBusyAlertMail')
             ->assertDontSee('PaymentConfirmationMail');
@@ -124,7 +155,10 @@ class SystemQueueTest extends TestCase
         $this->recordFailedJob('default', 'App\\Mail\\Admin\\QueueBusyAlertMail');
 
         $this->actingAsAdmin($admin)
-            ->get(route('admin.system.failed-jobs.index', ['job_class' => 'PaymentConfirmationMail']))
+            ->get(route('admin.system.queued-jobs.index', [
+                'tab' => 'failed',
+                'failed_job_class' => 'PaymentConfirmationMail',
+            ]))
             ->assertOk()
             ->assertSee('PaymentConfirmationMail')
             ->assertDontSee('QueueBusyAlertMail');
@@ -147,7 +181,7 @@ class SystemQueueTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.system.failed-jobs.retry', $uuid))
-            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertRedirect(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertSessionHas('success', 'Failed job queued for retry.');
 
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $uuid]);
@@ -158,7 +192,11 @@ class SystemQueueTest extends TestCase
         $admin = $this->createSuperAdmin();
         $this->recordFailedJob();
         $uuid = (string) DB::table('failed_jobs')->value('uuid');
-        $filters = ['queue' => 'emails', 'job_class' => 'PaymentConfirmationMail'];
+        $filters = [
+            'tab' => 'failed',
+            'failed_queue' => 'emails',
+            'failed_job_class' => 'PaymentConfirmationMail',
+        ];
 
         Artisan::shouldReceive('call')
             ->once()
@@ -171,7 +209,7 @@ class SystemQueueTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.system.failed-jobs.retry', ['uuid' => $uuid] + $filters))
-            ->assertRedirect(route('admin.system.failed-jobs.index', $filters))
+            ->assertRedirect(route('admin.system.queued-jobs.index', $filters))
             ->assertSessionHas('success', 'Failed job queued for retry.');
     }
 
@@ -190,11 +228,15 @@ class SystemQueueTest extends TestCase
                 return 0;
             });
 
-        $filters = ['queue' => 'emails', 'job_class' => 'PaymentConfirmationMail'];
+        $filters = [
+            'tab' => 'failed',
+            'failed_queue' => 'emails',
+            'failed_job_class' => 'PaymentConfirmationMail',
+        ];
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.system.failed-jobs.bulk-retry', $filters), ['ids' => [$firstUuid, $secondUuid]])
-            ->assertRedirect(route('admin.system.failed-jobs.index', $filters))
+            ->assertRedirect(route('admin.system.queued-jobs.index', $filters))
             ->assertSessionHas('success', '2 failed jobs queued for retry.');
 
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $firstUuid]);
@@ -218,7 +260,7 @@ class SystemQueueTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.system.failed-jobs.bulk-retry'), ['ids' => [$firstUuid, $secondUuid]])
-            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertRedirect(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertSessionHas('warning', '1 failed job queued for retry; 1 could not be queued.');
 
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $firstUuid]);
@@ -258,7 +300,7 @@ class SystemQueueTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.system.failed-jobs.retry', $uuid))
-            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertRedirect(route('admin.system.queued-jobs.index', ['tab' => 'failed']))
             ->assertSessionHas('error', 'The failed job could not be queued for retry.');
 
         $this->assertDatabaseHas('failed_jobs', ['uuid' => $uuid]);

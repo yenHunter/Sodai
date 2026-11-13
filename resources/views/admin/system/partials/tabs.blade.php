@@ -1,16 +1,16 @@
-<ul class="nav nav-tabs nav-bordered mb-3">
-    <li class="nav-item">
-        <a class="nav-link @if (request()->routeIs('admin.system.queued-jobs.*')) active @endif"
-            href="{{ route('admin.system.queued-jobs.index') }}"
-            @if (request()->routeIs('admin.system.queued-jobs.*')) aria-current="page" @endif>
-            <i class="fs-sm me-1" data-lucide="list-checks"></i> Queued Jobs
+<ul class="nav nav-tabs mb-3" id="systemJobsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @if ($activeTab === 'queued') active @endif" id="queued-jobs-tab"
+            data-bs-toggle="tab" href="#queued-jobs-pane" role="tab" aria-controls="queued-jobs-pane"
+            aria-selected="{{ $activeTab === 'queued' ? 'true' : 'false' }}">
+            Queued Jobs
         </a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link @if (request()->routeIs('admin.system.failed-jobs.*')) active @endif"
-            href="{{ route('admin.system.failed-jobs.index') }}"
-            @if (request()->routeIs('admin.system.failed-jobs.*')) aria-current="page" @endif>
-            <i class="fs-sm me-1" data-lucide="circle-alert"></i> Failed Jobs
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @if ($activeTab === 'failed') active @endif" id="failed-jobs-tab"
+            data-bs-toggle="tab" href="#failed-jobs-pane" role="tab" aria-controls="failed-jobs-pane"
+            aria-selected="{{ $activeTab === 'failed' ? 'true' : 'false' }}">
+            Failed Jobs
         </a>
     </li>
 </ul>
