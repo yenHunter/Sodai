@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Tests\TestCase;
 use Tests\Traits\AdminTestHelpers;
 
@@ -72,6 +74,60 @@ class SystemQueueTest extends TestCase
             ->assertOk()
             ->assertSee('PaymentConfirmationMail')
             ->assertDontSee('QueueBusyAlertMail');
+    }
+
+    public function test_super_admin_can_retry_a_failed_job(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob();
+        $uuid = (string) DB::table('failed_jobs')->value('uuid');
+
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:retry', ['id' => [$uuid]])
+            ->andReturnUsing(function () use ($uuid) {
+                DB::table('failed_jobs')->where('uuid', $uuid)->delete();
+
+                return 0;
+            });
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.retry', $uuid))
+            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertSessionHas('success', 'Failed job queued for retry.');
+
+        $this->assertDatabaseMissing('failed_jobs', ['uuid' => $uuid]);
+    }
+
+    public function test_retry_failure_keeps_the_failed_job(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordFailedJob();
+        $uuid = (string) DB::table('failed_jobs')->value('uuid');
+
+        Artisan::shouldReceive('call')
+            ->once()
+            ->andThrow(new RuntimeException('Queue unavailable.'));
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.retry', $uuid))
+            ->assertRedirect(route('admin.system.failed-jobs.index'))
+            ->assertSessionHas('error', 'The failed job could not be queued for retry.');
+
+        $this->assertDatabaseHas('failed_jobs', ['uuid' => $uuid]);
+    }
+
+    public function test_non_super_admin_cannot_retry_a_failed_job(): void
+    {
+        $admin = $this->createAdminWithPermissions(['admin.view']);
+        $this->recordFailedJob();
+        $uuid = (string) DB::table('failed_jobs')->value('uuid');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.system.failed-jobs.retry', $uuid))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('failed_jobs', ['uuid' => $uuid]);
     }
 
     public function test_non_super_admin_cannot_view_failed_jobs(): void
@@ -177,6 +233,15 @@ class SystemQueueTest extends TestCase
     public function test_guest_is_redirected_from_failed_jobs(): void
     {
         $this->get(route('admin.system.failed-jobs.index'))
+            ->assertRedirect(route('admin.login.view'));
+    }
+
+    public function test_guest_is_redirected_when_retrying_a_failed_job(): void
+    {
+        $this->recordFailedJob();
+        $uuid = (string) DB::table('failed_jobs')->value('uuid');
+
+        $this->post(route('admin.system.failed-jobs.retry', $uuid))
             ->assertRedirect(route('admin.login.view'));
     }
 

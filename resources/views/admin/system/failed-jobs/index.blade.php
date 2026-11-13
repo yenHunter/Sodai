@@ -5,6 +5,20 @@
 
     @include('admin.system.partials.tabs')
 
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-3">
+            <i class="me-2" data-lucide="circle-check"></i>{{ session('success') }}
+            <button class="btn-close" data-bs-dismiss="alert" type="button"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-3">
+            <i class="me-2" data-lucide="triangle-alert"></i>{{ session('error') }}
+            <button class="btn-close" data-bs-dismiss="alert" type="button"></button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -57,6 +71,7 @@
                                     <th>Job</th>
                                     <th>Exception</th>
                                     <th width="150">Failed At</th>
+                                    <th width="100">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -82,9 +97,19 @@
                                             </div>
                                         </td>
                                         <td><span class="text-nowrap">{{ $job->failed_at_display }}</span></td>
+                                        <td>
+                                            <form action="{{ route('admin.system.failed-jobs.retry', $job->uuid) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('Retry this job? It will be pushed back onto the queue.')">
+                                                @csrf
+                                                <button class="btn btn-sm btn-primary text-nowrap" type="submit">
+                                                    <i class="fs-sm me-1" data-lucide="rotate-ccw"></i> Retry
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     <tr class="collapse" id="failure-details-{{ $job->id }}">
-                                        <td colspan="5" class="bg-light">
+                                        <td colspan="6" class="bg-light">
                                             <div class="p-2">
                                                 <div
                                                     class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
@@ -108,7 +133,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
+                                        <td colspan="6" class="text-center text-muted py-4">
                                             @if ($queue !== '' || $jobClass !== '')
                                                 No failed jobs match these filters.
                                             @else

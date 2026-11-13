@@ -281,6 +281,9 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     Route::prefix('system')->name('system.')->group(function () {
         Route::get('queued-jobs', [SystemQueueController::class, 'index'])->name('queued-jobs.index');
         Route::get('failed-jobs', [SystemQueueController::class, 'failed'])->name('failed-jobs.index');
+        Route::post('failed-jobs/{uuid}/retry', [SystemQueueController::class, 'retry'])
+            ->name('failed-jobs.retry')
+            ->whereUuid('uuid');
     });
 
     // ── Admin Management: super-admin only ──

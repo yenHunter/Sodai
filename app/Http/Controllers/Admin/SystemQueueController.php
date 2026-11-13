@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class SystemQueueController extends Controller
 {
@@ -123,6 +125,37 @@ class SystemQueueController extends Controller
             'queue',
             'jobClass',
         ));
+    }
+
+    public function retry(string $uuid)
+    {
+        $this->ensureSuperAdmin();
+
+        if (! DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'Failed job not found.');
+        }
+
+        try {
+            Artisan::call('queue:retry', ['id' => [$uuid]]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'The failed job could not be queued for retry.');
+        }
+
+        if (DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            return redirect()
+                ->route('admin.system.failed-jobs.index')
+                ->with('error', 'The failed job could not be queued for retry.');
+        }
+
+        return redirect()
+            ->route('admin.system.failed-jobs.index')
+            ->with('success', 'Failed job queued for retry.');
     }
 
     private function ensureSuperAdmin(): void
