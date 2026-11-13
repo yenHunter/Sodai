@@ -15,7 +15,7 @@
                 <div class="card-body">
                     <form action="{{ route('admin.system.queued-jobs.index') }}" method="GET"
                         class="row g-2 align-items-end mb-3">
-                        <div class="col-md-4">
+                        <div class="col-lg-3 col-md-6">
                             <label class="form-label fw-semibold" for="queueFilter">Queue</label>
                             <select class="form-select" id="queueFilter" name="queue">
                                 <option value="">All Queues</option>
@@ -26,7 +26,16 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label fw-semibold" for="statusFilter">Status</label>
+                            <select class="form-select" id="statusFilter" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="pending" @selected($status === 'pending')>Pending</option>
+                                <option value="delayed" @selected($status === 'delayed')>Delayed</option>
+                                <option value="reserved" @selected($status === 'reserved')>Reserved</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
                             <label class="form-label fw-semibold" for="jobClassFilter">Job Class</label>
                             <div class="app-search">
                                 <input type="search" class="form-control" id="jobClassFilter" name="job_class"
@@ -34,11 +43,11 @@
                                 <i class="app-search-icon text-muted" data-lucide="search"></i>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex gap-2">
+                        <div class="col-lg-3 col-md-6 d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fs-sm me-1" data-lucide="filter"></i> Filter
                             </button>
-                            @if ($queue !== '' || $jobClass !== '')
+                            @if ($queue !== '' || $jobClass !== '' || $status !== '')
                                 <a href="{{ route('admin.system.queued-jobs.index') }}" class="btn btn-light">
                                     Reset
                                 </a>
@@ -81,7 +90,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center text-muted py-4">
-                                            @if ($queue !== '' || $jobClass !== '')
+                                            @if ($queue !== '' || $jobClass !== '' || $status !== '')
                                                 No queued jobs match these filters.
                                             @else
                                                 No queued jobs found.

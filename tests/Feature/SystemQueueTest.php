@@ -51,6 +51,40 @@ class SystemQueueTest extends TestCase
             ->assertDontSee('QueueBusyAlertMail');
     }
 
+    public function test_super_admin_can_filter_queued_jobs_by_status(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $this->recordQueuedJob('default', 'App\\Jobs\\PendingJob', availableAt: now()->timestamp - 60);
+        $this->recordQueuedJob('default', 'App\\Jobs\\DelayedJob', availableAt: now()->timestamp + 3600);
+        $this->recordQueuedJob(
+            'default',
+            'App\\Jobs\\ReservedJob',
+            reservedAt: now()->timestamp,
+            availableAt: now()->timestamp,
+        );
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.queued-jobs.index', ['status' => 'pending']))
+            ->assertOk()
+            ->assertSee('PendingJob')
+            ->assertDontSee('DelayedJob')
+            ->assertDontSee('ReservedJob');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.queued-jobs.index', ['status' => 'delayed']))
+            ->assertOk()
+            ->assertSee('DelayedJob')
+            ->assertDontSee('PendingJob')
+            ->assertDontSee('ReservedJob');
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.system.queued-jobs.index', ['status' => 'reserved']))
+            ->assertOk()
+            ->assertSee('ReservedJob')
+            ->assertDontSee('PendingJob')
+            ->assertDontSee('DelayedJob');
+    }
+
     public function test_non_super_admin_cannot_view_queued_jobs(): void
     {
         $admin = $this->createAdminWithPermissions(['admin.view']);
@@ -85,6 +119,8 @@ class SystemQueueTest extends TestCase
     private function recordQueuedJob(
         string $queue = 'default',
         string $jobClass = 'App\\Mail\\Customer\\OrderConfirmationMail',
+        ?int $reservedAt = null,
+        ?int $availableAt = null,
     ): void {
         DB::table('jobs')->insert([
             'queue' => $queue,
@@ -93,8 +129,8 @@ class SystemQueueTest extends TestCase
                 'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
             ]),
             'attempts' => 0,
-            'reserved_at' => null,
-            'available_at' => now()->timestamp,
+            'reserved_at' => $reservedAt,
+            'available_at' => $availableAt ?? now()->timestamp,
             'created_at' => now()->timestamp,
         ]);
     }

@@ -15,10 +15,24 @@ class SystemQueueController extends Controller
 
         $queue = mb_substr(trim((string) $request->query('queue', '')), 0, 100);
         $jobClass = mb_substr(trim((string) $request->query('job_class', '')), 0, 255);
+        $status = strtolower(trim((string) $request->query('status', '')));
+
+        if (! in_array($status, ['pending', 'delayed', 'reserved'], true)) {
+            $status = '';
+        }
+
+        $now = now()->timestamp;
 
         $jobs = DB::table('jobs')
             ->when($queue !== '', fn ($query) => $query->where('queue', $queue))
             ->when($jobClass !== '', fn ($query) => $query->where('payload', 'like', '%'.$jobClass.'%'))
+            ->when($status === 'reserved', fn ($query) => $query->whereNotNull('reserved_at'))
+            ->when($status === 'delayed', fn ($query) => $query
+                ->whereNull('reserved_at')
+                ->where('available_at', '>', $now))
+            ->when($status === 'pending', fn ($query) => $query
+                ->whereNull('reserved_at')
+                ->where('available_at', '<=', $now))
             ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString();
@@ -56,6 +70,7 @@ class SystemQueueController extends Controller
             'queues',
             'queue',
             'jobClass',
+            'status',
         ));
     }
 }
