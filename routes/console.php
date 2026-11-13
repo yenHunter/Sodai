@@ -18,6 +18,7 @@ Schedule::command('reports:send-weekly-summary')->weeklyOn(1, '8:00');
 // emails when the backlog starts a new incident.
 Schedule::command('queue:monitor-depth')
     ->everyTenMinutes()
+    ->withoutOverlapping(10)
     ->appendOutputTo(storage_path('logs/queue-monitor.log'));
 
 Schedule::command('queue:alert-failed-jobs')
