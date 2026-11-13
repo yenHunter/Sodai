@@ -342,12 +342,14 @@ class SettingModuleTest extends TestCase
                 'queue_depth_threshold' => 250,
                 'queue_alert_cooldown_minutes' => 30,
                 'queue_monitor_queues' => 'database:default, database:emails',
+                'queue_failed_jobs_sample_size' => 250,
             ])
             ->assertRedirect(route('admin.settings.notification'));
 
         $this->assertEquals('250', (string) Setting::get('notification', 'queue_depth_threshold'));
         $this->assertEquals('30', (string) Setting::get('notification', 'queue_alert_cooldown_minutes'));
         $this->assertEquals('database:default, database:emails', Setting::get('notification', 'queue_monitor_queues'));
+        $this->assertEquals('250', (string) Setting::get('notification', 'queue_failed_jobs_sample_size'));
     }
 
     public function test_notification_settings_page_renders_saved_queue_alert_values(): void
@@ -357,6 +359,7 @@ class SettingModuleTest extends TestCase
             'queue_depth_threshold' => '250',
             'queue_alert_cooldown_minutes' => '30',
             'queue_monitor_queues' => 'database:default, database:emails',
+            'queue_failed_jobs_sample_size' => '175',
         ]);
 
         $admin = $this->createAdminWithPermissions(['setting.view']);
@@ -367,12 +370,15 @@ class SettingModuleTest extends TestCase
             ->assertSee('Queue Depth Threshold')
             ->assertSee('Queue Alert Cooldown (minutes)')
             ->assertSee('Monitored Queues')
+            ->assertSee('Failed Jobs Sample Size')
             ->assertSee('name="queue_depth_threshold"', false)
             ->assertSee('value="250"', false)
             ->assertSee('name="queue_alert_cooldown_minutes"', false)
             ->assertSee('value="30"', false)
             ->assertSee('name="queue_monitor_queues"', false)
-            ->assertSee('value="database:default, database:emails"', false);
+            ->assertSee('value="database:default, database:emails"', false)
+            ->assertSee('name="queue_failed_jobs_sample_size"', false)
+            ->assertSee('value="175"', false);
     }
 
     public function test_queue_alert_settings_must_be_positive(): void
@@ -392,6 +398,13 @@ class SettingModuleTest extends TestCase
                 'queue_alert_cooldown_minutes' => 0,
             ])
             ->assertSessionHasErrors('queue_alert_cooldown_minutes');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.notification.update'), [
+                'admin_alert_email' => 'alerts@sodai.com',
+                'queue_failed_jobs_sample_size' => 0,
+            ])
+            ->assertSessionHasErrors('queue_failed_jobs_sample_size');
     }
 
     public function test_monitored_queues_must_use_connection_queue_format(): void

@@ -30,8 +30,6 @@ class AlertFailedQueueJobsCommand extends Command
 
     private const INCIDENT_JOB_CLASSES_KEY = 'queue.failed_jobs.incident_job_classes';
 
-    private const SUMMARY_LIMIT = 500;
-
     public function handle(): int
     {
         $current = (int) DB::table('failed_jobs')->count();
@@ -96,9 +94,10 @@ class AlertFailedQueueJobsCommand extends Command
             return self::FAILURE;
         }
 
+        $sampleSize = max(1, (int) setting('notification', 'queue_failed_jobs_sample_size', 500));
         $failedJobs = DB::table('failed_jobs')
             ->orderByDesc('id')
-            ->limit(self::SUMMARY_LIMIT)
+            ->limit($sampleSize)
             ->get(['queue', 'payload', 'exception']);
         $topException = $this->mostCommonFailure($failedJobs->pluck('exception'));
         $queueSummary = $this->summarizeQueues($failedJobs);

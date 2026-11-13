@@ -81,6 +81,19 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="queue_failed_jobs_sample_size">
+                                Failed Jobs Sample Size
+                            </label>
+                            <input type="number" class="form-control" min="1" max="5000"
+                                id="queue_failed_jobs_sample_size" name="queue_failed_jobs_sample_size"
+                                value="{{ old('queue_failed_jobs_sample_size', $settings['queue_failed_jobs_sample_size'] ?? 500) }}">
+                            <div class="form-text">
+                                How many of the newest failed jobs are inspected for the alert summary
+                                (default 500).
+                            </div>
+                        </div>
+
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" role="switch" value="1"
                                 id="notify_new_order" name="notify_new_order"

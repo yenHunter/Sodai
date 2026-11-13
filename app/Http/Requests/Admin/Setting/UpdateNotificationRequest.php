@@ -29,6 +29,7 @@ class UpdateNotificationRequest extends FormRequest
                 'max:500',
                 'regex:/^\s*[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+(?:\s*,\s*[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+)*\s*$/',
             ],
+            'queue_failed_jobs_sample_size' => ['nullable', 'integer', 'min:1', 'max:5000'],
             'weekly_sales_summary_enabled' => ['nullable'],
             'monthly_sales_summary_enabled' => ['nullable'],
         ];

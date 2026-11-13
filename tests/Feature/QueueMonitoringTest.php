@@ -79,6 +79,25 @@ class QueueMonitoringTest extends TestCase
         });
     }
 
+    public function test_alert_uses_the_configured_failed_jobs_sample_size(): void
+    {
+        Setting::setMany('notification', [
+            'admin_alert_email' => 'ops@example.com',
+            'queue_failed_jobs_sample_size' => 2,
+        ]);
+
+        $this->recordFailedJob();
+        $this->recordFailedJob();
+        $this->recordFailedJob();
+
+        $this->artisan('queue:alert-failed-jobs')->assertExitCode(0);
+
+        Mail::assertSent(QueueFailedJobsAlertMail::class, function (QueueFailedJobsAlertMail $mail) {
+            return $mail->currentCount === 3
+                && $mail->summarizedCount === 2;
+        });
+    }
+
     public function test_alert_reports_the_most_common_failure_exception(): void
     {
         $this->recordFailedJob('SMTP timeout');
