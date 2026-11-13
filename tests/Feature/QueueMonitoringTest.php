@@ -429,6 +429,17 @@ class QueueMonitoringTest extends TestCase
         });
     }
 
+    public function test_queue_depth_monitor_requires_both_cli_options(): void
+    {
+        $this->artisan('queue:monitor-depth', [
+            '--connection' => 'database',
+        ])->assertExitCode(1);
+
+        $this->artisan('queue:monitor-depth', [
+            '--queue' => 'default',
+        ])->assertExitCode(1);
+    }
+
     public function test_queue_depth_monitor_clears_the_cooldown_below_the_threshold(): void
     {
         Setting::setMany('notification', [
