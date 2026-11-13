@@ -260,6 +260,22 @@ class QueueMonitoringTest extends TestCase
         );
     }
 
+    public function test_recovery_email_omits_sampling_note_for_a_fully_sampled_incident(): void
+    {
+        $html = (new QueueFailedJobsRecoveredMail(
+            previousCount: 3,
+            startedAt: Carbon::parse('2026-11-12 10:00:00'),
+            recoveredAt: Carbon::parse('2026-11-12 10:20:00'),
+            topException: 'SMTP timeout',
+            queueSummary: 'default (3)',
+            jobClassSummary: 'App\\Mail\\Customer\\OrderConfirmationMail (3)',
+            summarizedCount: 3,
+            incidentCount: 3,
+        ))->render();
+
+        $this->assertStringNotContainsString('Failure details are based on', $html);
+    }
+
     public function test_alert_email_renders_the_counts_and_recovery_commands(): void
     {
         $html = (new QueueFailedJobsAlertMail(
