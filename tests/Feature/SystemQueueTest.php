@@ -55,6 +55,7 @@ class SystemQueueTest extends TestCase
             ->assertSee('Retry selected')
             ->assertSee('system-jobs-table--failed', false)
             ->assertSee('jobs-sticky-column', false)
+            ->assertSee('jobs-sticky-actions', false)
             ->assertSee('name="tab" value="failed"', false)
             ->assertSee('Stack trace: #0 {main}');
     }

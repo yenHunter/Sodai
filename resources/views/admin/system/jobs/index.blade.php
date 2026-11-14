@@ -27,6 +27,26 @@
         .system-jobs-table thead .jobs-sticky-column {
             z-index: 2;
         }
+
+        .system-jobs-table .jobs-sticky-actions {
+            position: sticky;
+            right: 0;
+            z-index: 1;
+            background-color: var(--theme-secondary-bg, #fff);
+            border-left: 1px solid var(--theme-border-color, #e7e9eb);
+        }
+
+        .system-jobs-table thead .jobs-sticky-actions {
+            z-index: 2;
+        }
+
+        @media (max-width: 575.98px) {
+            .system-jobs-table--failed .jobs-sticky-column {
+                position: static;
+                border-right: 0;
+                background-color: transparent;
+            }
+        }
     </style>
 @endsection
 
@@ -319,7 +339,7 @@
                                             <th class="jobs-sticky-column">Job</th>
                                             <th>Exception</th>
                                             <th width="150">Failed At</th>
-                                            <th width="100">Actions</th>
+                                            <th class="jobs-sticky-actions" width="100">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -355,7 +375,7 @@
                                                 </td>
                                                 <td><span
                                                         class="text-nowrap">{{ $job->failed_at_display }}</span></td>
-                                                <td>
+                                                <td class="jobs-sticky-actions">
                                                     <form
                                                         action="{{ route('admin.system.failed-jobs.retry', ['uuid' => $job->uuid] + $failedJobFilters) }}"
                                                         method="POST"
