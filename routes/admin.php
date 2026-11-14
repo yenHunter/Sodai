@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SystemQueueController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Models\CmsPage;
 use Illuminate\Support\Facades\Route;
@@ -274,6 +275,16 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
 
         Route::get('/marketing', [SettingController::class, 'marketing'])->name('marketing');
         Route::post('/marketing', [SettingController::class, 'updateMarketing'])->name('marketing.update')->middleware('permission:setting.edit');
+    });
+
+    // ── System: super-admin only ──
+    Route::prefix('system')->name('system.')->group(function () {
+        Route::get('queued-jobs', [SystemQueueController::class, 'index'])->name('queued-jobs.index');
+        Route::get('failed-jobs', [SystemQueueController::class, 'failed'])->name('failed-jobs.index');
+        Route::post('failed-jobs/bulk-retry', [SystemQueueController::class, 'bulkRetry'])
+            ->name('failed-jobs.bulk-retry');
+        Route::post('failed-jobs/{uuid}/retry', [SystemQueueController::class, 'retry'])
+            ->name('failed-jobs.retry');
     });
 
     // ── Admin Management: super-admin only ──
