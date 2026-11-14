@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemQueueController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Models\CmsPage;
@@ -280,6 +281,7 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
     // ── System: super-admin only ──
     Route::prefix('system')->name('system.')->group(function () {
         Route::get('queued-jobs', [SystemQueueController::class, 'index'])->name('queued-jobs.index');
+        Route::get('logs', [SystemLogController::class, 'index'])->name('logs.index');
         Route::get('failed-jobs', [SystemQueueController::class, 'failed'])->name('failed-jobs.index');
         Route::post('failed-jobs/bulk-retry', [SystemQueueController::class, 'bulkRetry'])
             ->name('failed-jobs.bulk-retry');
