@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductCsvController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\ReportController;
@@ -87,6 +88,11 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::get('/tags/search', [ProductController::class, 'searchTags'])->name('tags.search');
             // Product search for Select2 BEFORE /{product} wildcard
             Route::get('/search', [ProductController::class, 'search'])->name('search');
+            // CSV bulk import/export BEFORE /{product} wildcard
+            Route::get('/import-export', [ProductCsvController::class, 'index'])->name('import-export');
+            Route::get('/export', [ProductCsvController::class, 'export'])->name('export');
+            Route::get('/import-template', [ProductCsvController::class, 'template'])->name('import-template');
+            Route::post('/import', [ProductCsvController::class, 'import'])->name('import')->middleware('permission:product.create');
             // Wildcard routes AFTER all static routes
             Route::get('/{product}', [ProductController::class, 'show'])->name('show');
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit')->middleware('permission:product.edit');
