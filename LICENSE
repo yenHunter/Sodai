@@ -1,0 +1,49 @@
+MIT License
+
+Copyright (c) 2026 Firoz Ebna Jobaier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+THIRD-PARTY ASSETS ARE NOT COVERED BY THIS LICENSE
+
+This license applies to Sodai's own source code: the application code under
+app/, the routes, the database migrations and seeders, the tests, the deploy
+scripts, and the project documentation. It does not apply to third-party
+templates, libraries, fonts or media bundled in this repository or installed
+through Composer or npm. Those remain under their own licenses and copyright,
+and nothing here grants you rights to them.
+
+In particular, this repository contains the source of two commercially
+licensed ThemeForest templates, included so the application can be run and
+reviewed as a complete product:
+
+  - UBold - Admin & Dashboard Template, by Coderthemes
+    (admin panel: resources/views/admin/, resources/js/, resources/scss/,
+    package.json)
+  - Ekka - Ecommerce HTML Template, by ashishmaraviya
+    (storefront: public/visitor/)
+
+Neither template may be redistributed, sublicensed or reused outside the terms
+of the ThemeForest license under which it was obtained. If you fork or reuse
+this repository, you are responsible for obtaining your own license for those
+templates, or for removing and replacing their files.
+
+See THIRD-PARTY-NOTICES.md for the audit and the components identified.
