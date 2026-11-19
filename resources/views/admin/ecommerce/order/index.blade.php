@@ -137,7 +137,13 @@
                                 </a>
                             @endif
                         </div>
-                        <div>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-light"
+                                href="{{ route('admin.ecommerce.order.export', request()->only(['search', 'status', 'date_from', 'date_to'])) }}"
+                                title="Exports the orders matching the current filters as CSV">
+                                <i class="fs-sm me-2" data-lucide="download"></i>
+                                Export CSV
+                            </a>
                             @admincan('order.create')
                                 <a class="btn btn-primary" href="{{ route('admin.ecommerce.order.create') }}">
                                     <i class="fs-sm me-2" data-lucide="plus"></i>

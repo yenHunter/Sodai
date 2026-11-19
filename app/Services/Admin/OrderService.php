@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\Shared\PricingService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -386,6 +387,19 @@ class OrderService
     {
         $query = Order::with('user')->withCount('items');
 
+        $this->applyIndexFilters($query, $filters);
+
+        return $query->latest()->paginate(15)->withQueryString();
+    }
+
+    /**
+     * Applies the orders index filters (search, status, date range) to a query.
+     * The index page and its CSV export both call this so the two can't drift.
+     *
+     * @param  array{search?: string|null, status?: string|null, date_from?: string|null, date_to?: string|null}  $filters
+     */
+    public function applyIndexFilters(Builder $query, array $filters): Builder
+    {
         if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
@@ -402,7 +416,7 @@ class OrderService
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
-        return $query->latest()->paginate(15)->withQueryString();
+        return $query;
     }
 
     public function getOrderStats(): array

@@ -114,6 +114,8 @@ Route::middleware(['auth.admin', 'prevent.back.history'])->group(function () {
             Route::post('/customers/quick-create', [OrderController::class, 'quickCreateCustomer'])->name('customers.quick-create')->middleware('permission:order.create');
             Route::get('/customers/{customer}/address', [OrderController::class, 'getCustomerAddress'])->name('customers.address');
             Route::get('/products/search', [OrderController::class, 'searchProducts'])->name('products.search');
+            // CSV export of the filtered index BEFORE the {order} wildcard
+            Route::get('/export', [OrderController::class, 'export'])->name('export');
 
             Route::get('/preview-shipping', [OrderController::class, 'previewShippingCharge'])->name('preview-shipping');
             Route::get('/preview-tax', [OrderController::class, 'previewTax'])->name('preview-tax');
