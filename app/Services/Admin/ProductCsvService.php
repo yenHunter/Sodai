@@ -60,16 +60,22 @@ class ProductCsvService
     // ─────────────────────────────────────────────
 
     /**
-     * Writes the full catalog (products + variants) to an open stream.
-     * Chunked so a large catalog does not load entirely into memory.
+     * Writes the catalog (products + variants) to an open stream. Chunked so a
+     * large catalog does not load entirely into memory. Passing $filters applies
+     * the same search/category/status filters as the products index page.
+     *
+     * @param  array{search?: string|null, category_id?: int|string|null, status?: string|null}  $filters
      */
-    public function writeExport($handle): void
+    public function writeExport($handle, array $filters = []): void
     {
         $this->writeHeader($handle);
 
-        Product::query()
-            ->with(['category.parent', 'brand', 'tags', 'variants.optionValues.option'])
-            ->orderBy('products.id')
+        $query = Product::query()
+            ->with(['category.parent', 'brand', 'tags', 'variants.optionValues.option']);
+
+        $this->productService->applyIndexFilters($query, $filters);
+
+        $query->orderBy('products.id')
             ->chunk(200, function ($products) use ($handle) {
                 foreach ($products as $product) {
                     $variants = $product->variants

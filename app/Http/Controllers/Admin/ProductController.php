@@ -45,30 +45,7 @@ class ProductController extends Controller
                 'total_stock'
             );
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', "%{$search}%"));
-            });
-        }
-
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        if ($status = $request->input('status')) {
-            switch ($status) {
-                case 'active':
-                    $query->where('is_active', true)->where('total_stock', '>', 0);
-                    break;
-                case 'inactive':
-                    $query->where('is_active', false);
-                    break;
-                case 'out_of_stock':
-                    $query->where('is_active', true)->where('total_stock', '<=', 0);
-                    break;
-            }
-        }
+        $this->productService->applyIndexFilters($query, $request->only(['search', 'category_id', 'status']));
 
         $products = $query->latest()->paginate(15)->withQueryString();
         $categories = $this->productService->getAssignableCategories();

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -49,6 +50,58 @@ class ProductCsvModuleTest extends TestCase
         $this->assertStringContainsString('product_name,category,brand', $csv);
         $this->assertStringContainsString('Exported Widget', $csv);
         $this->assertStringContainsString($product->defaultVariant->sku, $csv);
+    }
+
+    public function test_export_honours_the_product_index_filters(): void
+    {
+        $admin = $this->createAdminWithPermissions(['product.view']);
+        $apparel = Category::factory()->create(['name' => 'Apparel']);
+        $home = Category::factory()->create(['name' => 'Home']);
+
+        Product::factory()->create(['name' => 'Alpha Tee', 'category_id' => $apparel->id, 'is_active' => true]);
+        Product::factory()->create(['name' => 'Beta Mug', 'category_id' => $home->id, 'is_active' => false]);
+
+        $csv = $this->exportCsv($admin, ['search' => 'Alpha']);
+        $this->assertStringContainsString('Alpha Tee', $csv);
+        $this->assertStringNotContainsString('Beta Mug', $csv);
+
+        $csv = $this->exportCsv($admin, ['category_id' => $home->id]);
+        $this->assertStringContainsString('Beta Mug', $csv);
+        $this->assertStringNotContainsString('Alpha Tee', $csv);
+
+        $csv = $this->exportCsv($admin, ['status' => 'inactive']);
+        $this->assertStringContainsString('Beta Mug', $csv);
+        $this->assertStringNotContainsString('Alpha Tee', $csv);
+
+        // A filtered export keeps the shared column set, so it stays re-importable.
+        $this->assertStringContainsString(implode(',', ProductCsvService::COLUMNS), $csv);
+    }
+
+    public function test_filtered_export_can_be_reimported_without_duplicates(): void
+    {
+        $admin = $this->createAdminWithPermissions(['product.view', 'product.create']);
+        $category = Category::factory()->create(['name' => 'Apparel']);
+        Product::factory()->create(['name' => 'Round Trip Tee', 'category_id' => $category->id]);
+
+        $csv = $this->exportCsv($admin, ['search' => 'Round Trip']);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.ecommerce.product.import'), [
+                'file' => UploadedFile::fake()->createWithContent('products.csv', $csv),
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertSame(1, Product::where('name', 'Round Trip Tee')->count());
+    }
+
+    public function test_products_index_export_link_keeps_the_current_search(): void
+    {
+        $admin = $this->createAdminWithPermissions(['product.view']);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.ecommerce.product.index', ['search' => 'Widget']))
+            ->assertOk()
+            ->assertSee(route('admin.ecommerce.product.export', ['search' => 'Widget']), false);
     }
 
     public function test_admin_can_download_import_template(): void
@@ -188,6 +241,19 @@ class ProductCsvModuleTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseMissing('products', ['name' => 'Blocked Product']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function exportCsv(Admin $admin, array $filters = []): string
+    {
+        $response = $this->actingAsAdmin($admin)
+            ->get(route('admin.ecommerce.product.export', $filters));
+
+        $response->assertOk();
+
+        return $response->streamedContent();
     }
 
     /**

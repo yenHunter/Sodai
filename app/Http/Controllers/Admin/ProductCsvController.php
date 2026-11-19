@@ -19,11 +19,14 @@ class ProductCsvController extends Controller
         ]);
     }
 
-    public function export()
+    public function export(Request $request)
     {
+        $filters = $request->only(['search', 'category_id', 'status']);
+        $isFiltered = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
+
         return $this->csvDownload(
-            'products_'.now()->format('Y-m-d_His').'.csv',
-            fn ($handle) => $this->csvService->writeExport($handle)
+            ($isFiltered ? 'products-filtered_' : 'products_').now()->format('Y-m-d_His').'.csv',
+            fn ($handle) => $this->csvService->writeExport($handle, $filters)
         );
     }
 
