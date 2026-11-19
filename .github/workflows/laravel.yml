@@ -12,10 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
+  # Style and formatting only: no database, no build, so it reports in seconds
+  # and gives the fastest signal on a pull request.
+  static:
+    name: Static checks
     runs-on: ubuntu-latest
 
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +27,78 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
+          extensions: mbstring, dom, fileinfo, mysql
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Check Code Style (Pint)
+        run: vendor/bin/pint --test
+
+  # Front-end build on its own so a Vite/Sass failure is not buried inside the
+  # PHP test log, and both the tests and browser jobs can rely on it passing.
+  assets:
+    name: Assets
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build Frontend Assets
+        run: npm run build
+
+      - name: Verify Build Output
+        run: test -f public/build/manifest.json
+
+  tests:
+    name: Tests (${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The lockfile requires PHP 8.3+, so 8.2 cannot run: laravel/framework 13
+        # (^8.3), phpunit/phpunit 12 (>=8.3), intervention/image 4 (^8.3) and
+        # spatie/laravel-permission 8 (^8.3) all refuse to install on 8.2 even
+        # though composer.json still declares "^8.2". Add "8.2" to this list once
+        # those constraints allow it; composer.json should then match too.
+        php: ["8.3"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
           extensions: mbstring, dom, fileinfo, mysql
           coverage: none
 
@@ -76,9 +151,6 @@ jobs:
           DB_DATABASE: database/database.sqlite
         run: php artisan migrate --force
 
-      - name: Check Code Style (Pint)
-        run: vendor/bin/pint --test
-
       - name: Run Tests
         env:
           DB_CONNECTION: sqlite
@@ -93,7 +165,10 @@ jobs:
           path: storage/logs/*.log
           if-no-files-found: ignore
 
-  e2e:
+  # Browser tests keep their own job: they need a seeded database, a running
+  # app and Playwright, which would make the unit/integration job much slower.
+  browser:
+    name: Browser tests
     runs-on: ubuntu-latest
 
     timeout-minutes: 20
@@ -184,3 +259,38 @@ jobs:
             test-results/
           retention-days: 7
           if-no-files-found: ignore
+
+  # Dependency advisories, kept blocking so a vulnerable package fails the pull
+  # request instead of waiting to be noticed.
+  advisory:
+    name: Advisory scan
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, dom, fileinfo
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Scan for known advisories
+        run: composer audit --locked --no-interaction

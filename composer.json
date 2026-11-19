@@ -1,12 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "yenhunter/sodai",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Sodai is a single-vendor e-commerce platform with a separate admin panel and customer storefront, built with Laravel.",
+    "keywords": ["laravel", "ecommerce", "e-commerce", "admin-panel", "storefront", "shopping-cart"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "intervention/image": "^4.2",
         "intervention/image-laravel": "^4.0",
         "laravel/framework": "^13.0",
