@@ -86,7 +86,7 @@
                                         </span>
                                     </td>
                                     <td>{{ $coupon->value_label }}</td>
-                                    <td>${{ number_format((float) $coupon->minimum_order_amount, 2) }}</td>
+                                    <td>{{ money($coupon->minimum_order_amount) }}</td>
                                     <td>
                                         {{ $coupon->used_count }}
                                         @if ($coupon->usage_limit)
@@ -195,7 +195,7 @@
                                 <select class="form-select" id="couponType" name="type" required>
                                     <option value="">Select Type</option>
                                     <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
+                                    <option value="fixed">Fixed Amount ({{ currency_symbol() }})</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

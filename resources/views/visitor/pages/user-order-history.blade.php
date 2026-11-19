@@ -54,7 +54,7 @@
                                                 <th scope="row"><span>{{ $order->order_number }}</span></th>
                                                 <td><span>{{ $order->items_count }} item(s)</span></td>
                                                 <td><span>{{ $order->created_at->format('d M Y') }}</span></td>
-                                                <td><span>${{ number_format((float) $order->total_amount, 2) }}</span></td>
+                                                <td><span>{{ money($order->total_amount) }}</span></td>
                                                 <td><span>{{ ucfirst($order->status) }}</span></td>
                                                 <td>
                                                     <span class="tbl-btn">

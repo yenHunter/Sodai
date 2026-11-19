@@ -209,10 +209,10 @@
                                             <div class="ec-fs-price">
                                                 @if ($product->has_discount)
                                                     <span
-                                                        class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                                        class="old-price">{{ money($product->min_price) }}</span>
                                                 @endif
                                                 <span
-                                                    class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                                    class="new-price">{{ money($product->final_price) }}</span>
                                             </div>
                                             <div class="ec-fs-pro-desc">{{ $product->short_description }}</div>
                                             <div class="ec-fs-pro-book">Total Sold:
@@ -275,9 +275,9 @@
                                             </div>
                                             <div class="ec-fs-price">
                                                 <span
-                                                    class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
+                                                    class="old-price">{{ money($product->min_price) }}</span>
                                                 <span
-                                                    class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                                                    class="new-price">{{ money($product->final_price) }}</span>
                                             </div>
                                             <div class="ec-fs-pro-desc">{{ $product->short_description }}</div>
                                             <div class="ec-fs-pro-book">Total Sold:

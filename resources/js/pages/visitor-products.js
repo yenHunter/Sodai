@@ -1,5 +1,6 @@
 import 'nouislider/dist/nouislider.css'
 import noUiSlider from 'nouislider'
+import { formatMoney, moneyOptions } from '../currency'
 
 document.addEventListener('DOMContentLoaded', () => {
     initAutoSubmitFilters()
@@ -22,6 +23,7 @@ function initPriceSlider() {
     const currentMin = parseFloat(slider.dataset.currentMin)
     const currentMax = parseFloat(slider.dataset.currentMax)
 
+    const currency = moneyOptions(slider)
     const minDisplay = document.getElementById('priceMinDisplay')
     const maxDisplay = document.getElementById('priceMaxDisplay')
     const minInput = document.getElementById('priceMinInput')
@@ -36,8 +38,8 @@ function initPriceSlider() {
 
     slider.noUiSlider.on('update', (values) => {
         const [lo, hi] = values.map(v => Math.round(parseFloat(v)))
-        if (minDisplay) minDisplay.value = `$${lo}`
-        if (maxDisplay) maxDisplay.value = `$${hi}`
+        if (minDisplay) minDisplay.value = formatMoney(lo, { ...currency, decimals: 0 })
+        if (maxDisplay) maxDisplay.value = formatMoney(hi, { ...currency, decimals: 0 })
         if (minInput) minInput.value = lo
         if (maxInput) maxInput.value = hi
     })

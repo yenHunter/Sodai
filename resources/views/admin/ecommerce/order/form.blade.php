@@ -156,11 +156,13 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Subtotal</span>
-                    <span class="fw-semibold" id="summarySubtotal">$0.00</span>
+                    <span class="fw-semibold" id="summarySubtotal" data-currency-symbol="{{ currency_symbol() }}"
+                        data-currency-position="{{ currency_position() }}"
+                        data-currency-decimals="{{ \App\Support\Currency::decimals() }}">{{ money(0) }}</span>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Discount ($)</label>
+                    <label class="form-label">Discount ({{ currency_symbol() }})</label>
                     <input type="number" class="form-control @error('discount_amount') is-invalid @enderror"
                         name="discount_amount" id="discountAmount" min="0" step="0.01"
                         value="{{ old('discount_amount', $order->discount_amount ?? 0) }}">
@@ -172,7 +174,7 @@
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <label class="form-label mb-0">Shipping Charge ($)</label>
+                        <label class="form-label mb-0">Shipping Charge ({{ currency_symbol() }})</label>
                         <span class="badge bg-secondary-subtle text-secondary" id="shippingAreaBadge"></span>
                     </div>
                     <input type="number" class="form-control @error('shipping_charge') is-invalid @enderror"
@@ -187,7 +189,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Tax ($) <span class="text-muted" id="taxLabelHint"></span></label>
+                    <label class="form-label">Tax ({{ currency_symbol() }}) <span class="text-muted" id="taxLabelHint"></span></label>
                     <input type="number" class="form-control @error('tax_amount') is-invalid @enderror"
                         name="tax_amount" id="taxAmount" min="0" step="0.01"
                         value="{{ old('tax_amount', $order->tax_amount ?? '') }}"
@@ -222,7 +224,9 @@
                 <hr>
                 <div class="d-flex justify-content-between fs-lg fw-bold">
                     <span>Grand Total</span>
-                    <span id="summaryTotal">$0.00</span>
+                    <span id="summaryTotal" data-currency-symbol="{{ currency_symbol() }}"
+                        data-currency-position="{{ currency_position() }}"
+                        data-currency-decimals="{{ \App\Support\Currency::decimals() }}">{{ money(0) }}</span>
                 </div>
             </div>
             <div class="card-footer">

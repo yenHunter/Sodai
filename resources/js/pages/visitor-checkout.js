@@ -1,3 +1,5 @@
+import { formatMoney, moneyOptions } from '../currency'
+
 document.addEventListener('DOMContentLoaded', function () {
     initAddressToggle()
     initCouponBox()
@@ -59,12 +61,17 @@ function initCouponBox() {
             }
 
             hidden.value = data.code
-            message.textContent = `Coupon "${data.code}" applied: -$${Number(data.discount_amount).toFixed(2)}`
+            const currency = moneyOptions(subtotalEl)
+            message.textContent = `Coupon "${data.code}" applied: -${formatMoney(data.discount_amount, currency)}`
             message.className = 'small mt-2 text-success'
 
-            const subtotal = parseFloat(subtotalEl.textContent.replace('$', ''))
-            const newTotal = Math.max(0, subtotal - Number(data.discount_amount))
-            totalEl.textContent = `$${newTotal.toFixed(2)}`
+            const shipping = Number(document.getElementById('summaryShipping')?.dataset.amount || 0)
+            const tax = Number(document.getElementById('summaryTax')?.dataset.amount || 0)
+            const subtotal = Number(subtotalEl.dataset.amount || 0)
+            const newTotal = Math.max(0, subtotal + shipping + tax - Number(data.discount_amount))
+
+            totalEl.dataset.amount = newTotal
+            totalEl.textContent = formatMoney(newTotal, currency)
         } catch (e) {
             message.textContent = 'Failed to apply coupon. Please try again.'
             message.className = 'small mt-2 text-danger'

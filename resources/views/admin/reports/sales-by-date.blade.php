@@ -42,7 +42,7 @@
                     <div class="card mb-1">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                                <h3 class="mb-0">${{ number_format($totals['revenue'], 2) }}</h3>
+                                <h3 class="mb-0">{{ money($totals['revenue']) }}</h3>
                                 <div class="avatar-md flex-shrink-0">
                                     <span class="avatar-title text-bg-success rounded-circle fs-22">
                                         <i data-lucide="banknote"></i>
@@ -57,7 +57,7 @@
                     <div class="card mb-1">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                                <h3 class="mb-0">${{ number_format($totals['discounts'], 2) }}</h3>
+                                <h3 class="mb-0">{{ money($totals['discounts']) }}</h3>
                                 <div class="avatar-md flex-shrink-0">
                                     <span class="avatar-title text-bg-danger rounded-circle fs-22">
                                         <i data-lucide="ticket-percent"></i>
@@ -87,7 +87,7 @@
                     <div class="card mb-1">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                                <h3 class="mb-0">${{ number_format($totals['avg_order_value'], 2) }}</h3>
+                                <h3 class="mb-0">{{ money($totals['avg_order_value']) }}</h3>
                                 <div class="avatar-md flex-shrink-0">
                                     <span class="avatar-title text-bg-primary rounded-circle fs-22">
                                         <i data-lucide="receipt"></i>
@@ -134,8 +134,8 @@
                                         <td class="fw-semibold">{{ \Illuminate\Support\Carbon::parse($day['date'])->format('M j, Y') }}</td>
                                         <td>{{ $day['orders_count'] }}</td>
                                         <td>{{ $day['items_sold'] }}</td>
-                                        <td>${{ number_format($day['revenue'], 2) }}</td>
-                                        <td>${{ number_format($day['discounts'], 2) }}</td>
+                                        <td>{{ money($day['revenue']) }}</td>
+                                        <td>{{ money($day['discounts']) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -149,8 +149,8 @@
                                         <td>Total ({{ $sales->count() }} days)</td>
                                         <td>{{ $totals['orders'] }}</td>
                                         <td>{{ $totals['items'] }}</td>
-                                        <td>${{ number_format($totals['revenue'], 2) }}</td>
-                                        <td>${{ number_format($totals['discounts'], 2) }}</td>
+                                        <td>{{ money($totals['revenue']) }}</td>
+                                        <td>{{ money($totals['discounts']) }}</td>
                                     </tr>
                                 </tfoot>
                             @endif

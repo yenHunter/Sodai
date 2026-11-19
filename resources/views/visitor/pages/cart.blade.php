@@ -61,7 +61,7 @@
                                                         @endif
                                                     </td>
                                                     <td data-label="Price" class="ec-cart-pro-price">
-                                                        <span class="amount">${{ number_format($item->unit_price, 2) }}</span>
+                                                        <span class="amount">{{ money($item->unit_price) }}</span>
                                                     </td>
                                                     <td data-label="Quantity" class="ec-cart-pro-qty" style="text-align: center;">
                                                         <form action="{{ route('visitor.cart.update', $item->id) }}" method="POST">
@@ -73,7 +73,7 @@
                                                             </div>
                                                         </form>
                                                     </td>
-                                                    <td data-label="Total" class="ec-cart-pro-subtotal">${{ number_format($item->subtotal, 2) }}</td>
+                                                    <td data-label="Total" class="ec-cart-pro-subtotal">{{ money($item->subtotal) }}</td>
                                                     <td data-label="Remove" class="ec-cart-pro-remove">
                                                         <form action="{{ route('visitor.cart.destroy', $item->id) }}" method="POST">
                                                             @csrf @method('DELETE')
@@ -115,11 +115,11 @@
                                     <div class="ec-cart-summary">
                                         <div>
                                             <span class="text-left">Sub-Total</span>
-                                            <span class="text-right">${{ number_format($total, 2) }}</span>
+                                            <span class="text-right">{{ money($total) }}</span>
                                         </div>
                                         <div class="ec-cart-summary-total">
                                             <span class="text-left">Total Amount</span>
-                                            <span class="text-right">${{ number_format($total, 2) }}</span>
+                                            <span class="text-right">{{ money($total) }}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -118,9 +118,9 @@
                                                         {{ $item->product_name }}
                                                     </div>
                                                 </td>
-                                                <td>${{ number_format((float) $item->unit_price, 2) }}</td>
+                                                <td>{{ money($item->unit_price) }}</td>
                                                 <td>{{ $item->quantity }}</td>
-                                                <td>${{ number_format((float) $item->total_price, 2) }}</td>
+                                                <td>{{ money($item->total_price) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -139,13 +139,13 @@
                                     </p>
                                 </div>
                                 <div class="col-md-6 text-md-end">
-                                    <p class="mb-1">Subtotal: ${{ number_format((float) $order->subtotal, 2) }}</p>
-                                    <p class="mb-1">Discount: -${{ number_format((float) $order->discount_amount, 2) }}
+                                    <p class="mb-1">Subtotal: {{ money($order->subtotal) }}</p>
+                                    <p class="mb-1">Discount: -{{ money($order->discount_amount) }}
                                     </p>
-                                    <p class="mb-1">Shipping: ${{ number_format((float) $order->shipping_charge, 2) }}
+                                    <p class="mb-1">Shipping: {{ money($order->shipping_charge) }}
                                     </p>
-                                    <p class="mb-1">Tax: ${{ number_format((float) $order->tax_amount, 2) }}</p>
-                                    <h5>Total: ${{ number_format((float) $order->total_amount, 2) }}</h5>
+                                    <p class="mb-1">Tax: {{ money($order->tax_amount) }}</p>
+                                    <h5>Total: {{ money($order->total_amount) }}</h5>
                                 </div>
                             </div>
 

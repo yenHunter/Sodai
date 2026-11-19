@@ -105,7 +105,7 @@
                                     </a>
                                 </td>
                                 <td>{{ $refund->user?->name ?? $refund->order?->shipping_name ?? '—' }}</td>
-                                <td>${{ number_format((float) $refund->amount, 2) }}</td>
+                                <td>{{ money($refund->amount) }}</td>
                                 <td><span class="badge {{ $refund->status_badge_class }} fs-xxs">{{ ucfirst($refund->status) }}</span></td>
                                 <td>{{ $refund->created_at->format('d M, Y') }}</td>
                                 <td>
@@ -195,12 +195,12 @@
                             <select class="form-select" id="refundOrderId" name="order_id" required>
                                 <option value="">Select Order</option>
                                 @foreach ($orders as $order)
-                                    <option value="{{ $order->id }}">#{{ $order->order_number }} — ${{ number_format((float) $order->total_amount, 2) }}</option>
+                                    <option value="{{ $order->id }}">#{{ $order->order_number }} — {{ money($order->total_amount) }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Refund Amount ($) <span class="text-danger">*</span></label>
+                            <label class="form-label">Refund Amount ({{ currency_symbol() }}) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="refundAmount" name="amount" step="0.01" min="0.01" required>
                         </div>
                         <div class="mb-0">

@@ -49,7 +49,7 @@
                                     Minimum Order Amount <small class="text-muted fw-normal">(Optional)</small>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">{{ currency_symbol() }}</span>
                                     <input type="number" step="0.01" min="0" class="form-control"
                                         id="minimum_order_amount" name="minimum_order_amount"
                                         value="{{ old('minimum_order_amount', $settings['minimum_order_amount'] ?? '') }}">

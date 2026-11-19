@@ -6,6 +6,7 @@
 import 'select2/dist/css/select2.min.css'
 import $ from 'jquery'
 import select2 from 'select2'
+import { formatMoney, moneyOptions } from '../currency'
 
 select2(window, $)
 
@@ -157,7 +158,7 @@ function initProductSelect2() {
             processResults: data => ({
                 results: data.map(p => ({
                     id: p.id,
-                    text: `${p.name} (${p.sku}) — $${p.price.toFixed(2)} — Stock: ${p.stock_quantity}`,
+                    text: `${p.name} (${p.sku}) — ${formatMoney(p.price, moneyOptions(document.getElementById('summarySubtotal')))} — Stock: ${p.stock_quantity}`,
                     raw: p,
                 })),
             }),
@@ -229,6 +230,8 @@ function renderCart() {
     const body = document.getElementById('cartBody')
     if (!body) return
 
+    const currency = moneyOptions(document.getElementById('summarySubtotal'))
+
     if (cart.length === 0) {
         body.innerHTML = `
             <tr id="cartEmptyRow">
@@ -246,12 +249,12 @@ function renderCart() {
                         </div>
                     </div>
                 </td>
-                <td>$${item.price.toFixed(2)}</td>
+                <td>${formatMoney(item.price, currency)}</td>
                 <td>
                     <input type="number" class="form-control form-control-sm cart-qty-input" min="1"
                         max="${item.stock_quantity}" value="${item.quantity}" data-product-id="${item.product_id}">
                 </td>
-                <td class="text-end fw-semibold cart-line-total">$${(item.price * item.quantity).toFixed(2)}</td>
+                <td class="text-end fw-semibold cart-line-total">${formatMoney(item.price * item.quantity, currency)}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-icon btn-default rounded-circle cart-remove-btn" data-product-id="${item.product_id}">
                         <i data-lucide="x" style="width:14px;height:14px"></i>
@@ -297,8 +300,9 @@ function recalculateSummary() {
 
     const total = Math.max(0, subtotal - discount + shipping + tax)
 
-    setText('summarySubtotal', `$${subtotal.toFixed(2)}`)
-    setText('summaryTotal', `$${total.toFixed(2)}`)
+    const currency = moneyOptions(document.getElementById('summarySubtotal'))
+    setText('summarySubtotal', formatMoney(subtotal, currency))
+    setText('summaryTotal', formatMoney(total, currency))
 }
 
 // ─────────────────────────────────────────────
@@ -452,7 +456,7 @@ function initCouponApply() {
                 }
 
                 discountInput.value = Number(data.discount_amount).toFixed(2)
-                showCouponFeedback(`Applied "${data.code}" — ${data.value_label} off (−$${Number(data.discount_amount).toFixed(2)}).`, 'success')
+                showCouponFeedback(`Applied "${data.code}" — ${data.value_label} off (−${formatMoney(data.discount_amount, moneyOptions(document.getElementById('summarySubtotal')))}).`, 'success')
                 recalculateSummary()
             })
             .catch(() => showCouponFeedback('Something went wrong validating the coupon.', 'danger'))
