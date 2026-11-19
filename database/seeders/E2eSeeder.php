@@ -41,6 +41,8 @@ class E2eSeeder extends Seeder
 
     public const PENDING_ORDER_NUMBER = 'E2E-ORD-PENDING';
 
+    public const ARCHIVED_ORDER_NUMBER = 'E2E-ORD-ARCHIVED';
+
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -149,16 +151,21 @@ class E2eSeeder extends Seeder
         }
 
         $orders = [
-            self::DELIVERED_ORDER_NUMBER => 'delivered',
-            self::PENDING_ORDER_NUMBER => 'pending',
+            self::DELIVERED_ORDER_NUMBER => ['status' => 'delivered'],
+            self::PENDING_ORDER_NUMBER => ['status' => 'pending'],
+            // Outside the "Last 7 Days" window the orders export spec selects
+            // through the date picker, so the range visibly narrows the file.
+            self::ARCHIVED_ORDER_NUMBER => ['status' => 'confirmed', 'created_at' => now()->subDays(30)],
         ];
 
-        foreach ($orders as $orderNumber => $status) {
+        foreach ($orders as $orderNumber => $attributes) {
+            $createdAt = $attributes['created_at'] ?? null;
+            unset($attributes['created_at']);
+
             $order = Order::updateOrCreate(
                 ['order_number' => $orderNumber],
-                [
+                $attributes + [
                     'user_id' => $customer->id,
-                    'status' => $status,
                     'subtotal' => 100,
                     'discount_amount' => 0,
                     'shipping_charge' => 0,
@@ -175,6 +182,11 @@ class E2eSeeder extends Seeder
                     'shipping_country' => 'Bangladesh',
                 ],
             );
+
+            if ($createdAt) {
+                // created_at is not fillable, so pin the date after the upsert.
+                $order->forceFill(['created_at' => $createdAt])->save();
+            }
 
             OrderItem::updateOrCreate(
                 ['order_id' => $order->id, 'product_sku' => 'E2E-SKU-001'],
