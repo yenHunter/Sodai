@@ -1,3 +1,5 @@
+import { formatMoney, moneyOptions } from '../currency'
+
 document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('mouseenter', handleSwap, true)
     document.addEventListener('click', handleSwap, true)
@@ -23,12 +25,13 @@ function handleSwap(e) {
     }
 
     if (priceWrap) {
-        const price = option.dataset.price
-        const oldPrice = option.dataset.oldPrice
+        const price = Number(option.dataset.price)
+        const oldPrice = Number(option.dataset.oldPrice)
         if (price) {
+            const currency = moneyOptions(priceWrap)
             priceWrap.innerHTML = (oldPrice && oldPrice !== price)
-                ? `<span class="old-price">$${oldPrice}</span><span class="new-price">$${price}</span>`
-                : `<span class="new-price">$${price}</span>`
+                ? `<span class="old-price">${formatMoney(oldPrice, currency)}</span><span class="new-price">${formatMoney(price, currency)}</span>`
+                : `<span class="new-price">${formatMoney(price, currency)}</span>`
         }
     }
 }

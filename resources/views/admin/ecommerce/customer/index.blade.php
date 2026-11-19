@@ -93,7 +93,7 @@
                                             class="text-muted d-block">{{ $customer->created_at->format('h:i A') }}</small>
                                     </td>
                                     <td><span class="badge bg-secondary">{{ $customer->orders_count }}</span></td>
-                                    <td>${{ number_format((float) ($customer->total_spent ?? 0), 2) }}</td>
+                                    <td>{{ money($customer->total_spent ?? 0) }}</td>
                                     <td>
                                         @if ($customer->status === 'banned')
                                             <span class="badge bg-danger">Banned</span>

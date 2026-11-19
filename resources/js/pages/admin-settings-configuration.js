@@ -4,6 +4,8 @@
  * the file input, and form submit loading states.
  */
 
+import { formatMoney, moneyOptions } from '../currency'
+
 document.addEventListener('DOMContentLoaded', () => {
     initImagePreviews();
     initRemoveCheckboxes();
@@ -171,6 +173,7 @@ function initShippingPreview() {
         const freeEnabled = document.getElementById('enable_free_shipping')?.checked ?? initial.freeShippingEnabled;
         const freeThreshold = parseFloat(document.getElementById('free_shipping_threshold')?.value) || initial.freeShippingThreshold;
 
+        const currency = moneyOptions(subtotalInput);
         const city = cityInput.value.trim();
         const subtotal = parseFloat(subtotalInput.value) || 0;
         const areas = getCheckedAreas();
@@ -183,7 +186,7 @@ function initShippingPreview() {
 
         if (freeEnabled && freeThreshold > 0 && subtotal >= freeThreshold) {
             resultBox.className = 'alert alert-success mb-0';
-            resultBox.innerHTML = `<strong>Free Shipping</strong> — subtotal meets the ৳${freeThreshold.toFixed(2)} threshold.`;
+            resultBox.innerHTML = `<strong>Free Shipping</strong> — subtotal meets the ${formatMoney(freeThreshold, currency)} threshold.`;
             return;
         }
 
@@ -193,7 +196,7 @@ function initShippingPreview() {
         resultBox.className = 'alert alert-info mb-0';
         resultBox.innerHTML =
             `<strong>${withinArea ? 'Inside Operation Area' : 'Outside Operation Area'}</strong> — ` +
-            `shipping charge: <strong>৳${charge.toFixed(2)}</strong>`;
+            `shipping charge: <strong>${formatMoney(charge, currency)}</strong>`;
     };
 
     document.addEventListener('change', e => {

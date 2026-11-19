@@ -516,7 +516,7 @@
                             @if ($item->variant->options_label)
                                 <span class="d-block small text-muted">{{ $item->variant->options_label }}</span>
                             @endif
-                            <span class="cart-price"><span>${{ number_format($item->unit_price, 2) }}</span> x
+                            <span class="cart-price"><span>{{ money($item->unit_price) }}</span> x
                                 {{ $item->quantity }}</span>
                             <form action="{{ route('visitor.cart.update', $item->id) }}" method="POST">
                                 @csrf @method('PATCH')
@@ -543,11 +543,11 @@
                     <tbody>
                         <tr>
                             <td class="text-left">Sub-Total :</td>
-                            <td class="text-right">${{ number_format($miniCartTotal ?? 0, 2) }}</td>
+                            <td class="text-right">{{ money($miniCartTotal ?? 0) }}</td>
                         </tr>
                         <tr>
                             <td class="text-left">Total :</td>
-                            <td class="text-right primary-color">${{ number_format($miniCartTotal ?? 0, 2) }}</td>
+                            <td class="text-right primary-color">{{ money($miniCartTotal ?? 0) }}</td>
                         </tr>
                     </tbody>
                 </table>

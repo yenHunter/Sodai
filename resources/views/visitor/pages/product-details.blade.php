@@ -86,7 +86,9 @@
                                             <div class="ec-single-price">
                                                 <span class="ec-single-ps-title">Price</span>
                                                 <span class="new-price"
-                                                    id="variant-price">${{ number_format($product->final_price, 2) }}</span>
+                                                    id="variant-price" data-currency-symbol="{{ currency_symbol() }}"
+                                                    data-currency-position="{{ currency_position() }}"
+                                                    data-currency-decimals="{{ \App\Support\Currency::decimals() }}">{{ money($product->final_price) }}</span>
                                                 <span class="old-price d-none" id="variant-old-price"></span>
                                             </div>
                                             <div class="ec-single-stoke">

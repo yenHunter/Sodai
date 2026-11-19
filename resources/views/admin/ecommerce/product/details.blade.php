@@ -291,7 +291,7 @@
                                                     @endif
                                                 </td>
                                                 <td>{{ $variant->sku }}</td>
-                                                <td>${{ number_format((float) $variant->final_price, 2) }}</td>
+                                                <td>{{ money($variant->final_price) }}</td>
                                                 <td>{{ $variant->stock_quantity }} <small class="text-muted">(alert
                                                         &lt;= {{ $variant->low_stock_threshold }})</small></td>
                                                 <td><span
@@ -350,7 +350,7 @@
                                             <p class="mb-0 small fw-semibold text-truncate text-body">{{ $related->name }}
                                             </p>
                                             <p class="mb-0 small text-muted">
-                                                ${{ number_format((float) $related->price, 2) }}</p>
+                                                {{ money($related->price) }}</p>
                                         </div>
                                     </a>
                                 </div>

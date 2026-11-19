@@ -197,11 +197,10 @@ class Product extends Model
     public function getPriceRangeLabelAttribute(): string
     {
         if ((float) $this->min_price === (float) $this->max_price) {
-            return '$'.number_format((float) $this->min_price, 2);
+            return money($this->min_price);
         }
 
-        return '$'.number_format((float) $this->min_price, 2)
-            .' – $'.number_format((float) $this->max_price, 2);
+        return money($this->min_price).' – '.money($this->max_price);
     }
 
     /**

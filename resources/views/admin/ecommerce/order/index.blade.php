@@ -178,7 +178,7 @@
                                             <p class="text-muted fs-xs mb-0">{{ $order->shipping_email }}</p>
                                         </td>
                                         <td>{{ $order->items_count }}</td>
-                                        <td>${{ number_format((float) $order->total_amount, 2) }}</td>
+                                        <td>{{ money($order->total_amount) }}</td>
                                         <td>
                                             <span class="badge {{ $order->status_badge_class }} fs-xxs">{{ ucfirst($order->status) }}</span>
                                         </td>

@@ -29,15 +29,15 @@
 
             <table>
                 <tr>
-                    <td><span class="big">${{ number_format($revenue, 2) }}</span><br><span class="muted">Revenue</span></td>
+                    <td><span class="big">{{ money($revenue) }}</span><br><span class="muted">Revenue</span></td>
                     <td align="right">
                         <strong>{{ $orders }}</strong> order{{ $orders === 1 ? '' : 's' }}<br>
-                        <span class="muted">Avg ${{ number_format($avgOrderValue, 2) }} / order</span>
+                        <span class="muted">Avg {{ money($avgOrderValue) }} / order</span>
                     </td>
                 </tr>
                 <tr>
                     <td><strong>{{ $itemsSold }}</strong> items sold</td>
-                    <td align="right"><span class="muted">Discounts given: ${{ number_format($discounts, 2) }}</span></td>
+                    <td align="right"><span class="muted">Discounts given: {{ money($discounts) }}</span></td>
                 </tr>
             </table>
 
@@ -47,7 +47,7 @@
                     @forelse ($topProducts as $index => $item)
                         <tr>
                             <td>{{ $index + 1 }}. {{ $item->product_name }}@if($item->product_missing) <span class="muted">(deleted)</span>@endif</td>
-                            <td align="right">{{ $item->quantity }} units · ${{ number_format($item->revenue, 2) }}</td>
+                            <td align="right">{{ $item->quantity }} units · {{ money($item->revenue) }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="2" class="muted">No product sales last {{ $periodNoun }}.</td></tr>

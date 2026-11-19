@@ -1,3 +1,5 @@
+import { formatMoney, moneyOptions } from '../currency'
+
 document.addEventListener('DOMContentLoaded', () => {
     initAutoSubmitFilters()
     initCheckboxes()
@@ -77,17 +79,19 @@ function initViewModal() {
                     document.getElementById('modalCustomerEmail').textContent = data.customer_email || ''
                     document.getElementById('modalUpdatedAt').textContent = data.updated_at
 
+                    const totalEl = document.getElementById('modalTotal')
+                    const currency = moneyOptions(totalEl)
                     const body = document.getElementById('modalItemsBody')
                     body.innerHTML = data.items.map(item => `
                         <tr>
                             <td>${escapeHtml(item.product_name)}<br><small class="text-muted">${escapeHtml(item.product_sku)}</small></td>
-                            <td>$${item.unit_price.toFixed(2)}</td>
+                            <td>${formatMoney(item.unit_price, currency)}</td>
                             <td>${item.quantity}</td>
-                            <td class="text-end">$${item.subtotal.toFixed(2)}</td>
+                            <td class="text-end">${formatMoney(item.subtotal, currency)}</td>
                         </tr>
                     `).join('')
 
-                    document.getElementById('modalTotal').textContent = `$${data.total.toFixed(2)}`
+                    totalEl.textContent = formatMoney(data.total, currency)
 
                     new bootstrap.Modal(document.getElementById('cartDetailModal')).show()
                 })

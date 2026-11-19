@@ -204,6 +204,8 @@
                                 <div class="ec-sb-block-content es-price-slider">
                                     <div class="ec-price-filter">
                                         <div id="ec-sliderPrice" class="filter__slider-price"
+                                            data-currency-symbol="{{ currency_symbol() }}"
+                                            data-currency-position="{{ currency_position() }}"
                                             data-min="{{ floor($priceBounds['min']) }}"
                                             data-max="{{ ceil($priceBounds['max']) }}" data-step="1"
                                             data-current-min="{{ $filters['price_min'] ?? floor($priceBounds['min']) }}"

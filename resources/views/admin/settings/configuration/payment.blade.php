@@ -44,7 +44,7 @@
                                 COD Extra Fee <small class="text-muted fw-normal">(Optional)</small>
                             </label>
                             <div class="input-group" style="max-width:220px">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">{{ currency_symbol() }}</span>
                                 <input type="number" step="0.01" min="0" class="form-control"
                                     id="cod_extra_fee" name="cod_extra_fee"
                                     value="{{ old('cod_extra_fee', $settings['cod_extra_fee'] ?? '') }}">

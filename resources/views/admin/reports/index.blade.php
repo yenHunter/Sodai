@@ -11,7 +11,7 @@
             <div class="card mb-1">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                        <h3 class="mb-0">${{ number_format($summary['revenue_30d'], 2) }}</h3>
+                        <h3 class="mb-0">{{ money($summary['revenue_30d']) }}</h3>
                         <div class="avatar-md flex-shrink-0">
                             <span class="avatar-title text-bg-success rounded-circle fs-22">
                                 <i data-lucide="banknote"></i>

@@ -86,7 +86,7 @@ class Coupon extends Model
     {
         return $this->type === 'percentage'
             ? number_format((float) $this->value, 2).'%'
-            : '$'.number_format((float) $this->value, 2);
+            : money($this->value);
     }
 
     // ─────────────────────────────────────────────

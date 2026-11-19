@@ -103,32 +103,32 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>${{ number_format((float) $item->unit_price, 2) }}</td>
+                                        <td>{{ money($item->unit_price) }}</td>
                                         <td>{{ $item->quantity }}</td>
-                                        <td class="text-end">${{ number_format((float) $item->total_price, 2) }}</td>
+                                        <td class="text-end">{{ money($item->total_price) }}</td>
                                     </tr>
                                 @endforeach
                                 <tr class="border-top">
                                     <td class="text-end fw-semibold" colspan="3">Subtotal</td>
-                                    <td class="text-end">${{ number_format((float) $order->subtotal, 2) }}</td>
+                                    <td class="text-end">{{ money($order->subtotal) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-semibold" colspan="3">Discount</td>
                                     <td class="text-end text-danger fw-semibold">
-                                        -${{ number_format((float) $order->discount_amount, 2) }}</td>
+                                        -{{ money($order->discount_amount) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-semibold" colspan="3">Shipping fee</td>
-                                    <td class="text-end">${{ number_format((float) $order->shipping_charge, 2) }}</td>
+                                    <td class="text-end">{{ money($order->shipping_charge) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-semibold" colspan="3">Tax</td>
-                                    <td class="text-end">${{ number_format((float) $order->tax_amount, 2) }}</td>
+                                    <td class="text-end">{{ money($order->tax_amount) }}</td>
                                 </tr>
                                 <tr class="border-top">
                                     <td class="text-end fw-bold text-uppercase" colspan="3">Grand Total</td>
                                     <td class="fw-bold text-end table-active">
-                                        ${{ number_format((float) $order->total_amount, 2) }}</td>
+                                        {{ money($order->total_amount) }}</td>
                                 </tr>
                             </tbody>
                         </table>
