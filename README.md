@@ -92,7 +92,7 @@ continuously-updated breakdown of what's built vs. what's planned.
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 13.36, PHP 8.3 |
+| Backend | Laravel 13.x, PHP 8.3 |
 | Database | SQLite (dev), MySQL-ready |
 | Authorization | Spatie Laravel Permission |
 | Image processing | Intervention Image v4 (WebP conversion) |
@@ -264,6 +264,18 @@ documents the branching strategy and coding standards used, in case that changes
 
 ## License
 
-This project is built on the Laravel framework, which is open-sourced under the
-[MIT license](https://opensource.org/licenses/MIT). Application-specific code follows
-the same license unless noted otherwise.
+Sodai's own source code — the application, routes, migrations, seeders, tests and
+documentation — is released under the [MIT license](LICENSE).
+Copyright (c) 2026 Firoz Ebna Jobaier. It is built on the
+[Laravel framework](https://laravel.com), which is MIT-licensed as well.
+
+The two UI templates bundled with the repository are **not** MIT and are excluded from
+that grant:
+
+- **UBold** — admin template by Coderthemes (admin panel)
+- **Ekka** — storefront template by ashishmaraviya (customer storefront)
+
+Both are commercially licensed on ThemeForest. They are committed so the application can
+be run and reviewed, but reusing them requires your own license, or replacing them.
+Composer and npm dependencies keep their own licenses. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for the full audit.
