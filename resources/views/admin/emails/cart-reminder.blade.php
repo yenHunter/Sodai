@@ -24,12 +24,12 @@
                 @foreach ($items as $item)
                     <tr>
                         <td>{{ $item['name'] }} × {{ $item['quantity'] }}</td>
-                        <td align="right">${{ number_format($item['subtotal'], 2) }}</td>
+                        <td align="right">{{ money($item['subtotal']) }}</td>
                     </tr>
                 @endforeach
                 <tr>
                     <td><strong>Total</strong></td>
-                    <td align="right"><strong>${{ number_format($total, 2) }}</strong></td>
+                    <td align="right"><strong>{{ money($total) }}</strong></td>
                 </tr>
             </table>
             <p style="text-align:center;">

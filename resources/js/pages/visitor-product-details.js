@@ -1,3 +1,5 @@
+import { formatMoney, moneyOptions } from '../currency'
+
 document.addEventListener('DOMContentLoaded', function () {
     const root = document.getElementById('variant-options')
     const matrixDataEl = document.getElementById('variant-matrix-data')
@@ -61,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return
         }
 
-        if (priceEl) priceEl.textContent = '$' + Number(variant.final_price).toFixed(2)
+        if (priceEl) priceEl.textContent = formatMoney(variant.final_price, moneyOptions(priceEl))
         if (skuEl) skuEl.textContent = 'SKU#: ' + variant.sku
         if (variantIdInput) variantIdInput.value = variant.variant_id
 

@@ -46,14 +46,16 @@
                     <i class="ecicon eci-star{{ $i <= round($product->average_rating) ? ' fill' : '' }}"></i>
                 @endfor
             </div>
-            <span class="ec-price product-card-price">
+            <span class="ec-price product-card-price" data-currency-symbol="{{ currency_symbol() }}"
+                data-currency-position="{{ currency_position() }}"
+                data-currency-decimals="{{ \App\Support\Currency::decimals() }}">
                 @if ($product->has_variants)
                     <span class="new-price">{{ $product->price_range_label }}</span>
                 @elseif ($product->has_discount)
-                    <span class="old-price">${{ number_format((float) $product->min_price, 2) }}</span>
-                    <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                    <span class="old-price">{{ money($product->min_price) }}</span>
+                    <span class="new-price">{{ money($product->final_price) }}</span>
                 @else
-                    <span class="new-price">${{ number_format($product->final_price, 2) }}</span>
+                    <span class="new-price">{{ money($product->final_price) }}</span>
                 @endif
             </span>
 
@@ -65,8 +67,8 @@
                             @foreach ($swatches as $swatch)
                                 <li class="{{ $loop->first ? 'active' : '' }}">
                                     <a href="javascript:void(0)" class="product-swatch-option"
-                                        data-price="{{ number_format($swatch['final_price'], 2) }}"
-                                        data-old-price="{{ number_format($swatch['price'], 2) }}"
+                                        data-price="{{ $swatch['final_price'] }}"
+                                        data-old-price="{{ $swatch['price'] }}"
                                         title="{{ $swatch['label'] }}">
                                         @if ($swatch['swatch'] && preg_match('/^#([A-Fa-f0-9]{3}){1,2}$/', $swatch['swatch']))
                                             <span style="background-color: {{ $swatch['swatch'] }};"></span>

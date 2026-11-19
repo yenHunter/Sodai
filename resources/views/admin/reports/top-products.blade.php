@@ -85,7 +85,7 @@
                                             @endif
                                         </td>
                                         <td><span class="badge badge-soft-primary">{{ $item->quantity }}</span></td>
-                                        <td>${{ number_format($item->revenue, 2) }}</td>
+                                        <td>{{ money($item->revenue) }}</td>
                                         <td>{{ $item->orders_count }}</td>
                                         <td class="text-center">
                                             @if ($item->product_missing)

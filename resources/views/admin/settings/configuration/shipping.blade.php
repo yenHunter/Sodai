@@ -96,7 +96,7 @@
                                     <small class="text-muted fw-normal">(within your operation area)</small>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">৳</span>
+                                    <span class="input-group-text">{{ currency_symbol() }}</span>
                                     <input type="number" step="0.01" min="0"
                                         class="form-control @error('inside_area_charge') is-invalid @enderror"
                                         id="inside_area_charge" name="inside_area_charge"
@@ -113,7 +113,7 @@
                                     <small class="text-muted fw-normal">(everywhere else)</small>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">৳</span>
+                                    <span class="input-group-text">{{ currency_symbol() }}</span>
                                     <input type="number" step="0.01" min="0"
                                         class="form-control @error('outside_area_charge') is-invalid @enderror"
                                         id="outside_area_charge" name="outside_area_charge"
@@ -146,7 +146,7 @@
                                 Free Shipping Minimum Order
                             </label>
                             <div class="input-group" style="max-width:250px">
-                                <span class="input-group-text">৳</span>
+                                <span class="input-group-text">{{ currency_symbol() }}</span>
                                 <input type="number" step="0.01" min="0" class="form-control"
                                     id="free_shipping_threshold" name="free_shipping_threshold"
                                     value="{{ old('free_shipping_threshold', $settings['free_shipping_threshold'] ?? '') }}">
@@ -196,7 +196,10 @@
                         <label class="form-label fw-semibold" for="previewSubtotal">Order Subtotal
                             <small class="text-muted fw-normal">(Optional)</small></label>
                         <input type="number" step="0.01" min="0" class="form-control mb-3"
-                            id="previewSubtotal" placeholder="0.00">
+                            id="previewSubtotal" placeholder="0.00"
+                            data-currency-symbol="{{ currency_symbol() }}"
+                            data-currency-position="{{ currency_position() }}"
+                            data-currency-decimals="{{ \App\Support\Currency::decimals() }}">
                         <div class="alert alert-secondary mb-0" id="previewResult">
                             Select your operation area(s) and enter a city to preview the charge.
                         </div>

@@ -64,7 +64,7 @@
                                             @endif
                                         </td>
                                         <td>{{ $cart->items_count }}</td>
-                                        <td>${{ number_format($cart->total_value, 2) }}</td>
+                                        <td>{{ money($cart->total_value) }}</td>
                                         <td>
                                             {{ $cart->updated_at->format('d M, Y') }}
                                             <small class="text-muted">{{ $cart->updated_at->format('h:i A') }}</small>
@@ -146,7 +146,9 @@
                         <tfoot>
                             <tr class="border-top">
                                 <td colspan="3" class="text-end fw-bold">Total</td>
-                                <td class="text-end fw-bold" id="modalTotal">$0.00</td>
+                                <td class="text-end fw-bold" id="modalTotal" data-currency-symbol="{{ currency_symbol() }}"
+                                data-currency-position="{{ currency_position() }}"
+                                data-currency-decimals="{{ \App\Support\Currency::decimals() }}">{{ money(0) }}</td>
                             </tr>
                         </tfoot>
                     </table>

@@ -48,20 +48,20 @@
                         <tr>
                             <td>{{ $item->product_name }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>${{ number_format((float) $item->total_price, 2) }}</td>
+                            <td>{{ money($item->total_price) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
             <div class="totals">
-                <p><span>Subtotal</span><span>${{ number_format((float) $order->subtotal, 2) }}</span></p>
+                <p><span>Subtotal</span><span>{{ money($order->subtotal) }}</span></p>
                 @if ((float) $order->discount_amount > 0)
-                    <p><span>Discount</span><span>-${{ number_format((float) $order->discount_amount, 2) }}</span></p>
+                    <p><span>Discount</span><span>-{{ money($order->discount_amount) }}</span></p>
                 @endif
-                <p><span>Shipping</span><span>${{ number_format((float) $order->shipping_charge, 2) }}</span></p>
-                <p><span>Tax</span><span>${{ number_format((float) $order->tax_amount, 2) }}</span></p>
-                <p class="total"><span>Total</span><span>${{ number_format((float) $order->total_amount, 2) }}</span></p>
+                <p><span>Shipping</span><span>{{ money($order->shipping_charge) }}</span></p>
+                <p><span>Tax</span><span>{{ money($order->tax_amount) }}</span></p>
+                <p class="total"><span>Total</span><span>{{ money($order->total_amount) }}</span></p>
             </div>
 
             <p style="margin-top: 30px;">

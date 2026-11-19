@@ -22,10 +22,14 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       `reports:send-monthly-summary` (1st, 08:00) email summaries to the admin inbox, gated by the
       notification settings. Covered by `ReportModuleTest`, `WeeklySalesSummaryTest` and
       `MonthlySalesSummaryTest`.
-- [ ] **Currency formatting helper**: no `format_price()` / `money()` helper exists (`app/Support/helpers.php`
-      only defines `setting()`), while `currency` and `currency_symbol_position` settings are already
-      stored and editable. Hardcoded `$` remains across the product/order/refund/cart Blade views.
-      Add the helper (respecting symbol position + decimals) and replace the hardcoded symbols.
+- [x] **Currency formatting helper**: ✅ Shipped — `App\Support\Currency` plus the `money()` /
+      `format_price()` / `currency_symbol()` / `currency_position()` helpers format every amount from the
+      `company` settings group (symbol, `currency_symbol_position`, optional `currency_decimals`).
+      Hardcoded `$` removed from the storefront (product cards, PDP, cart, checkout, order history /
+      confirm / track, header mini-cart, wishlist, order email) and the admin panel (orders, refunds,
+      coupons, carts, customers, products, reports, summary emails, POS), including the
+      `Product::price_range_label` and `Coupon::value_label` accessors. JS price updates go through
+      `resources/js/currency.js` with the same formatting. Covered by `tests/Unit/CurrencyFormatTest.php`.
 - [x] **CMS static pages**: ✅ Shipped — `CmsPage` model/table, admin editor (`admin.cms.pages.*`)
       and storefront rendering through `App\Services\Visitor\CmsPageService::getPage()`. Content is
       HTML-sanitized on save (`App\Support\HtmlSanitizer`); per-page meta overrides the storefront `<head>`.

@@ -139,9 +139,9 @@
                                 <div class="ec-sb-title"><h3 class="ec-sidebar-title">Summary</h3></div>
                                 <div class="ec-sb-block-content">
                                     <div class="ec-checkout-summary">
-                                        <div><span class="text-left">Sub-Total</span><span class="text-right" id="summarySubtotal">${{ number_format($summary['subtotal'], 2) }}</span></div>
-                                        <div><span class="text-left">Est. Shipping</span><span class="text-right">${{ number_format($summary['shipping_charge_estimate'], 2) }}</span></div>
-                                        <div><span class="text-left">Est. Tax</span><span class="text-right">${{ number_format($summary['tax_amount_estimate'], 2) }}</span></div>
+                                        <div><span class="text-left">Sub-Total</span><span class="text-right" id="summarySubtotal" data-amount="{{ $summary['subtotal'] }}">{{ money($summary['subtotal']) }}</span></div>
+                                        <div><span class="text-left">Est. Shipping</span><span class="text-right" id="summaryShipping" data-amount="{{ $summary['shipping_charge_estimate'] }}">{{ money($summary['shipping_charge_estimate']) }}</span></div>
+                                        <div><span class="text-left">Est. Tax</span><span class="text-right" id="summaryTax" data-amount="{{ $summary['tax_amount_estimate'] }}">{{ money($summary['tax_amount_estimate']) }}</span></div>
                                         <div>
                                             <span class="text-left">Coupon</span>
                                             <span class="text-right"><a class="ec-checkout-coupan" id="toggleCoupon">Apply Coupon</a></span>
@@ -157,9 +157,8 @@
                                     </div>
                                     <div class="ec-checkout-summary-total">
                                         <span class="text-left">Est. Total</span>
-                                        <span class="text-right" id="summaryTotal">
-                                            ${{ number_format($summary['subtotal'] + $summary['shipping_charge_estimate'] + $summary['tax_amount_estimate'], 2) }}
-                                        </span>
+                                        <span class="text-right" id="summaryTotal"
+                                            data-amount="{{ $summary['subtotal'] + $summary['shipping_charge_estimate'] + $summary['tax_amount_estimate'] }}">{{ money($summary['subtotal'] + $summary['shipping_charge_estimate'] + $summary['tax_amount_estimate']) }}</span>
                                     </div>
                                 </div>
                             </div>

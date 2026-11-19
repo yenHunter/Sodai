@@ -61,7 +61,7 @@
                                                 </td>
                                                 <td><span>{{ $product?->name ?? 'Product removed' }}</span></td>
                                                 <td><span>{{ $item->created_at->format('d M Y') }}</span></td>
-                                                <td><span>${{ number_format((float) ($product?->final_price ?? 0), 2) }}</span></td>
+                                                <td><span>{{ money($product?->final_price ?? 0) }}</span></td>
                                                 <td>
                                                     @if (!$product)
                                                         <span class="dis">Unavailable</span>
