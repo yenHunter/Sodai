@@ -79,10 +79,8 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       exist today (`admin.products.search`, `admin.products.tags.search`,
       `admin.products.options.search`, `admin.orders.customers.search`,
       `admin.orders.products.search`). The template's topbar search input is still non-functional.
-- [ ] Saved/exportable filters on Order and Product index pages — product side shipped: the
-      products index has an **Export CSV** button that streams the current search/category/status filter
-      using `ProductCsvService`'s shared columns, so the filtered file stays re-importable. Saved filter
-      presets and an order-index export are still unbuilt.
+- [ ] Saved/exportable filters on Order and Product index pages (CSV export of the current filter).
+      Report exports are the only CSV generation in the app so far.
 - [ ] Audit-friendly "who changed this coupon/price" trail (ties into the Activity Log item above).
 
 ---

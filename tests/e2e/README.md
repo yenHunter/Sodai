@@ -42,6 +42,9 @@ The same seeder creates the checkout fixtures used by `checkout.spec.js`:
 | Product | `/products/e2e-checkout-product` ($100, 50 in stock) |
 | Coupon | `E2ECHECKOUT` (10% off) |
 | Guest checkout | enabled via the `order.allow_guest_checkout` setting |
+| Delivered order | `E2E-ORD-DELIVERED` (used by `admin-orders-export.spec.js`) |
+| Pending order | `E2E-ORD-PENDING` (used by `admin-orders-export.spec.js`) |
+| Archived order | `E2E-ORD-ARCHIVED` (dated 30 days ago, outside the export spec's date window) |
 
 ## CI
 
