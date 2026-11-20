@@ -64,7 +64,16 @@
                                 <i class="app-search-icon text-muted" data-lucide="activity"></i>
                             </div>
                         </div>
-                        <div>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-light" href="{{ route('admin.ecommerce.product.import-export') }}">
+                                <i class="fs-sm me-2" data-lucide="file-spreadsheet"></i>
+                                Import / Export
+                            </a>
+                            <a class="btn btn-light" href="{{ route('admin.ecommerce.product.export', request()->only(['search', 'category_id', 'status'])) }}"
+                                title="Exports the products matching the current filters as a re-importable CSV">
+                                <i class="fs-sm me-2" data-lucide="download"></i>
+                                Export CSV
+                            </a>
                             @admincan('product.create')
                                 <a class="btn btn-primary" href="{{ route('admin.ecommerce.product.create') }}">
                                     <i class="fs-sm me-2" data-lucide="plus"></i>

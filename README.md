@@ -55,6 +55,9 @@ continuously-updated breakdown of what's built vs. what's planned.
 - Role-based access control (Spatie Permission) with 5 seeded roles and granular permissions
 - Product catalog with **variant support** (Color/Size/Weight/custom options), auto-generated
   SKUs, image galleries scoped per-variant or shared, related products, tags
+- Bulk product **CSV import/export**: re-importable catalog export (all products, or just the
+  rows matching the current search/category/status filter), downloadable template, and an importer
+  that matches variants by SKU and reports skipped rows with line numbers
 - Category (2-level) and Brand management
 - Order management with a POS-style builder: live AJAX shipping/tax/coupon calculation,
   editable overrides, full status-history audit trail, and a CSV export of the currently

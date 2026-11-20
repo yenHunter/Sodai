@@ -11,6 +11,7 @@ use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
 use App\Models\Tag;
 use App\Support\HtmlSanitizer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -819,6 +820,40 @@ class ProductService
     // ─────────────────────────────────────────────
     // QUERY HELPERS
     // ─────────────────────────────────────────────
+
+    /**
+     * Applies the products index filters (search, category, status) to a query.
+     * The index page and its CSV export both call this so the two can't drift.
+     *
+     * @param  array{search?: string|null, category_id?: int|string|null, status?: string|null}  $filters
+     */
+    public function applyIndexFilters(Builder $query, array $filters): Builder
+    {
+        if ($search = $filters['search'] ?? null) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($categoryId = $filters['category_id'] ?? null) {
+            $query->where('category_id', $categoryId);
+        }
+
+        switch ($filters['status'] ?? null) {
+            case 'active':
+                $query->where('is_active', true)->where('total_stock', '>', 0);
+                break;
+            case 'inactive':
+                $query->where('is_active', false);
+                break;
+            case 'out_of_stock':
+                $query->where('is_active', true)->where('total_stock', '<=', 0);
+                break;
+        }
+
+        return $query;
+    }
 
     public function getProductsList(array $filters = [])
     {
