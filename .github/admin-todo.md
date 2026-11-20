@@ -59,8 +59,13 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       `TwoFactorController`, encrypted `two_factor_*` columns, recovery codes, challenge after
       password verification). Routes: `admin/two-factor` + `admin/two-factor-challenge`; the profile
       page links to it. Covered by `tests/Feature/AdminTwoFactorTest.php`. Customers still have no MFA.
-- [ ] **Bulk product import/export (CSV)** — only report exports exist (sales-by-date, top products).
-      No product or order import/export controller, route or view.
+- [x] **Bulk product import/export (CSV)** — ✅ Shipped — `ProductCsvService` + `ProductCsvController`
+      (`admin.ecommerce.product.import-export`): export the whole catalog (one row per variant, re-importable),
+      download a template, and import in bulk. Import groups rows by product name, matches variants by SKU
+      (blank SKU = create), creates unknown brands, validates each row (price/stock/discount/options) and
+      commits one product per transaction, reporting skipped rows with their line numbers. Gated by
+      `product.view` (export) and `product.create` (import). Covered by `ProductCsvModuleTest`.
+      Order import/export is still unbuilt.
 - [ ] **Admin activity log surfaced in UI** — `ActivityLog` model + migration + `Admin::loggable()`
       morph relation exist, but nothing writes entries and there is no admin view. Either add model
       observers (Product/Order/Category/Coupon changes) plus a log screen, or drop the unused table.
@@ -74,8 +79,10 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       exist today (`admin.products.search`, `admin.products.tags.search`,
       `admin.products.options.search`, `admin.orders.customers.search`,
       `admin.orders.products.search`). The template's topbar search input is still non-functional.
-- [ ] Saved/exportable filters on Order and Product index pages (CSV export of the current filter).
-      Report exports are the only CSV generation in the app so far.
+- [ ] Saved/exportable filters on Order and Product index pages — product side shipped: the
+      products index has an **Export CSV** button that streams the current search/category/status filter
+      using `ProductCsvService`'s shared columns, so the filtered file stays re-importable. Saved filter
+      presets and an order-index export are still unbuilt.
 - [ ] Audit-friendly "who changed this coupon/price" trail (ties into the Activity Log item above).
 
 ---
