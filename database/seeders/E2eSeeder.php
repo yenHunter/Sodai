@@ -34,6 +34,10 @@ class E2eSeeder extends Seeder
 
     public const COUPON_CODE = 'E2ECHECKOUT';
 
+    public const EXPORT_PRODUCT_SLUG = 'e2e-accessory-product';
+
+    public const EXPORT_PRODUCT_CATEGORY = 'E2E Accessories';
+
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -60,6 +64,7 @@ class E2eSeeder extends Seeder
         ])->save();
 
         $this->seedCheckoutCatalog();
+        $this->seedProductExport();
     }
 
     /**
@@ -116,5 +121,40 @@ class E2eSeeder extends Seeder
             ['allow_guest_checkout' => '1'],
             ['allow_guest_checkout' => 'boolean'],
         );
+    }
+
+    /**
+     * A second product in a category of its own, so the products export spec
+     * can filter by category and see the downloaded file narrow to it.
+     */
+    private function seedProductExport(): void
+    {
+        $category = Category::firstOrCreate(
+            ['slug' => 'e2e-accessories'],
+            ['name' => self::EXPORT_PRODUCT_CATEGORY, 'is_active' => true, 'sort_order' => 1],
+        );
+
+        $product = Product::updateOrCreate(
+            ['slug' => self::EXPORT_PRODUCT_SLUG],
+            [
+                'name' => 'E2E Accessory Product',
+                'category_id' => $category->id,
+                'is_active' => true,
+                'is_featured' => false,
+            ],
+        );
+
+        ProductVariant::updateOrCreate(
+            ['product_id' => $product->id, 'sku' => 'E2E-SKU-002'],
+            [
+                'price' => 25,
+                'stock_quantity' => 10,
+                'low_stock_threshold' => 5,
+                'is_default' => true,
+                'is_active' => true,
+            ],
+        );
+
+        $product->refreshPriceAndStockCache();
     }
 }
