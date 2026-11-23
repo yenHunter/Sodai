@@ -35,12 +35,14 @@ use Illuminate\Support\Str;
  *     php artisan db:seed --class=DemoCatalogSeeder
  *
  * Re-running it is safe: every row is found by a stable slug, SKU, order
- * number or email and updated in place. Identifiers a real store also issues
- * for itself — order numbers, refund numbers, coupon codes — carry the
- * DEMO- marker, so seeding beside live data can never adopt or rewrite a
- * real order, refund or coupon. Images live in public/images/demo and are
- * copied into storage/app/public on first run, so a fresh checkout only
- * needs `php artisan storage:link`.
+ * number or email and updated in place. Every identifier a real store also
+ * issues for itself — order numbers, refund numbers, coupon codes, catalog
+ * slugs and variant SKUs — is namespaced with DEMO-/demo-, so seeding beside
+ * live data can never adopt or rewrite a real order, refund, coupon, category,
+ * brand or product. Store settings are only created where the shop has no
+ * value yet. Images live in public/images/demo and are copied into
+ * storage/app/public on first run, so a fresh checkout only needs
+ * `php artisan storage:link`.
  */
 class DemoCatalogSeeder extends Seeder
 {
@@ -55,6 +57,13 @@ class DemoCatalogSeeder extends Seeder
      * "latest number" lookups that derive the next sequence.
      */
     public const ID_PREFIX = 'DEMO-';
+
+    /**
+     * Marker on catalog slugs. A real shop may legitimately own the slug
+     * "stationery", so the demo category is "demo-stationery" instead and the
+     * two can never be matched to each other.
+     */
+    public const SLUG_PREFIX = 'demo-';
 
     /** @var array<string, Category> */
     private array $categories = [];
@@ -156,12 +165,14 @@ class DemoCatalogSeeder extends Seeder
     // ─────────────────────────────────────────────
 
     /**
-     * Store identity and the checkout/shipping rules the seeded orders were
-     * priced against, so the storefront and the order history agree.
+     * Store identity and the checkout/shipping defaults the seeded orders
+     * were priced against. Only written into a group that is still empty:
+     * a demo run beside a live shop must leave that shop's name, currency,
+     * shipping charges and order prefix exactly as they are.
      */
     private function seedSettings(): void
     {
-        Setting::setMany('company', [
+        $this->seedMissingSettings('company', [
             'name' => 'Sodai',
             'email' => 'hello@example.com',
             'phone' => '+880 1700 000000',
@@ -173,7 +184,7 @@ class DemoCatalogSeeder extends Seeder
             'currency_decimals' => 'integer',
         ]);
 
-        Setting::setMany('shipping', [
+        $this->seedMissingSettings('shipping', [
             'operation_areas' => json_encode(['Dhaka']),
             'inside_area_charge' => '60',
             'outside_area_charge' => '120',
@@ -184,12 +195,47 @@ class DemoCatalogSeeder extends Seeder
             'enable_free_shipping' => 'boolean',
         ]);
 
-        Setting::setMany('order', [
+        $this->seedMissingSettings('order', [
             'allow_guest_checkout' => '1',
             'order_number_prefix' => 'ORD-',
         ], [
             'allow_guest_checkout' => 'boolean',
         ]);
+    }
+
+    /**
+     * Create the given keys only where the group has no row yet.
+     * Setting::setMany() upserts, so it would rewrite a live shop's values;
+     * the settings it does keep are reported instead of silently ignored.
+     *
+     * @param  array<string, string>  $values
+     * @param  array<string, string>  $types
+     */
+    private function seedMissingSettings(string $group, array $values, array $types = []): void
+    {
+        $existing = Setting::group($group);
+        $missing = [];
+        $kept = [];
+
+        foreach ($values as $key => $value) {
+            if (! array_key_exists($key, $existing)) {
+                $missing[$key] = $value;
+
+                continue;
+            }
+
+            if ((string) $existing[$key] !== (string) $value) {
+                $kept[] = $key;
+            }
+        }
+
+        if ($missing !== []) {
+            Setting::setMany($group, $missing, array_intersect_key($types, $missing));
+        }
+
+        if ($kept !== []) {
+            $this->command?->warn('Kept the store\'s existing '.$group.' settings: '.implode(', ', $kept).'.');
+        }
     }
 
     private function seedAdmin(): void
@@ -229,7 +275,7 @@ class DemoCatalogSeeder extends Seeder
 
         foreach ($categories as $category) {
             $this->categories[$category['slug']] = Category::updateOrCreate(
-                ['slug' => $category['slug']],
+                ['slug' => $this->demoSlug($category['slug'])],
                 [
                     'name' => $category['name'],
                     'description' => $category['description'],
@@ -252,7 +298,7 @@ class DemoCatalogSeeder extends Seeder
 
         foreach ($brands as $index => $brand) {
             $this->brands[$brand['slug']] = Brand::updateOrCreate(
-                ['slug' => $brand['slug']],
+                ['slug' => $this->demoSlug($brand['slug'])],
                 [
                     'name' => $brand['name'],
                     'description' => $brand['description'],
@@ -437,7 +483,7 @@ class DemoCatalogSeeder extends Seeder
         $createdAt = now()->subDays($definition['days_ago'])->setTime(10, 0);
 
         $product = Product::updateOrCreate(
-            ['slug' => $definition['slug']],
+            ['slug' => $this->demoSlug($definition['slug'])],
             [
                 'name' => $definition['name'],
                 'short_description' => $definition['short_description'],
@@ -460,7 +506,7 @@ class DemoCatalogSeeder extends Seeder
 
         foreach ($definition['variants'] as $variantData) {
             $variant = ProductVariant::updateOrCreate(
-                ['sku' => $variantData['sku']],
+                ['sku' => $this->demoSku($variantData['sku'])],
                 [
                     'product_id' => $product->id,
                     'price' => $variantData['price'],
@@ -513,14 +559,16 @@ class DemoCatalogSeeder extends Seeder
     {
         $ids = [];
 
+        // Colors and sizes are shared vocabulary: a live shop's "Sage" swatch
+        // is its own, so reuse it read-only and only add what is missing.
         foreach ($productOptions as $optionName => $values) {
-            $option = ProductOption::updateOrCreate(
+            $option = ProductOption::firstOrCreate(
                 ['slug' => Str::slug($optionName)],
                 ['name' => $optionName, 'sort_order' => $optionName === 'Size' ? 2 : 1],
             );
 
             foreach ($values as $index => [$value, $swatch]) {
-                $optionValue = ProductOptionValue::updateOrCreate(
+                $optionValue = ProductOptionValue::firstOrCreate(
                     ['product_option_id' => $option->id, 'slug' => Str::slug($value)],
                     ['value' => $value, 'swatch' => $swatch, 'sort_order' => $index + 1],
                 );
@@ -553,7 +601,7 @@ class DemoCatalogSeeder extends Seeder
                 'subtitle' => 'Sakura throws and linen notebooks',
                 'description' => 'Stone-washed linen that starts crisp and gets better with every wash.',
                 'button_text' => 'Explore Home & Living',
-                'button_url' => '/category/home-living',
+                'button_url' => '/category/'.self::SLUG_PREFIX.'home-living',
                 'image' => 'banners/demo/linen-stack.webp',
                 'text_position' => 'left',
                 'text_color' => 'dark',
@@ -561,9 +609,11 @@ class DemoCatalogSeeder extends Seeder
             ],
         ];
 
+        // Keyed by their demo image path, not their title: a live banner that
+        // happens to share a headline must keep its own copy and layout.
         foreach ($banners as $banner) {
             Banner::updateOrCreate(
-                ['title' => $banner['title'], 'position' => 'home_slider'],
+                ['position' => 'home_slider', 'image' => $banner['image']],
                 $banner + [
                     'button_target' => '_self',
                     'mobile_image' => null,
@@ -783,6 +833,24 @@ class DemoCatalogSeeder extends Seeder
     private function orderNumber(int $sequence): string
     {
         return self::ID_PREFIX.'ORD-'.$sequence;
+    }
+
+    /**
+     * Catalog lookups key on the namespaced identifier, so a real row with
+     * the bare slug can never be adopted and rewritten by a demo run.
+     */
+    private function demoSlug(string $slug): string
+    {
+        return self::SLUG_PREFIX.$slug;
+    }
+
+    /**
+     * Same idea for variant SKUs: "SOD-NOTE-RULED" is a number a real store
+     * could well have issued, so the demo variant is "DEMO-SOD-NOTE-RULED".
+     */
+    private function demoSku(string $sku): string
+    {
+        return self::ID_PREFIX.$sku;
     }
 
     private function shippingCharge(User $customer, float $subtotal): float
