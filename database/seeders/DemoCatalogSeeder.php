@@ -35,15 +35,26 @@ use Illuminate\Support\Str;
  *     php artisan db:seed --class=DemoCatalogSeeder
  *
  * Re-running it is safe: every row is found by a stable slug, SKU, order
- * number or email and updated in place. Images live in public/images/demo
- * and are copied into storage/app/public on first run, so a fresh checkout
- * only needs `php artisan storage:link`.
+ * number or email and updated in place. Identifiers a real store also issues
+ * for itself — order numbers, refund numbers, coupon codes — carry the
+ * DEMO- marker, so seeding beside live data can never adopt or rewrite a
+ * real order, refund or coupon. Images live in public/images/demo and are
+ * copied into storage/app/public on first run, so a fresh checkout only
+ * needs `php artisan storage:link`.
  */
 class DemoCatalogSeeder extends Seeder
 {
     public const ADMIN_EMAIL = 'demo-admin@example.com';
 
     public const CUSTOMER_EMAIL = 'demo-customer@example.com';
+
+    /**
+     * Marker on every identifier the application generates for real business
+     * records. Those generators build `<settings prefix><digits>`, so a demo
+     * identifier can neither equal one of theirs nor be picked up by the
+     * "latest number" lookups that derive the next sequence.
+     */
+    public const ID_PREFIX = 'DEMO-';
 
     /** @var array<string, Category> */
     private array $categories = [];
@@ -628,7 +639,7 @@ class DemoCatalogSeeder extends Seeder
     private function seedCoupon(): void
     {
         $this->coupon = Coupon::updateOrCreate(
-            ['code' => 'WELCOME10'],
+            ['code' => self::ID_PREFIX.'WELCOME10'],
             [
                 'type' => 'percentage',
                 'value' => 10,
@@ -650,28 +661,30 @@ class DemoCatalogSeeder extends Seeder
 
     private function seedOrders(): void
     {
-        // Customer key, status, how long ago it was placed, and the basket.
-        // Prices/totals are derived from the seeded variants, never hardcoded.
+        // Sequence (the number after DEMO-ORD-), customer key, status, how
+        // long ago it was placed, and the basket. Prices/totals are derived
+        // from the seeded variants, never hardcoded.
         $orders = [
-            ['number' => 'ORD-100001', 'customer' => 'tanvir', 'status' => 'delivered', 'days_ago' => 45, 'items' => [['SOD-MUG-SAGE-350', 2], ['SOD-BOARD-M', 1]]],
-            ['number' => 'ORD-100002', 'customer' => 'farhana', 'status' => 'delivered', 'days_ago' => 38, 'items' => [['SOD-TEAPOT-600', 1]]],
-            ['number' => 'ORD-100003', 'customer' => 'rifat', 'status' => 'delivered', 'days_ago' => 31, 'items' => [['SOD-THROW-SAGE', 1], ['SOD-NOTE-DOTTED', 1]], 'coupon' => true],
-            ['number' => 'ORD-100004', 'customer' => 'sadia', 'status' => 'delivered', 'days_ago' => 24, 'items' => [['SOD-KETTLE-BLACK', 1]]],
-            ['number' => 'ORD-100005', 'customer' => 'tanvir', 'status' => 'delivered', 'days_ago' => 18, 'items' => [['SOD-MATCHA-SET', 1], ['SOD-MUG-CHAR-350', 1]]],
-            ['number' => 'ORD-100006', 'customer' => 'imran', 'status' => 'shipped', 'days_ago' => 8, 'items' => [['SOD-TOTE-NAT', 1]]],
-            ['number' => 'ORD-100007', 'customer' => 'farhana', 'status' => 'shipped', 'days_ago' => 6, 'items' => [['SOD-BOARD-L', 1], ['SOD-NOTE-RULED', 2]]],
-            ['number' => 'ORD-100008', 'customer' => 'rifat', 'status' => 'processing', 'days_ago' => 4, 'items' => [['SOD-TEAPOT-900', 1], ['SOD-MATCHA-SET', 1]]],
-            ['number' => 'ORD-100009', 'customer' => 'sadia', 'status' => 'processing', 'days_ago' => 3, 'items' => [['SOD-MUG-CHAR-450', 3]]],
-            ['number' => 'ORD-100010', 'customer' => 'imran', 'status' => 'confirmed', 'days_ago' => 2, 'items' => [['SOD-THROW-OAT', 1]]],
-            ['number' => 'ORD-100011', 'customer' => 'farhana', 'status' => 'pending', 'days_ago' => 1, 'items' => [['SOD-KETTLE-STEEL', 1], ['SOD-NOTE-PLAIN', 2]]],
-            ['number' => 'ORD-100012', 'customer' => 'demo', 'status' => 'pending', 'days_ago' => 0, 'items' => [['SOD-MUG-SAGE-450', 1]]],
-            ['number' => 'ORD-100013', 'customer' => 'sadia', 'status' => 'cancelled', 'days_ago' => 12, 'items' => [['SOD-TOTE-CHAR', 1]]],
-            ['number' => 'ORD-100014', 'customer' => 'rifat', 'status' => 'refunded', 'days_ago' => 20, 'items' => [['SOD-BOARD-S', 1]]],
+            ['sequence' => 100001, 'customer' => 'tanvir', 'status' => 'delivered', 'days_ago' => 45, 'items' => [['SOD-MUG-SAGE-350', 2], ['SOD-BOARD-M', 1]]],
+            ['sequence' => 100002, 'customer' => 'farhana', 'status' => 'delivered', 'days_ago' => 38, 'items' => [['SOD-TEAPOT-600', 1]]],
+            ['sequence' => 100003, 'customer' => 'rifat', 'status' => 'delivered', 'days_ago' => 31, 'items' => [['SOD-THROW-SAGE', 1], ['SOD-NOTE-DOTTED', 1]], 'coupon' => true],
+            ['sequence' => 100004, 'customer' => 'sadia', 'status' => 'delivered', 'days_ago' => 24, 'items' => [['SOD-KETTLE-BLACK', 1]]],
+            ['sequence' => 100005, 'customer' => 'tanvir', 'status' => 'delivered', 'days_ago' => 18, 'items' => [['SOD-MATCHA-SET', 1], ['SOD-MUG-CHAR-350', 1]]],
+            ['sequence' => 100006, 'customer' => 'imran', 'status' => 'shipped', 'days_ago' => 8, 'items' => [['SOD-TOTE-NAT', 1]]],
+            ['sequence' => 100007, 'customer' => 'farhana', 'status' => 'shipped', 'days_ago' => 6, 'items' => [['SOD-BOARD-L', 1], ['SOD-NOTE-RULED', 2]]],
+            ['sequence' => 100008, 'customer' => 'rifat', 'status' => 'processing', 'days_ago' => 4, 'items' => [['SOD-TEAPOT-900', 1], ['SOD-MATCHA-SET', 1]]],
+            ['sequence' => 100009, 'customer' => 'sadia', 'status' => 'processing', 'days_ago' => 3, 'items' => [['SOD-MUG-CHAR-450', 3]]],
+            ['sequence' => 100010, 'customer' => 'imran', 'status' => 'confirmed', 'days_ago' => 2, 'items' => [['SOD-THROW-OAT', 1]]],
+            ['sequence' => 100011, 'customer' => 'farhana', 'status' => 'pending', 'days_ago' => 1, 'items' => [['SOD-KETTLE-STEEL', 1], ['SOD-NOTE-PLAIN', 2]]],
+            ['sequence' => 100012, 'customer' => 'demo', 'status' => 'pending', 'days_ago' => 0, 'items' => [['SOD-MUG-SAGE-450', 1]]],
+            ['sequence' => 100013, 'customer' => 'sadia', 'status' => 'cancelled', 'days_ago' => 12, 'items' => [['SOD-TOTE-CHAR', 1]]],
+            ['sequence' => 100014, 'customer' => 'rifat', 'status' => 'refunded', 'days_ago' => 20, 'items' => [['SOD-BOARD-S', 1]]],
         ];
 
         foreach ($orders as $plan) {
             $customer = $this->customers[$plan['customer']];
             $placedAt = now()->subDays($plan['days_ago'])->setTime(11, 30);
+            $number = $this->orderNumber($plan['sequence']);
 
             $subtotal = 0.0;
             $lines = [];
@@ -697,7 +710,7 @@ class DemoCatalogSeeder extends Seeder
             $shipping = $this->shippingCharge($customer, $subtotal);
 
             $order = Order::updateOrCreate(
-                ['order_number' => $plan['number']],
+                ['order_number' => $number],
                 [
                     'user_id' => $customer->id,
                     'status' => $plan['status'],
@@ -718,7 +731,7 @@ class DemoCatalogSeeder extends Seeder
                     'shipping_zip' => $customer->defaultAddress?->zip_code ?? '1205',
                     'shipping_country' => 'Bangladesh',
                     'tracking_number' => in_array($plan['status'], ['shipped', 'delivered'], true)
-                        ? 'SPX-'.substr(str_replace('ORD-', '', $plan['number']), -4).'-BD'
+                        ? 'SPX-'.$plan['sequence'].'-BD'
                         : null,
                     'shipped_at' => in_array($plan['status'], ['shipped', 'delivered'], true) ? $placedAt->copy()->addDays(2) : null,
                     'delivered_at' => $plan['status'] === 'delivered' ? $placedAt->copy()->addDays(4) : null,
@@ -759,6 +772,17 @@ class DemoCatalogSeeder extends Seeder
         $this->coupon->update([
             'used_count' => Order::where('coupon_id', $this->coupon->id)->count(),
         ]);
+    }
+
+    /**
+     * Demo order numbers live in their own namespace, "DEMO-ORD-100001".
+     * PricingService::generateUniqueOrderNumber() emits
+     * `<order prefix><six digits>` from the newest matching number, so these
+     * neither collide with real orders nor push the real sequence forward.
+     */
+    private function orderNumber(int $sequence): string
+    {
+        return self::ID_PREFIX.'ORD-'.$sequence;
     }
 
     private function shippingCharge(User $customer, float $subtotal): float
@@ -816,10 +840,15 @@ class DemoCatalogSeeder extends Seeder
 
     private function seedRefund(Order $order): void
     {
+        // Found by the demo order, not by its number: a refund that belongs to
+        // any other order is real data and must never be rewritten. The DEMO-
+        // prefix additionally keeps the number out of the generator's
+        // `<invoice prefix>-REF-<digits>` namespace, so a fresh refund issued
+        // by the admin UI can never reuse or overwrite it.
         Refund::updateOrCreate(
-            ['refund_number' => 'INV-REF-000001'],
+            ['order_id' => $order->id],
             [
-                'order_id' => $order->id,
+                'refund_number' => self::ID_PREFIX.'REF-000001',
                 'user_id' => $order->user_id,
                 'amount' => $order->total_amount,
                 'reason' => 'Board arrived with a split along the grain.',
@@ -838,27 +867,27 @@ class DemoCatalogSeeder extends Seeder
     private function seedReviews(): void
     {
         $reviews = [
-            ['sku' => 'SOD-MUG-SAGE-350', 'order' => 'ORD-100001', 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
+            ['sku' => 'SOD-MUG-SAGE-350', 'sequence' => 100001, 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
                 'comment' => 'The glaze is even better in person and it holds heat for ages. Bought a second one for the office.'],
-            ['sku' => 'SOD-BOARD-M', 'order' => 'ORD-100001', 'customer' => 'tanvir', 'rating' => 4, 'status' => 'pending',
+            ['sku' => 'SOD-BOARD-M', 'sequence' => 100001, 'customer' => 'tanvir', 'rating' => 4, 'status' => 'pending',
                 'comment' => 'Lovely grain and very light. Slightly smaller than I pictured, but it fits our counter.'],
-            ['sku' => 'SOD-TEAPOT-600', 'order' => 'ORD-100002', 'customer' => 'farhana', 'rating' => 5, 'status' => 'approved',
+            ['sku' => 'SOD-TEAPOT-600', 'sequence' => 100002, 'customer' => 'farhana', 'rating' => 5, 'status' => 'approved',
                 'comment' => 'No drip at all, which is why I bought it. Packaging was careful too.'],
-            ['sku' => 'SOD-THROW-SAGE', 'order' => 'ORD-100003', 'customer' => 'rifat', 'rating' => 4, 'status' => 'approved',
+            ['sku' => 'SOD-THROW-SAGE', 'sequence' => 100003, 'customer' => 'rifat', 'rating' => 4, 'status' => 'approved',
                 'comment' => 'Soft after the first wash and the colour is exactly as shown. A little lighter than expected.'],
-            ['sku' => 'SOD-NOTE-DOTTED', 'order' => 'ORD-100003', 'customer' => 'rifat', 'rating' => 5, 'status' => 'approved',
+            ['sku' => 'SOD-NOTE-DOTTED', 'sequence' => 100003, 'customer' => 'rifat', 'rating' => 5, 'status' => 'approved',
                 'comment' => 'Fountain pen ink does not bleed through. Already ordered a second set.'],
-            ['sku' => 'SOD-KETTLE-BLACK', 'order' => 'ORD-100004', 'customer' => 'sadia', 'rating' => 4, 'status' => 'approved',
+            ['sku' => 'SOD-KETTLE-BLACK', 'sequence' => 100004, 'customer' => 'sadia', 'rating' => 4, 'status' => 'approved',
                 'comment' => 'Excellent control on the pour. The handle gets slightly warm if you leave it on the hob too long.'],
-            ['sku' => 'SOD-MATCHA-SET', 'order' => 'ORD-100005', 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
+            ['sku' => 'SOD-MATCHA-SET', 'sequence' => 100005, 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
                 'comment' => 'A proper starter set. The whisk has held its shape after two months of daily use.'],
-            ['sku' => 'SOD-MUG-CHAR-350', 'order' => 'ORD-100005', 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
+            ['sku' => 'SOD-MUG-CHAR-350', 'sequence' => 100005, 'customer' => 'tanvir', 'rating' => 5, 'status' => 'approved',
                 'comment' => 'Charcoal is a deep matte black. Feels sturdy without being heavy.'],
         ];
 
         foreach ($reviews as $review) {
             $variant = $this->variants[$review['sku']];
-            $order = Order::where('order_number', $review['order'])->first();
+            $order = Order::where('order_number', $this->orderNumber($review['sequence']))->first();
 
             if (! $order) {
                 continue;
