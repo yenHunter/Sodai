@@ -43,6 +43,7 @@ The same seeder creates the checkout fixtures used by `checkout.spec.js`:
 | Coupon | `E2ECHECKOUT` (10% off) |
 | Guest checkout | enabled via the `order.allow_guest_checkout` setting |
 | Accessory product | `E2E Accessory Product` in category `E2E Accessories` (used by `admin-products-export.spec.js`) |
+| Status fixtures | `E2E Inactive Product` (inactive, 5 in stock) and `E2E Out Of Stock Product` (active, 0 in stock) in category `E2E Status` (used by `admin-products-export.spec.js`) |
 
 ## CI
 
