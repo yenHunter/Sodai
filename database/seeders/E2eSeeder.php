@@ -43,6 +43,16 @@ class E2eSeeder extends Seeder
 
     public const ARCHIVED_ORDER_NUMBER = 'E2E-ORD-ARCHIVED';
 
+    public const EXPORT_PRODUCT_SLUG = 'e2e-accessory-product';
+
+    public const EXPORT_PRODUCT_CATEGORY = 'E2E Accessories';
+
+    public const INACTIVE_PRODUCT_SLUG = 'e2e-inactive-product';
+
+    public const OUT_OF_STOCK_PRODUCT_SLUG = 'e2e-out-of-stock-product';
+
+    public const STATUS_PRODUCT_CATEGORY = 'E2E Status';
+
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -69,6 +79,8 @@ class E2eSeeder extends Seeder
         ])->save();
 
         $this->seedCheckoutCatalog();
+        $this->seedProductExport();
+        $this->seedProductStatus();
         $this->seedOrders();
     }
 
@@ -126,6 +138,104 @@ class E2eSeeder extends Seeder
             ['allow_guest_checkout' => '1'],
             ['allow_guest_checkout' => 'boolean'],
         );
+    }
+
+    /**
+     * A second product in a category of its own, so the products export spec
+     * can filter by category and see the downloaded file narrow to it.
+     */
+    private function seedProductExport(): void
+    {
+        $category = Category::firstOrCreate(
+            ['slug' => 'e2e-accessories'],
+            ['name' => self::EXPORT_PRODUCT_CATEGORY, 'is_active' => true, 'sort_order' => 1],
+        );
+
+        $product = Product::updateOrCreate(
+            ['slug' => self::EXPORT_PRODUCT_SLUG],
+            [
+                'name' => 'E2E Accessory Product',
+                'category_id' => $category->id,
+                'is_active' => true,
+                'is_featured' => false,
+            ],
+        );
+
+        ProductVariant::updateOrCreate(
+            ['product_id' => $product->id, 'sku' => 'E2E-SKU-002'],
+            [
+                'price' => 25,
+                'stock_quantity' => 10,
+                'low_stock_threshold' => 5,
+                'is_default' => true,
+                'is_active' => true,
+            ],
+        );
+
+        $product->refreshPriceAndStockCache();
+    }
+
+    /**
+     * One inactive product and one active but depleted product, in a category
+     * of their own, so the products export spec can filter by each status and
+     * see the downloaded file narrow to it.
+     */
+    private function seedProductStatus(): void
+    {
+        $category = Category::firstOrCreate(
+            ['slug' => 'e2e-status'],
+            ['name' => self::STATUS_PRODUCT_CATEGORY, 'is_active' => true, 'sort_order' => 2],
+        );
+
+        $this->seedStatusProduct(
+            slug: self::INACTIVE_PRODUCT_SLUG,
+            name: 'E2E Inactive Product',
+            sku: 'E2E-SKU-003',
+            categoryId: $category->id,
+            isActive: false,
+            stockQuantity: 5,
+        );
+
+        $this->seedStatusProduct(
+            slug: self::OUT_OF_STOCK_PRODUCT_SLUG,
+            name: 'E2E Out Of Stock Product',
+            sku: 'E2E-SKU-004',
+            categoryId: $category->id,
+            isActive: true,
+            stockQuantity: 0,
+        );
+    }
+
+    private function seedStatusProduct(
+        string $slug,
+        string $name,
+        string $sku,
+        int $categoryId,
+        bool $isActive,
+        int $stockQuantity,
+    ): void {
+        $product = Product::updateOrCreate(
+            ['slug' => $slug],
+            [
+                'name' => $name,
+                'category_id' => $categoryId,
+                'is_active' => $isActive,
+                'is_featured' => false,
+            ],
+        );
+
+        ProductVariant::updateOrCreate(
+            ['product_id' => $product->id, 'sku' => $sku],
+            [
+                'price' => 40,
+                'stock_quantity' => $stockQuantity,
+                'low_stock_threshold' => 5,
+                'is_default' => true,
+                'is_active' => true,
+            ],
+        );
+
+        $product->refreshPriceAndStockCache();
     }
 
     /**
