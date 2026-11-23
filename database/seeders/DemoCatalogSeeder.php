@@ -6,6 +6,8 @@ use App\Models\Address;
 use App\Models\Admin;
 use App\Models\Banner;
 use App\Models\Brand;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -19,9 +21,13 @@ use App\Models\ProductVariant;
 use App\Models\Refund;
 use App\Models\Review;
 use App\Models\Setting;
+use App\Models\Tag;
 use App\Models\User;
+use App\Models\Wishlist;
 use App\Services\Shared\PricingService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -35,7 +41,11 @@ use Illuminate\Support\Str;
  *
  *     php artisan db:seed --class=DemoCatalogSeeder
  *
- * Undo that run, and only that run, with `php artisan demo:clear`.
+ * Seed it with `php artisan demo:seed` (or the db:seed line above) and undo
+ * that run, and only that run, with `php artisan demo:clear`.
+ *
+ * Relative dates anchor to "now" unless `DEMO_DATE=YYYY-MM-DD` is set, which
+ * pins the history so screenshots and tests reproduce exactly.
  *
  * Re-running it is safe: every row is found by a stable slug, SKU, order
  * number or email and updated in place. Every identifier a real store also
@@ -83,6 +93,9 @@ class DemoCatalogSeeder extends Seeder
     /** @var array<string, User> */
     private array $customers = [];
 
+    /** @var array<string, array<string, string>> */
+    private array $writtenSettings = [];
+
     private ?Admin $admin = null;
 
     private ?Coupon $coupon = null;
@@ -91,6 +104,14 @@ class DemoCatalogSeeder extends Seeder
     {
         if (app()->environment('production')) {
             $this->command?->warn('DemoCatalogSeeder skipped: demo accounts are disabled in production.');
+
+            return;
+        }
+
+        // Outside a developer's own machine the demo's well-known password
+        // would be a live super-admin, so an explicit password is required.
+        if (! app()->environment(['local', 'development', 'testing']) && blank(config('app.demo_password'))) {
+            $this->command?->warn('DemoCatalogSeeder skipped: set SEED_DEMO_PASSWORD to seed demo accounts outside local/testing.');
 
             return;
         }
@@ -106,26 +127,44 @@ class DemoCatalogSeeder extends Seeder
         $this->seedCategories();
         $this->seedBrands();
         $this->seedProducts();
+        $this->seedTags();
+        $this->seedRelatedProducts();
         $this->seedBanners();
         $this->seedCustomers();
         $this->seedCoupon();
 
         $this->seedOrders();
+        $this->seedCart();
+        $this->seedWishlist();
         $this->seedReviews();
         $this->refreshCatalogStats();
 
+        $orderIds = Order::whereIn('order_number', self::orderNumbers())->pluck('id');
+
         $this->command?->info('Demo catalog seeded: '
-            .Product::count().' products, '
-            .ProductVariant::count().' variants, '
-            .Order::count().' orders, '
-            .Review::count().' reviews.');
+            .Product::whereIn('slug', self::productSlugs())->count().' products, '
+            .ProductVariant::whereIn('sku', self::variantSkus())->count().' variants, '
+            .$orderIds->count().' orders, '
+            .Review::whereIn('order_id', $orderIds)->count().' reviews.');
         $this->command?->info('Admin login: '.self::ADMIN_EMAIL.' / '.$this->password());
         $this->command?->info('Customer login: '.self::CUSTOMER_EMAIL.' / '.$this->password());
     }
 
     private function password(): string
     {
-        return (string) env('SEED_DEMO_PASSWORD', 'Demo#12345');
+        return (string) (config('app.demo_password') ?: 'Demo#12345');
+    }
+
+    /**
+     * The reference point for every relative date this seeder writes. Normally
+     * "now"; `DEMO_DATE=YYYY-MM-DD` pins it so re-running produces the same
+     * history, which keeps screenshots and tests stable.
+     */
+    private function demoDate(): CarbonInterface
+    {
+        $anchor = config('app.demo_date');
+
+        return $anchor ? Carbon::parse($anchor) : now();
     }
 
     // ─────────────────────────────────────────────
@@ -175,6 +214,8 @@ class DemoCatalogSeeder extends Seeder
      */
     private function seedSettings(): void
     {
+        $this->writtenSettings = [];
+
         $this->seedMissingSettings('company', [
             'name' => 'Sodai',
             'email' => 'hello@example.com',
@@ -204,6 +245,8 @@ class DemoCatalogSeeder extends Seeder
         ], [
             'allow_guest_checkout' => 'boolean',
         ]);
+
+        $this->rememberWrittenSettings();
     }
 
     /**
@@ -234,11 +277,51 @@ class DemoCatalogSeeder extends Seeder
 
         if ($missing !== []) {
             Setting::setMany($group, $missing, array_intersect_key($types, $missing));
+            $this->writtenSettings[$group] = $missing;
         }
 
         if ($kept !== []) {
             $this->command?->warn('Kept the store\'s existing '.$group.' settings: '.implode(', ', $kept).'.');
         }
+    }
+
+    /**
+     * Remember the settings this run created, so `demo:clear` can remove
+     * exactly those values later — and only while they still hold what the
+     * demo wrote. Entries recorded by earlier runs are merged, not replaced.
+     */
+    private function rememberWrittenSettings(): void
+    {
+        $written = [];
+
+        foreach ($this->writtenSettings as $group => $keys) {
+            foreach ($keys as $key => $value) {
+                $written[$group.'.'.$key] = (string) $value;
+            }
+        }
+
+        if ($written === []) {
+            return;
+        }
+
+        Setting::setMany('demo', [
+            'written_settings' => json_encode(array_replace(self::recordedSettings(), $written)),
+        ], [
+            'written_settings' => 'json',
+        ]);
+    }
+
+    /**
+     * Settings the demo seeder created, as "group.key" => value it wrote.
+     * Values a shop has since changed are filtered out by `demo:clear`.
+     *
+     * @return array<string, string>
+     */
+    public static function recordedSettings(): array
+    {
+        $recorded = json_decode((string) Setting::get('demo', 'written_settings', '{}'), true);
+
+        return is_array($recorded) ? $recorded : [];
     }
 
     private function seedAdmin(): void
@@ -260,12 +343,15 @@ class DemoCatalogSeeder extends Seeder
     // CATALOG
     // ─────────────────────────────────────────────
 
-    private function seedCategories(): void
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private static function categoryDefinitions(): array
     {
         // Flat on purpose: the home page counts a category's own products
         // (not its children's), so leaf-only categories keep those counts
         // truthful. Every product below belongs to exactly one of these.
-        $categories = [
+        return [
             ['slug' => 'kitchen-dining', 'name' => 'Kitchen & Dining', 'image' => 'kitchen-dining.webp', 'sort' => 1,
                 'description' => 'Everyday ceramics, cypress boards and tableware made to be used, not saved for guests.'],
             ['slug' => 'tea-coffee', 'name' => 'Tea & Coffee', 'image' => 'tea-coffee.webp', 'sort' => 2,
@@ -275,8 +361,11 @@ class DemoCatalogSeeder extends Seeder
             ['slug' => 'stationery', 'name' => 'Stationery', 'image' => 'stationery.webp', 'sort' => 4,
                 'description' => 'Linen-bound notebooks and desk pieces for lists, sketches and plans worth keeping.'],
         ];
+    }
 
-        foreach ($categories as $category) {
+    private function seedCategories(): void
+    {
+        foreach (self::categoryDefinitions() as $category) {
             $this->categories[$category['slug']] = Category::updateOrCreate(
                 ['slug' => $this->demoSlug($category['slug'])],
                 [
@@ -291,15 +380,21 @@ class DemoCatalogSeeder extends Seeder
         }
     }
 
-    private function seedBrands(): void
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private static function brandDefinitions(): array
     {
-        $brands = [
+        return [
             ['slug' => 'sodai-studio', 'name' => 'Sodai Studio', 'description' => 'Our own line, designed in Dhaka and made in small batches.'],
             ['slug' => 'kizen-ceramics', 'name' => 'Kizen Ceramics', 'description' => 'A family pottery studio working in speckled stoneware.'],
             ['slug' => 'aoyama', 'name' => 'Aoyama', 'description' => 'Tea ware and bamboo tools from a workshop in Shiga, Japan.'],
         ];
+    }
 
-        foreach ($brands as $index => $brand) {
+    private function seedBrands(): void
+    {
+        foreach (self::brandDefinitions() as $index => $brand) {
             $this->brands[$brand['slug']] = Brand::updateOrCreate(
                 ['slug' => $this->demoSlug($brand['slug'])],
                 [
@@ -315,7 +410,7 @@ class DemoCatalogSeeder extends Seeder
 
     private function seedProducts(): void
     {
-        foreach ($this->productDefinitions() as $definition) {
+        foreach (self::productDefinitions() as $definition) {
             $this->seedProduct($definition);
         }
     }
@@ -323,7 +418,7 @@ class DemoCatalogSeeder extends Seeder
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function productDefinitions(): array
+    private static function productDefinitions(): array
     {
         return [
             [
@@ -483,7 +578,7 @@ class DemoCatalogSeeder extends Seeder
      */
     private function seedProduct(array $definition): void
     {
-        $createdAt = now()->subDays($definition['days_ago'])->setTime(10, 0);
+        $createdAt = $this->demoDate()->subDays($definition['days_ago'])->setTime(10, 0);
 
         $product = Product::updateOrCreate(
             ['slug' => $this->demoSlug($definition['slug'])],
@@ -585,9 +680,12 @@ class DemoCatalogSeeder extends Seeder
         return array_values(array_unique($ids));
     }
 
-    private function seedBanners(): void
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function bannerDefinitions(): array
     {
-        $banners = [
+        return [
             [
                 'title' => 'The Quiet Morning Collection',
                 'subtitle' => 'New season, made in small batches',
@@ -611,10 +709,13 @@ class DemoCatalogSeeder extends Seeder
                 'sort_order' => 2,
             ],
         ];
+    }
 
+    private function seedBanners(): void
+    {
         // Keyed by their demo image path, not their title: a live banner that
         // happens to share a headline must keep its own copy and layout.
-        foreach ($banners as $banner) {
+        foreach (self::bannerDefinitions() as $banner) {
             Banner::updateOrCreate(
                 ['position' => 'home_slider', 'image' => $banner['image']],
                 $banner + [
@@ -624,6 +725,104 @@ class DemoCatalogSeeder extends Seeder
                     'starts_at' => null,
                     'expires_at' => null,
                 ],
+            );
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // TAGS, RELATIONS, CART & WISHLIST
+    // ─────────────────────────────────────────────
+
+    /**
+     * Shared product tags. Like the Color/Size vocabulary these are not
+     * demo-owned rows: an existing tag is reused and never renamed.
+     */
+    private function seedTags(): void
+    {
+        $tags = [
+            'kizen-stoneware-mug' => ['Ceramics', 'Everyday'],
+            'hinoki-serving-board' => ['Wood', 'Kitchen'],
+            'aoyama-ceramic-teapot' => ['Tea', 'Ceramics'],
+            'koyo-pour-over-kettle' => ['Coffee', 'Kitchen'],
+            'matcha-whisk-set' => ['Tea', 'Everyday'],
+            'sakura-linen-throw' => ['Linen', 'Home'],
+            'nori-canvas-tote' => ['Everyday', 'Home'],
+            'sumi-pocket-notebooks' => ['Paper', 'Stationery'],
+        ];
+
+        foreach ($tags as $slug => $names) {
+            $this->products[$slug]->tags()->syncWithoutDetaching(
+                array_map(fn (string $name): int => Tag::findOrCreateByName($name)->id, $names),
+            );
+        }
+    }
+
+    /**
+     * Cross-sells, so product pages have a related-products rail without
+     * anyone filling it in by hand.
+     */
+    private function seedRelatedProducts(): void
+    {
+        $relations = [
+            'kizen-stoneware-mug' => ['aoyama-ceramic-teapot', 'matcha-whisk-set'],
+            'aoyama-ceramic-teapot' => ['matcha-whisk-set', 'kizen-stoneware-mug'],
+            'hinoki-serving-board' => ['kizen-stoneware-mug', 'sakura-linen-throw'],
+            'koyo-pour-over-kettle' => ['matcha-whisk-set', 'aoyama-ceramic-teapot'],
+            'sakura-linen-throw' => ['nori-canvas-tote', 'sumi-pocket-notebooks'],
+        ];
+
+        foreach ($relations as $slug => $related) {
+            $this->products[$slug]->relatedProducts()->syncWithoutDetaching(
+                array_map(fn (string $relatedSlug): int => $this->products[$relatedSlug]->id, $related),
+            );
+        }
+    }
+
+    /**
+     * A saved cart for the demo customer, old enough for the abandoned-cart
+     * reminder to find, so cart and reminder screens have real content.
+     */
+    private function seedCart(): void
+    {
+        $cart = Cart::updateOrCreate(
+            ['user_id' => $this->customers['demo']->id],
+            ['session_id' => null],
+        );
+
+        $cart->items()->delete();
+
+        foreach ([['SOD-TOTE-NAT', 1], ['SOD-MATCHA-SET', 2]] as [$sku, $quantity]) {
+            CartItem::create([
+                'cart_id' => $cart->id,
+                'product_variant_id' => $this->variants[$sku]->id,
+                'quantity' => $quantity,
+            ]);
+        }
+
+        $cart->forceFill([
+            'created_at' => $this->demoDate()->subDays(5),
+            'updated_at' => $this->demoDate()->subDays(3),
+            'reminder_sent_at' => null,
+        ])->save();
+    }
+
+    private function seedWishlist(): void
+    {
+        $wishlists = [
+            ['customer' => 'demo', 'sku' => 'SOD-TEAPOT-600'],
+            ['customer' => 'tanvir', 'sku' => 'SOD-KETTLE-BLACK'],
+            ['customer' => 'sadia', 'sku' => 'SOD-THROW-OAT'],
+        ];
+
+        foreach ($wishlists as $entry) {
+            $variant = $this->variants[$entry['sku']];
+
+            Wishlist::updateOrCreate(
+                [
+                    'user_id' => $this->customers[$entry['customer']]->id,
+                    'product_id' => $variant->product_id,
+                ],
+                ['product_variant_id' => $variant->id],
             );
         }
     }
@@ -677,13 +876,13 @@ class DemoCatalogSeeder extends Seeder
                     'phone' => $data['phone'],
                     'password' => $isDemo ? $this->password() : Str::random(32),
                     'status' => 'active',
-                    'email_verified_at' => now()->subDays(60),
+                    'email_verified_at' => $this->demoDate()->subDays(60),
                 ],
             );
 
             $customer->forceFill([
-                'email_verified_at' => now()->subDays(60),
-                'created_at' => now()->subDays(75),
+                'email_verified_at' => $this->demoDate()->subDays(60),
+                'created_at' => $this->demoDate()->subDays(75),
             ])->save();
 
             Address::updateOrCreate(
@@ -701,7 +900,7 @@ class DemoCatalogSeeder extends Seeder
                 ],
             );
 
-            $customer->forceFill(['created_at' => now()->subDays(75)])->save();
+            $customer->forceFill(['created_at' => $this->demoDate()->subDays(75)])->save();
 
             $this->customers[$data['key']] = $customer;
         }
@@ -710,7 +909,7 @@ class DemoCatalogSeeder extends Seeder
     private function seedCoupon(): void
     {
         $this->coupon = Coupon::updateOrCreate(
-            ['code' => self::ID_PREFIX.'WELCOME10'],
+            ['code' => self::couponCode()],
             [
                 'type' => 'percentage',
                 'value' => 10,
@@ -720,8 +919,8 @@ class DemoCatalogSeeder extends Seeder
                 'usage_per_user' => 1,
                 'used_count' => 0,
                 'is_active' => true,
-                'starts_at' => now()->subDays(30),
-                'expires_at' => now()->addDays(60),
+                'starts_at' => $this->demoDate()->subDays(30),
+                'expires_at' => $this->demoDate()->addDays(60),
             ],
         );
     }
@@ -730,12 +929,16 @@ class DemoCatalogSeeder extends Seeder
     // ORDERS
     // ─────────────────────────────────────────────
 
-    private function seedOrders(): void
+    /**
+     * Sequence (the number after DEMO-ORD-), customer key, status, how long
+     * ago it was placed, and the basket. Prices and totals are derived from
+     * the seeded variants, never hardcoded.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private static function orderDefinitions(): array
     {
-        // Sequence (the number after DEMO-ORD-), customer key, status, how
-        // long ago it was placed, and the basket. Prices/totals are derived
-        // from the seeded variants, never hardcoded.
-        $orders = [
+        return [
             ['sequence' => 100001, 'customer' => 'tanvir', 'status' => 'delivered', 'days_ago' => 45, 'items' => [['SOD-MUG-SAGE-350', 2], ['SOD-BOARD-M', 1]]],
             ['sequence' => 100002, 'customer' => 'farhana', 'status' => 'delivered', 'days_ago' => 38, 'items' => [['SOD-TEAPOT-600', 1]]],
             ['sequence' => 100003, 'customer' => 'rifat', 'status' => 'delivered', 'days_ago' => 31, 'items' => [['SOD-THROW-SAGE', 1], ['SOD-NOTE-DOTTED', 1]], 'coupon' => true],
@@ -751,11 +954,16 @@ class DemoCatalogSeeder extends Seeder
             ['sequence' => 100013, 'customer' => 'sadia', 'status' => 'cancelled', 'days_ago' => 12, 'items' => [['SOD-TOTE-CHAR', 1]]],
             ['sequence' => 100014, 'customer' => 'rifat', 'status' => 'refunded', 'days_ago' => 20, 'items' => [['SOD-BOARD-S', 1]]],
         ];
+    }
 
-        foreach ($orders as $plan) {
+    private function seedOrders(): void
+    {
+        $pricing = app(PricingService::class);
+
+        foreach (self::orderDefinitions() as $plan) {
             $customer = $this->customers[$plan['customer']];
-            $placedAt = now()->subDays($plan['days_ago'])->setTime(11, 30);
-            $number = $this->orderNumber($plan['sequence']);
+            $placedAt = $this->demoDate()->subDays($plan['days_ago'])->setTime(11, 30);
+            $number = self::orderNumber($plan['sequence']);
 
             $subtotal = 0.0;
             $lines = [];
@@ -773,12 +981,13 @@ class DemoCatalogSeeder extends Seeder
                 ];
             }
 
-            $discount = 0.0;
-            if (! empty($plan['coupon'])) {
-                $discount = round($subtotal * 0.10, 2);
-            }
+            // Priced by the same coupon rule checkout applies, including the
+            // coupon's maximum_discount cap.
+            $discount = ! empty($plan['coupon'])
+                ? $pricing->calculateCouponDiscount($this->coupon, $subtotal)
+                : 0.0;
 
-            $shipping = $this->shippingCharge($customer, $subtotal);
+            $shipping = $this->shippingCharge($pricing, $customer, $subtotal);
 
             $order = Order::updateOrCreate(
                 ['order_number' => $number],
@@ -851,7 +1060,7 @@ class DemoCatalogSeeder extends Seeder
      * `<order prefix><six digits>` from the newest matching number, so these
      * neither collide with real orders nor push the real sequence forward.
      */
-    private function orderNumber(int $sequence): string
+    public static function orderNumber(int $sequence): string
     {
         return self::ID_PREFIX.'ORD-'.$sequence;
     }
@@ -860,7 +1069,7 @@ class DemoCatalogSeeder extends Seeder
      * Catalog lookups key on the namespaced identifier, so a real row with
      * the bare slug can never be adopted and rewritten by a demo run.
      */
-    private function demoSlug(string $slug): string
+    public static function demoSlug(string $slug): string
     {
         return self::SLUG_PREFIX.$slug;
     }
@@ -869,9 +1078,75 @@ class DemoCatalogSeeder extends Seeder
      * Same idea for variant SKUs: "SOD-NOTE-RULED" is a number a real store
      * could well have issued, so the demo variant is "DEMO-SOD-NOTE-RULED".
      */
-    private function demoSku(string $sku): string
+    public static function demoSku(string $sku): string
     {
         return self::ID_PREFIX.$sku;
+    }
+
+    /**
+     * Every identifier this seeder owns. `demo:clear` removes exactly these
+     * rows, so a real record is never matched by a shared prefix alone.
+     *
+     * @return array<int, string>
+     */
+    public static function categorySlugs(): array
+    {
+        return self::demoSlugs(self::categoryDefinitions());
+    }
+
+    /** @return array<int, string> */
+    public static function brandSlugs(): array
+    {
+        return self::demoSlugs(self::brandDefinitions());
+    }
+
+    /** @return array<int, string> */
+    public static function productSlugs(): array
+    {
+        return self::demoSlugs(self::productDefinitions());
+    }
+
+    /** @return array<int, string> */
+    public static function variantSkus(): array
+    {
+        $skus = [];
+
+        foreach (self::productDefinitions() as $definition) {
+            foreach ($definition['variants'] as $variant) {
+                $skus[] = self::demoSku($variant['sku']);
+            }
+        }
+
+        return $skus;
+    }
+
+    /** @return array<int, string> */
+    public static function bannerImages(): array
+    {
+        return array_column(self::bannerDefinitions(), 'image');
+    }
+
+    /** @return array<int, string> */
+    public static function orderNumbers(): array
+    {
+        return array_map(
+            fn (array $plan): string => self::orderNumber((int) $plan['sequence']),
+            self::orderDefinitions(),
+        );
+    }
+
+    public static function couponCode(): string
+    {
+        return self::ID_PREFIX.'WELCOME10';
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $definitions
+     * @return array<int, string>
+     */
+    private static function demoSlugs(array $definitions): array
+    {
+        return array_map(fn (array $definition): string => self::demoSlug($definition['slug']), $definitions);
     }
 
     /**
@@ -881,9 +1156,9 @@ class DemoCatalogSeeder extends Seeder
      * written just above; beside a live shop they are the charges it already
      * had, because seedMissingSettings() left them alone.
      */
-    private function shippingCharge(User $customer, float $subtotal): float
+    private function shippingCharge(PricingService $pricing, User $customer, float $subtotal): float
     {
-        return app(PricingService::class)->resolveShippingCharge($customer->defaultAddress?->city, $subtotal);
+        return $pricing->resolveShippingCharge($customer->defaultAddress?->city, $subtotal);
     }
 
     private function seedStatusHistory(Order $order, $placedAt): void
@@ -979,7 +1254,7 @@ class DemoCatalogSeeder extends Seeder
 
         foreach ($reviews as $review) {
             $variant = $this->variants[$review['sku']];
-            $order = Order::where('order_number', $this->orderNumber($review['sequence']))->first();
+            $order = Order::where('order_number', self::orderNumber($review['sequence']))->first();
 
             if (! $order) {
                 continue;

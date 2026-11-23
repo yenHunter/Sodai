@@ -11,26 +11,34 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Refund;
 use App\Models\Review;
+use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\DemoCatalogSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Undo a DemoCatalogSeeder run. Rows are found only by the namespaces the
- * seeder writes (DEMO-/demo-/@example.com), so a real order, refund, coupon,
- * product, category, brand, banner or account is never matched, and each
- * deletion is guarded against rows that have since been referenced by real
- * data. Store settings are left exactly as they are.
+ * Undo a DemoCatalogSeeder run. Rows are found by the exact identifier lists
+ * the seeder publishes, so a real order, refund, coupon, product, category,
+ * brand, banner or account is never matched, and each deletion is guarded
+ * against rows that have since been referenced by real data.
+ *
+ * Store settings the seeder created are removed too, but only while they still
+ * hold the value the demo wrote; a setting a shop has changed is kept and
+ * reported. This command never touches settings it cannot attribute to a demo
+ * run. Demo images copied into storage are deleted with the rows.
  */
 class ClearDemoCatalogCommand extends Command
 {
     protected $signature = 'demo:clear
+        {--dry-run : Report what would be removed without deleting anything}
         {--force : Delete without asking for confirmation}';
 
     protected $description = 'Delete only the rows created by the demo catalog seeder';
@@ -43,13 +51,32 @@ class ClearDemoCatalogCommand extends Command
             return self::FAILURE;
         }
 
-        $orderIds = $this->demoOrderIds();
-        $productIds = $this->ids(Product::withTrashed(), 'slug');
-        $bannerIds = Banner::withTrashed()->where('image', 'like', 'banners/demo/%')->pluck('id')->all();
-        $categoryIds = $this->ids(Category::withTrashed(), 'slug');
-        $brandIds = $this->ids(Brand::withTrashed(), 'slug');
+        $orderIds = Order::withTrashed()
+            ->whereIn('order_number', DemoCatalogSeeder::orderNumbers())
+            ->pluck('id')
+            ->all();
+        $productIds = Product::withTrashed()
+            ->whereIn('slug', DemoCatalogSeeder::productSlugs())
+            ->pluck('id')
+            ->all();
+        $variantIds = ProductVariant::withTrashed()
+            ->whereIn('sku', DemoCatalogSeeder::variantSkus())
+            ->pluck('id')
+            ->all();
+        $categoryIds = Category::withTrashed()
+            ->whereIn('slug', DemoCatalogSeeder::categorySlugs())
+            ->pluck('id')
+            ->all();
+        $brandIds = Brand::withTrashed()
+            ->whereIn('slug', DemoCatalogSeeder::brandSlugs())
+            ->pluck('id')
+            ->all();
+        $bannerIds = Banner::withTrashed()
+            ->whereIn('image', DemoCatalogSeeder::bannerImages())
+            ->pluck('id')
+            ->all();
         $couponIds = Coupon::withTrashed()
-            ->where('code', DemoCatalogSeeder::ID_PREFIX.'WELCOME10')
+            ->whereIn('code', [DemoCatalogSeeder::couponCode()])
             ->pluck('id')
             ->all();
         $userIds = User::withTrashed()
@@ -60,17 +87,40 @@ class ClearDemoCatalogCommand extends Command
             ->where('email', DemoCatalogSeeder::ADMIN_EMAIL)
             ->pluck('id')
             ->all();
+        $recordedSettings = DemoCatalogSeeder::recordedSettings();
 
-        $total = count($orderIds) + count($productIds) + count($bannerIds) + count($categoryIds)
-            + count($brandIds) + count($couponIds) + count($userIds) + count($adminIds);
+        $counts = [
+            'orders' => count($orderIds),
+            'products' => count($productIds),
+            'variants' => count($variantIds),
+            'banners' => count($bannerIds),
+            'categories' => count($categoryIds),
+            'brands' => count($brandIds),
+            'coupons' => count($couponIds),
+            'customers' => count($userIds),
+            'admins' => count($adminIds),
+            'settings' => count($recordedSettings),
+        ];
 
-        if ($total === 0) {
+        if (array_sum($counts) === 0) {
             $this->components->info('No demo catalog rows found.');
 
             return self::SUCCESS;
         }
 
-        if (! $this->option('force') && ! $this->confirm("Delete {$total} demo row(s)? Real records are never touched.", false)) {
+        if ($this->option('dry-run')) {
+            $this->components->info('Would remove these demo rows:');
+
+            foreach ($counts as $label => $count) {
+                $this->components->twoColumnDetail($label, (string) $count);
+            }
+
+            $this->components->info('Nothing was deleted.');
+
+            return self::SUCCESS;
+        }
+
+        if (! $this->option('force') && ! $this->confirm('Delete '.array_sum($counts).' demo row(s)? Real records are never touched.', false)) {
             $this->components->info('Nothing deleted.');
 
             return self::SUCCESS;
@@ -78,8 +128,26 @@ class ClearDemoCatalogCommand extends Command
 
         $removed = [];
         $kept = [];
+        $visitorCarts = 0;
+        $visitorWishlists = 0;
 
-        DB::transaction(function () use ($orderIds, $productIds, $bannerIds, $categoryIds, $brandIds, $couponIds, $userIds, $adminIds, &$removed, &$kept) {
+        DB::transaction(function () use ($orderIds, $productIds, $variantIds, $bannerIds, $categoryIds, $brandIds, $couponIds, $userIds, $adminIds, $recordedSettings, &$removed, &$kept, &$visitorCarts, &$visitorWishlists) {
+            // Placed in real visitors' carts or wishlists, these rows disappear
+            // through the schema's cascade; count them so the side effect is
+            // reported rather than silent.
+            $visitorCarts = DB::table('cart_items')
+                ->join('carts', 'carts.id', '=', 'cart_items.cart_id')
+                ->whereIn('cart_items.product_variant_id', $variantIds)
+                ->where(function ($query) use ($userIds) {
+                    $query->whereNull('carts.user_id')->orWhereNotIn('carts.user_id', $userIds);
+                })
+                ->count();
+
+            $visitorWishlists = DB::table('wishlists')
+                ->whereIn('product_id', $productIds)
+                ->when($userIds !== [], fn ($query) => $query->whereNotIn('user_id', $userIds))
+                ->count();
+
             // Orders first: everything that hangs off them goes with them, and
             // the accounts/coupon below are then free of references.
             $removed['order items'] = OrderItem::whereIn('order_id', $orderIds)->delete();
@@ -153,6 +221,28 @@ class ClearDemoCatalogCommand extends Command
 
             $removed['brands'] = $removedBrands;
 
+            // Settings the seeder created, only while untouched by the shop.
+            $removedSettings = 0;
+
+            foreach ($recordedSettings as $path => $value) {
+                [$group, $key] = explode('.', $path, 2);
+
+                if ((string) Setting::get($group, $key) !== (string) $value) {
+                    $kept[] = "setting {$path} (changed since the demo seeded it)";
+
+                    continue;
+                }
+
+                Setting::where('group', $group)->where('key', $key)->delete();
+                Setting::forgetGroupCache($group);
+                $removedSettings++;
+            }
+
+            Setting::where('group', 'demo')->delete();
+            Setting::forgetGroupCache('demo');
+
+            $removed['demo-created settings'] = $removedSettings;
+
             // Accounts last: addresses, carts, reviews and sessions cascade.
             $removedUsers = 0;
 
@@ -203,30 +293,31 @@ class ClearDemoCatalogCommand extends Command
             $this->components->warn('Kept '.$line.'.');
         }
 
-        $this->components->info('Store settings were left untouched.');
+        if ($visitorCarts > 0 || $visitorWishlists > 0) {
+            $this->components->warn("Removed {$visitorCarts} cart item(s) and {$visitorWishlists} wishlist row(s) that non-demo visitors had pointing at demo products.");
+        }
+
+        // A kept demo row still needs the photo it points at.
+        if (Product::withTrashed()->whereIn('id', $productIds)->exists()
+            || Banner::withTrashed()->whereIn('id', $bannerIds)->exists()
+            || Category::withTrashed()->whereIn('id', $categoryIds)->exists()) {
+            $this->components->warn('Demo images were left in storage because some demo rows were kept.');
+        } else {
+            $this->deleteImages();
+        }
 
         return self::SUCCESS;
     }
 
     /**
-     * Demo catalog rows carry the seeder's demo- slug namespace; nothing a
-     * real shop creates starts with it.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder<*>  $query
-     * @return array<int, int>
+     * The seeder copies its photos into storage so the storefront can serve
+     * them; the rows are gone, so the copies go too.
      */
-    private function ids($query, string $column): array
+    private function deleteImages(): void
     {
-        return $query->where($column, 'like', DemoCatalogSeeder::SLUG_PREFIX.'%')->pluck('id')->all();
-    }
-
-    /** @return array<int, int> */
-    private function demoOrderIds(): array
-    {
-        return Order::withTrashed()
-            ->where('order_number', 'like', DemoCatalogSeeder::ID_PREFIX.'ORD-%')
-            ->pluck('id')
-            ->all();
+        foreach (['products', 'banners', 'categories'] as $folder) {
+            File::deleteDirectory(storage_path("app/public/{$folder}/demo"));
+        }
     }
 
     /**

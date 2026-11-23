@@ -220,6 +220,31 @@ so confirm the order notification state before bulk-retrying `all`.
 Default seeded accounts (see `database/seeders/AdminSeeder.php` / `CustomerSeeder.php`
 for current values — change these before any shared/public deployment).
 
+### Demo catalog (optional)
+
+`php artisan migrate --seed` installs only the normal development data. For a
+full storefront — categories, brands, variant products with photos, banners,
+customers, orders in every status, reviews, a coupon and a refund:
+
+```bash
+php artisan storage:link
+php artisan demo:seed        # or: php artisan db:seed --class=DemoCatalogSeeder
+```
+
+Logins: `demo-admin@example.com` / `Demo#12345` (super admin) and
+`demo-customer@example.com` / `Demo#12345`. Set `SEED_DEMO_PASSWORD` to replace
+the password; outside local/testing the seeder refuses to create accounts
+without it. `DEMO_DATE=2026-01-15` pins every relative date so the history
+reproduces exactly for screenshots and tests.
+
+Undo a demo run, and only that run, with `php artisan demo:clear`
+(`--dry-run` previews it). Demo rows use their own identifiers (`DEMO-ORD-…`
+order numbers, `demo-…` slugs, `DEMO-…` SKUs, `@example.com` accounts), and the
+command never deletes a real record: a demo product still referenced by a real
+order, a demo coupon on a real order, or any setting a shop has since changed
+is kept and reported. Settings the seeder created are removed with it; the
+demo photos copied into `storage/app/public` are cleaned up too.
+
 ## Running Tests
 
 ```bash
