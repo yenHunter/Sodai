@@ -20,6 +20,7 @@ use App\Models\Refund;
 use App\Models\Review;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\Shared\PricingService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -873,13 +874,16 @@ class DemoCatalogSeeder extends Seeder
         return self::ID_PREFIX.$sku;
     }
 
+    /**
+     * Priced with the store's effective shipping rules — free-shipping
+     * threshold, in-area and out-of-area charge — so the seeded history agrees
+     * with Settings → Shipping. On a fresh database those are the demo defaults
+     * written just above; beside a live shop they are the charges it already
+     * had, because seedMissingSettings() left them alone.
+     */
     private function shippingCharge(User $customer, float $subtotal): float
     {
-        if ($subtotal >= 7500) {
-            return 0.0;
-        }
-
-        return ($customer->defaultAddress?->city === 'Dhaka') ? 60.0 : 120.0;
+        return app(PricingService::class)->resolveShippingCharge($customer->defaultAddress?->city, $subtotal);
     }
 
     private function seedStatusHistory(Order $order, $placedAt): void
