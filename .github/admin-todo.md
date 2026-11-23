@@ -81,8 +81,10 @@ _Last verified against source: 10 November 2026 (full re-audit of routes, servic
       `admin.orders.products.search`). The template's topbar search input is still non-functional.
 - [ ] Saved/exportable filters on Order and Product index pages — product side shipped: the
       products index has an **Export CSV** button that streams the current search/category/status filter
-      using `ProductCsvService`'s shared columns, so the filtered file stays re-importable. Saved filter
-      presets and an order-index export are still unbuilt.
+      using `ProductCsvService`'s shared columns, so the filtered file stays re-importable. Browser
+      coverage in `tests/e2e/admin-products-export.spec.js` drives the search and category filters
+      through the page and checks the downloaded rows match the filtered table. Saved filter presets
+      and an order-index export are still unbuilt.
 - [ ] Audit-friendly "who changed this coupon/price" trail (ties into the Activity Log item above).
 
 ---
