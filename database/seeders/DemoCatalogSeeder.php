@@ -34,6 +34,8 @@ use Illuminate\Support\Str;
  *
  *     php artisan db:seed --class=DemoCatalogSeeder
  *
+ * Undo that run, and only that run, with `php artisan demo:clear`.
+ *
  * Re-running it is safe: every row is found by a stable slug, SKU, order
  * number or email and updated in place. Every identifier a real store also
  * issues for itself — order numbers, refund numbers, coupon codes, catalog
@@ -629,9 +631,12 @@ class DemoCatalogSeeder extends Seeder
     // CUSTOMERS & COUPON
     // ─────────────────────────────────────────────
 
-    private function seedCustomers(): void
+    /**
+     * @return array<int, array<string, string>>
+     */
+    public static function customerDefinitions(): array
     {
-        $customers = [
+        return [
             ['key' => 'demo', 'name' => 'Nusrat Jahan', 'email' => self::CUSTOMER_EMAIL, 'phone' => '+880 1811 445566',
                 'address' => 'House 12, Road 7, Dhanmondi', 'city' => 'Dhaka', 'state' => 'Dhaka', 'zip' => '1205'],
             ['key' => 'tanvir', 'name' => 'Tanvir Ahmed', 'email' => 'tanvir.ahmed@example.com', 'phone' => '+880 1712 334455',
@@ -645,8 +650,23 @@ class DemoCatalogSeeder extends Seeder
             ['key' => 'imran', 'name' => 'Imran Hossain', 'email' => 'imran.hossain@example.com', 'phone' => '+880 1316 223344',
                 'address' => 'House 21, Sector 4, Uttara', 'city' => 'Rajshahi', 'state' => 'Rajshahi', 'zip' => '6000'],
         ];
+    }
 
-        foreach ($customers as $data) {
+    /**
+     * Emails of every seeded shopper. `demo:clear` matches these exact
+     * addresses, so it can never remove a real account that merely looks
+     * like a demo one.
+     *
+     * @return array<int, string>
+     */
+    public static function customerEmails(): array
+    {
+        return array_column(self::customerDefinitions(), 'email');
+    }
+
+    private function seedCustomers(): void
+    {
+        foreach (self::customerDefinitions() as $data) {
             $isDemo = $data['key'] === 'demo';
 
             $customer = User::updateOrCreate(
