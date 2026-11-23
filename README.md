@@ -60,7 +60,8 @@ continuously-updated breakdown of what's built vs. what's planned.
   that matches variants by SKU and reports skipped rows with line numbers
 - Category (2-level) and Brand management
 - Order management with a POS-style builder: live AJAX shipping/tax/coupon calculation,
-  editable overrides, full status-history audit trail
+  editable overrides, full status-history audit trail, and a CSV export of the currently
+  filtered order list (search, status, date range)
 - Coupon engine (percentage/fixed, usage limits, validity windows)
 - Refund workflow, independent from order cancellation, with approval/rejection
 - Product review moderation with automatic rating recalculation

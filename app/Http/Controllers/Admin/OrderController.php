@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Admin\OrderCsvService;
 use App\Services\Admin\OrderService;
 use App\Services\Admin\SettingService;
 use Illuminate\Http\Request;
@@ -19,7 +20,8 @@ class OrderController extends Controller
 {
     public function __construct(
         private OrderService $orderService,
-        private SettingService $settingService
+        private SettingService $settingService,
+        private OrderCsvService $orderCsvService
     ) {}
 
     // ─────────────────────────────────────────────
@@ -32,6 +34,28 @@ class OrderController extends Controller
         $stats = $this->orderService->getOrderStats();
 
         return view('admin.ecommerce.order.index', compact('orders', 'stats'));
+    }
+
+    /**
+     * CSV of the orders currently shown by the index filters.
+     */
+    public function export(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'date_from', 'date_to']);
+        $isFiltered = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
+
+        return response()->streamDownload(function () use ($filters) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM so Excel opens the file with the correct encoding.
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            $this->orderCsvService->writeExport($handle, $filters);
+
+            fclose($handle);
+        }, ($isFiltered ? 'orders-filtered_' : 'orders_').now()->format('Y-m-d_His').'.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     // ─────────────────────────────────────────────

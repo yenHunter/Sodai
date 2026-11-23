@@ -5,9 +5,12 @@ namespace Database\Seeders;
 use App\Models\Admin;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -33,6 +36,12 @@ class E2eSeeder extends Seeder
     public const CHECKOUT_PRODUCT_SLUG = 'e2e-checkout-product';
 
     public const COUPON_CODE = 'E2ECHECKOUT';
+
+    public const DELIVERED_ORDER_NUMBER = 'E2E-ORD-DELIVERED';
+
+    public const PENDING_ORDER_NUMBER = 'E2E-ORD-PENDING';
+
+    public const ARCHIVED_ORDER_NUMBER = 'E2E-ORD-ARCHIVED';
 
     public function run(): void
     {
@@ -60,6 +69,7 @@ class E2eSeeder extends Seeder
         ])->save();
 
         $this->seedCheckoutCatalog();
+        $this->seedOrders();
     }
 
     /**
@@ -116,5 +126,79 @@ class E2eSeeder extends Seeder
             ['allow_guest_checkout' => '1'],
             ['allow_guest_checkout' => 'boolean'],
         );
+    }
+
+    /**
+     * Two orders with different statuses, so browser tests can prove that an
+     * index filter (and the CSV export of it) narrows a real result set.
+     */
+    private function seedOrders(): void
+    {
+        $customer = User::updateOrCreate(
+            ['email' => 'e2e-customer@example.com'],
+            [
+                'name' => 'E2E Customer',
+                'phone' => '+8801700000000',
+                'password' => Hash::make('Customer#123'),
+                'status' => 'active',
+            ],
+        );
+
+        $variant = ProductVariant::where('sku', 'E2E-SKU-001')->first();
+
+        if (! $variant) {
+            return;
+        }
+
+        $orders = [
+            self::DELIVERED_ORDER_NUMBER => ['status' => 'delivered'],
+            self::PENDING_ORDER_NUMBER => ['status' => 'pending'],
+            // Outside the "Last 7 Days" window the orders export spec selects
+            // through the date picker, so the range visibly narrows the file.
+            self::ARCHIVED_ORDER_NUMBER => ['status' => 'confirmed', 'created_at' => now()->subDays(30)],
+        ];
+
+        foreach ($orders as $orderNumber => $attributes) {
+            $createdAt = $attributes['created_at'] ?? null;
+            unset($attributes['created_at']);
+
+            $order = Order::updateOrCreate(
+                ['order_number' => $orderNumber],
+                $attributes + [
+                    'user_id' => $customer->id,
+                    'subtotal' => 100,
+                    'discount_amount' => 0,
+                    'shipping_charge' => 0,
+                    'tax_amount' => 0,
+                    'total_amount' => 100,
+                    'payment_method' => 'cod',
+                    'shipping_name' => 'E2E Customer',
+                    'shipping_email' => 'e2e-customer@example.com',
+                    'shipping_phone' => '+8801700000000',
+                    'shipping_address' => '12 Test Street',
+                    'shipping_city' => 'Dhaka',
+                    'shipping_state' => 'Dhaka',
+                    'shipping_zip' => '1207',
+                    'shipping_country' => 'Bangladesh',
+                ],
+            );
+
+            if ($createdAt) {
+                // created_at is not fillable, so pin the date after the upsert.
+                $order->forceFill(['created_at' => $createdAt])->save();
+            }
+
+            OrderItem::updateOrCreate(
+                ['order_id' => $order->id, 'product_sku' => 'E2E-SKU-001'],
+                [
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variant->id,
+                    'product_name' => 'E2E Checkout Product',
+                    'unit_price' => 100,
+                    'quantity' => 1,
+                    'total_price' => 100,
+                ],
+            );
+        }
     }
 }
