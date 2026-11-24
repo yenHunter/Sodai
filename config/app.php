@@ -123,4 +123,20 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo catalog
+    |--------------------------------------------------------------------------
+    |
+    | DEMO_DATE pins every relative date the demo seeder writes, so its history
+    | reproduces exactly for screenshots and tests. SEED_DEMO_PASSWORD replaces
+    | the demo accounts' well-known password; outside local/testing the seeder
+    | refuses to run without it.
+    |
+    */
+
+    'demo_date' => env('DEMO_DATE'),
+
+    'demo_password' => env('SEED_DEMO_PASSWORD'),
+
 ];
