@@ -29,6 +29,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -100,6 +101,8 @@ class DemoCatalogSeeder extends Seeder
 
     private ?Coupon $coupon = null;
 
+    private ?string $passwordHash = null;
+
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -153,6 +156,18 @@ class DemoCatalogSeeder extends Seeder
     private function password(): string
     {
         return (string) (config('app.demo_password') ?: 'Demo#12345');
+    }
+
+    /**
+     * The demo password, hashed once per run. The admin and the demo customer
+     * sign in with the same password, and bcrypt is deliberately expensive, so
+     * both rows get this one hash instead of paying a full work factor each.
+     * The `hashed` cast on both models recognises it as already hashed and
+     * stores it untouched.
+     */
+    private function passwordHash(): string
+    {
+        return $this->passwordHash ??= Hash::make($this->password());
     }
 
     /**
@@ -331,7 +346,7 @@ class DemoCatalogSeeder extends Seeder
             [
                 'name' => 'Mahmudul Hasan',
                 'phone' => '+880 1711 223344',
-                'password' => $this->password(),
+                'password' => $this->passwordHash(),
                 'is_active' => true,
             ],
         );
@@ -874,7 +889,7 @@ class DemoCatalogSeeder extends Seeder
                 [
                     'name' => $data['name'],
                     'phone' => $data['phone'],
-                    'password' => $isDemo ? $this->password() : Str::random(32),
+                    'password' => $isDemo ? $this->passwordHash() : Str::random(32),
                     'status' => 'active',
                     'email_verified_at' => $this->demoDate()->subDays(60),
                 ],

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin;
 use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Category;
@@ -16,6 +17,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\DemoCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class DemoCatalogSeederTest extends TestCase
@@ -46,6 +48,14 @@ class DemoCatalogSeederTest extends TestCase
         $this->assertSame(1, Refund::count());
         $this->assertDatabaseHas('coupons', ['code' => DemoCatalogSeeder::couponCode()]);
         $this->assertDatabaseMissing('orders', ['order_number' => 'ORD-100001']);
+
+        // Both demo accounts still sign in with the documented password: the
+        // one hash shared by the admin and the demo customer has to survive the
+        // models' `hashed` cast untouched, on a re-run as well.
+        $admin = Hash::check('Demo#12345', Admin::where('email', DemoCatalogSeeder::ADMIN_EMAIL)->value('password'));
+        $customer = Hash::check('Demo#12345', User::where('email', DemoCatalogSeeder::CUSTOMER_EMAIL)->value('password'));
+
+        $this->assertTrue($admin && $customer);
     }
 
     public function test_the_coupon_order_respects_the_coupons_maximum_discount(): void
