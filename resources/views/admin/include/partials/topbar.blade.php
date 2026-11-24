@@ -9,7 +9,7 @@
                         <img alt="Sodai" src="/images/logo-sodai-white.png" />
                     </span>
                     <span class="logo-sm">
-                        <img alt="Sodai" src="/images/logo-sodai-mark.png" />
+                        <img alt="Sodai" src="/images/logo-sodai-mark-white.png" />
                     </span>
                 </a>
                 <!-- Logo Dark -->

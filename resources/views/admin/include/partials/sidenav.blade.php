@@ -4,7 +4,7 @@
     <a class="logo" href="{{ route('admin.dashboard') }}">
         <span class="logo logo-light">
             <span class="logo-lg"><img alt="Sodai" src="{{ asset('images/logo-sodai-white.png') }}" /></span>
-            <span class="logo-sm"><img alt="Sodai" src="{{ asset('images/logo-sodai-mark.png') }}" /></span>
+            <span class="logo-sm"><img alt="Sodai" src="{{ asset('images/logo-sodai-mark-white.png') }}" /></span>
         </span>
         <span class="logo logo-dark">
             <span class="logo-lg"><img alt="Sodai" src="{{ asset('images/logo-black.png') }}" /></span>
