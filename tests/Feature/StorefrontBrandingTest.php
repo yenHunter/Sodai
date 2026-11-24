@@ -16,7 +16,7 @@ class StorefrontBrandingTest extends TestCase
     // DEFAULTS (fresh store, settings table empty)
     // ─────────────────────────────────────────────
 
-    public function test_head_renders_template_default_branding_without_settings(): void
+    public function test_head_renders_default_branding_without_settings(): void
     {
         $response = $this->get(route('visitor.about'));
 
@@ -24,18 +24,17 @@ class StorefrontBrandingTest extends TestCase
         // Company settings feed the title; about page supplies its own title text.
         $response->assertSee('<title>Sodai - Single vendor eCommerce - About Us</title>', false);
         $response->assertSee(asset('visitor/images/favicon/favicon-4.png'), false);
-        // Template defaults render when nothing is configured
-        $response->assertSee(asset('visitor/images/logo/logo.png'), false);
-        $response->assertSee(asset('visitor/images/logo/dark-logo.png'), false);
+        // The project logo renders when nothing is configured
+        $response->assertSee(asset('images/logo-black.png'), false);
+        $response->assertDontSee(asset('visitor/images/logo/logo.png'), false);
     }
 
-    public function test_header_and_footer_render_template_default_logos_and_contact_without_settings(): void
+    public function test_header_and_footer_render_default_logo_and_contact_without_settings(): void
     {
         $response = $this->get(route('visitor.about'));
 
         $response->assertOk();
-        $response->assertSee(asset('visitor/images/logo/logo.png'), false);
-        $response->assertSee(asset('visitor/images/logo/dark-logo.png'), false);
+        $response->assertSee(asset('images/logo-black.png'), false);
         $response->assertSee('71 Pilgrim Avenue Chevy Chase, east california.');
         $response->assertSee('+44 0123 456 789');
         $response->assertSee('example@ec-email.com');
@@ -90,8 +89,8 @@ class StorefrontBrandingTest extends TestCase
         $response->assertSee(asset('storage/settings/design/test.png'), false);
         $response->assertSee(asset('storage/settings/design/dark-test.png'), false);
         $response->assertSee(asset('storage/settings/design/favicon-test.png'), false);
-        // Template fallbacks are gone
-        $response->assertDontSee(asset('visitor/images/logo/logo.png'), false);
+        // Default fallbacks are gone
+        $response->assertDontSee(asset('images/logo-black.png'), false);
         $response->assertDontSee(asset('visitor/images/favicon/favicon-4.png'), false);
     }
 

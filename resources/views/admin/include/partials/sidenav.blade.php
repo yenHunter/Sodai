@@ -1,13 +1,14 @@
+@php $currentAdmin = auth('admin')->user(); @endphp
 <div class="sidenav-menu">
     <!-- Brand Logo -->
     <a class="logo" href="{{ route('admin.dashboard') }}">
         <span class="logo logo-light">
-            <span class="logo-lg"><img alt="logo" src="{{ asset('images/logo.png') }}" /></span>
-            <span class="logo-sm"><img alt="small logo" src="{{ asset('images/logo-sm.png') }}" /></span>
+            <span class="logo-lg"><img alt="Sodai" src="{{ asset('images/logo-sodai-white.png') }}" /></span>
+            <span class="logo-sm"><img alt="Sodai" src="{{ asset('images/logo-sodai-mark.png') }}" /></span>
         </span>
         <span class="logo logo-dark">
-            <span class="logo-lg"><img alt="dark logo" src="{{ asset('images/logo-black.png') }}" /></span>
-            <span class="logo-sm"><img alt="small logo" src="{{ asset('images/logo-sm.png') }}" /></span>
+            <span class="logo-lg"><img alt="Sodai" src="{{ asset('images/logo-black.png') }}" /></span>
+            <span class="logo-sm"><img alt="Sodai" src="{{ asset('images/logo-sodai-mark-dark.png') }}" /></span>
         </span>
     </a>
     <!-- Sidebar Hover Menu Toggle Button -->
@@ -24,10 +25,12 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <a class="link-reset" href="#!">
-                        <img alt="user-image" class="rounded-circle mb-2 avatar-md"
-                            src="{{ asset('images/users/user-1.jpg') }}" />
-                        <span class="sidenav-user-name fw-bold">Geneva K.</span>
-                        <span class="fs-12 fw-semibold" data-lang="user-role">Art Director</span>
+                        <img alt="{{ $currentAdmin?->name ?? 'Administrator' }}" class="rounded-circle mb-2 avatar-md"
+                            src="{{ $currentAdmin?->avatar_url ?? asset('images/users/user-1.jpg') }}" />
+                        <span class="sidenav-user-name fw-bold">{{ $currentAdmin?->name ?? 'Administrator' }}</span>
+                        <span class="fs-12 fw-semibold" data-lang="user-role">
+                            {{ $currentAdmin?->getRoleNames()->first() ? ucfirst(str_replace('-', ' ', $currentAdmin->getRoleNames()->first())) : 'Administrator' }}
+                        </span>
                     </a>
                 </div>
                 <div>
