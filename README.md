@@ -1,13 +1,12 @@
 <p align="center">
-  <img src="public/images/logo-black.png" alt="Sodai" width="220">
+  <img src="public/images/logo-black.png" alt="Sodai" width="200">
 </p>
 
-<h1 align="center">Sodai — Single Vendor E-Commerce Platform</h1>
+<h1 align="center">Sodai</h1>
 
 <p align="center">
-  A full-featured, admin-first e-commerce application built with Laravel 13.
-  Developed as a portfolio project to demonstrate real-world backend architecture,
-  role-based access control, variant-based product modeling, and test-driven development.
+  <strong>Open-source Laravel 13 e-commerce platform: a customer storefront and a
+  permission-gated admin panel around a variant-based catalog, covered by 459 tests.</strong>
 </p>
 
 <p align="center">
@@ -15,25 +14,136 @@
   <img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php" alt="PHP">
   <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap" alt="Bootstrap">
   <img src="https://img.shields.io/badge/Vite-7.x-646CFF?logo=vite" alt="Vite">
-  <a href="../../actions"><img src="https://github.com/yenHunter/sodai/actions/workflows/laravel.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/yenHunter/Sodai/actions/workflows/laravel.yml"><img src="https://github.com/yenHunter/Sodai/actions/workflows/laravel.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/tests-459%20passing-2ea44f" alt="459 tests passing">
 </p>
 
----
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#highlights">Features</a> ·
+  <a href="#tech-stack">Tech stack</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
-## About Sodai
+<p align="center">
+  <img src="docs/screenshots/storefront-home.png" alt="Sodai storefront homepage" width="880">
+</p>
 
-Sodai is a single-vendor e-commerce platform with a completely separated admin panel and
-customer storefront, each with its own authentication guard. The admin panel is
-feature-complete for core catalog and order operations, and the customer storefront is now
-wired end-to-end: browse → cart → coupon → COD checkout → order confirmation and tracking.
+**Live demo:** coming soon. Until it is hosted, the [quick start](#quick-start) below
+brings the seeded demo catalog up locally in two commands.
 
-This is a **learning and portfolio project** — it is not deployed to production. Payment
-integration is intentionally limited to Cash On Delivery. Guest order confirmation
-emails are queued; order-relevant admin summaries continue to send as before. See
-[`.github/project-instructions.md`](.github/project-instructions.md) for a detailed,
-continuously-updated breakdown of what's built vs. what's planned.
+> **License note:** Sodai's own code is MIT. The bundled **UBold** admin theme and
+> **Ekka** storefront theme are commercially licensed on ThemeForest and are excluded
+> from that grant — see [License](#license).
 
-## Key Features
+## What is Sodai?
+
+Sodai is a single-vendor e-commerce platform split into two applications with their own
+authentication guards: a Blade storefront for customers, and a separate admin panel behind
+Spatie roles and granular permissions. It covers what a shop actually needs — scheduled
+CMS banners and a filtered variant catalog, guest or registered COD checkout with real
+stock locking, order tracking and cancellation, review moderation, refunds, CSV catalog
+and order import/export, and a ten-group settings module.
+
+It is a portfolio project rather than a hosted product: payment is Cash On Delivery only,
+and the demo data is synthetic. The interesting part is the backend — a service layer that
+writes orders inside a transaction, object-level authorization on every customer resource,
+and a test suite that pins the business rules down. See
+[`.github/project-instructions.md`](.github/project-instructions.md) for a continuously
+updated breakdown of what is built versus planned.
+
+## Quick start
+
+Requirements: PHP 8.3+, Composer 2, Node 20+, and a database (SQLite by default).
+
+```bash
+git clone https://github.com/yenHunter/Sodai.git
+cd Sodai
+composer run setup          # install, .env, key, migrate, npm install, build assets
+php artisan storage:link
+php artisan demo:seed       # optional: the full demo catalog
+composer run dev            # server + queue listener + logs + Vite
+```
+
+`composer run setup` expands to `composer install`, `.env` creation, `key:generate`,
+`migrate --force`, `npm install`, and `npm run build`. The step-by-step equivalent:
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+npm install && npm run build
+php artisan migrate --seed
+```
+
+After `php artisan demo:seed`, sign in as `demo-admin@example.com` / `Demo#12345`
+(super admin) or `demo-customer@example.com` / `Demo#12345`. The normal development
+accounts come from `database/seeders/AdminSeeder.php` and `CustomerSeeder.php` — change
+them before any shared deployment.
+
+### Demo catalog
+
+`php artisan migrate --seed` installs only the normal development data. For a full
+storefront — categories, brands, variant products with photos, banners, customers, orders
+in every status, reviews, a coupon and a refund:
+
+```bash
+php artisan demo:seed        # or: php artisan db:seed --class=DemoCatalogSeeder
+```
+
+Set `SEED_DEMO_PASSWORD` to replace the demo password; outside local/testing the seeder
+refuses to create accounts without it. `DEMO_DATE=2026-01-15` pins every relative date so
+the history reproduces exactly for screenshots and tests.
+
+Undo a demo run, and only that run, with `php artisan demo:clear` (`--dry-run` previews
+it). Demo rows use their own identifiers (`DEMO-ORD-…` order numbers, `demo-…` slugs,
+`DEMO-…` SKUs, `@example.com` accounts), and the command never deletes a real record: a
+demo product still referenced by a real order, a demo coupon on a real order, or any
+setting a shop has since changed is kept and reported. Settings the seeder created are
+removed with it, and the demo photos copied into `storage/app/public` are cleaned up too.
+
+## Screenshots
+
+Every screenshot is captured from the seeded demo catalog.
+
+| | |
+|---|---|
+| ![Storefront homepage](docs/screenshots/storefront-home.png) | ![Product page with variant selection](docs/screenshots/product-variants.png) |
+| **Cart** | **Admin — order management** |
+| ![Cart](docs/screenshots/cart.png) | ![Admin orders list](docs/screenshots/admin-orders.png) |
+| **Admin — roles and permissions** | |
+| ![Role permission matrix](docs/screenshots/admin-roles-permissions.png) | |
+
+## Highlights
+
+**Storefront**
+- Homepage driven by real data: scheduled CMS banners, featured/new/limited-time products,
+  top categories
+- Catalog with category/option/color/size/price filters and sorting; product pages with a
+  variant matrix
+- Guest or registered checkout, COD, with live shipping, tax and coupon validation
+- Customer area: order history and timeline, cancellation, addresses, reviews, wishlist,
+  profile and password
+
+**Admin**
+- Spatie RBAC with 5 seeded roles and granular permissions
+- Variant-based product catalog (Color/Size/Weight/custom), generated SKUs, per-variant
+  galleries, related products, tags, CSV import/export
+- POS-style order builder, status-history audit trail, refund workflow, filtered CSV export
+- Coupons, review moderation, abandoned-cart reminders, sales report emails, CMS banners,
+  a ten-group cached settings module, and reCAPTCHA v3 plus rate limiting on every auth
+  surface
+
+**Engineering**
+- Thin controllers with business logic in a dedicated service layer
+- 459 tests / 1,899 assertions across 39 feature suites and 6 unit suites
+- Form Request validation, soft deletes, security headers and CSP
+- Whitelist HTML sanitizer for rich text, sanitized SVG uploads, object-level ownership
+  checks on orders, reviews, addresses, cart and wishlist
+
+<details>
+<summary>Full feature list</summary>
 
 **Storefront (Customer)**
 - Homepage wired to real data: banners (scheduled CMS placements), featured/new/limited-time
@@ -75,9 +185,9 @@ continuously-updated breakdown of what's built vs. what's planned.
 
 **Engineering practices**
 - Thin controllers, business logic in a dedicated Service layer
-- 306 tests / 1,259 assertions across 29 Feature suites + Unit tests, covering permissions,
-  validation edge cases, and business rules (stock locking on order creation, coupon
-  eligibility, refund balances, report window anchoring)
+- 459 tests / 1,899 assertions across 39 feature suites and 6 unit suites, covering
+  permissions, validation edge cases, and business rules (stock locking on order creation,
+  coupon eligibility, refund balances, report window anchoring)
 - Consistent Form Request validation, soft deletes on core models, security headers + CSP
 
 **Security hardening**
@@ -92,6 +202,8 @@ continuously-updated breakdown of what's built vs. what's planned.
 - App-image-only `mimes`/`max` validation on all uploads; UUID filenames; no source-map
   files shipped to the browser; `composer audit` tracked clean
 
+</details>
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -101,157 +213,21 @@ continuously-updated breakdown of what's built vs. what's planned.
 | Authorization | Spatie Laravel Permission |
 | Image processing | Intervention Image v4 (WebP conversion) |
 | Frontend | Blade, Bootstrap 5.3 (UBold admin theme), Vite |
-| Testing | PHPUnit 12 |
+| Jobs / scheduling | Database queue, Laravel scheduler |
+| Testing | PHPUnit 12, Playwright for browser flows |
 
-## Getting Started
-
-```bash
-git clone https://github.com/yenHunter/Sodai.git
-cd sodai
-composer run setup   # installs deps, copies .env, generates key, migrates, builds assets
-```
-
-Or step by step:
+## Testing
 
 ```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-npm install && npm run build
-php artisan migrate --seed
-```
-
-Run the dev environment (server + queue listener + logs + Vite, all at once):
-
-```bash
-composer run dev
-```
-
-### Queue worker
-
-Guest order confirmation emails are queued, and the default `QUEUE_CONNECTION=database`
-stores them in the `jobs` table until a worker processes them. `composer run dev` starts a
-queue listener locally. In any other environment, run a supervised worker:
-
-```bash
-php artisan queue:work
-```
-
-Without a running worker, checkouts still succeed but confirmation emails are not
-delivered. Monitor the failed-jobs table (`php artisan queue:failed`) after deploying.
-
-For production, [`deploy/supervisor/sodai-queue-worker.conf`](deploy/supervisor/sodai-queue-worker.conf)
-provides a Supervisor program that restarts the worker and recycles it hourly. Update its
-`directory`, `command`, and `user` values for the host, then install it:
-
-```bash
-sudo cp deploy/supervisor/sodai-queue-worker.conf /etc/supervisor/conf.d/sodai-queue-worker.conf
-sudo supervisorctl reread
-sudo supervisorctl update
-sudo supervisorctl start sodai-queue-worker:*
-```
-
-Ensure `/var/log/sodai` exists and is writable by the worker user. After each release,
-run `sudo supervisorctl restart sodai-queue-worker:*` to load the new code immediately.
-
-### Monitoring and retrying failed jobs
-
-The Supervisor command retries a job up to three times (`--tries=3`). A job that still
-fails is moved to the `failed_jobs` table; checkout is unaffected, but that confirmation
-email was not delivered. Failed queued mail appears as an
-`Illuminate\Mail\SendQueuedMailable` job whose payload contains the order confirmation.
-
-```bash
-# Worker process state (restarts are automatic)
-sudo supervisorctl status sodai-queue-worker:*
-
-# Failed jobs: UUID, connection, queue, job class, failure time
-php artisan queue:failed
-
-# Retry one job, or every failed job (a running worker picks them up)
-php artisan queue:retry <uuid>
-php artisan queue:retry all
-
-# Remove a permanently failed job (bad address, obsolete order)
-php artisan queue:forget <uuid>
-
-# Destructive: removes every failed job
-php artisan queue:flush
-```
-
-Check the worker log at `/var/log/sodai/queue-worker.log` and application errors in
-`storage/logs/laravel.log`. If queueing itself fails during checkout, the checkout
-service logs the order ID and exception; worker-side delivery failures are recorded in
-`failed_jobs`.
-
-For a manual queue-size check, run the wrapper with the configured threshold and queues:
-
-```bash
-php artisan queue:monitor-depth
-```
-
-The scheduler already registers two checks every ten minutes:
-
-- `queue:monitor-depth`, which checks every `connection:queue` pair in the **Monitored
-  Queues** setting (default `database:default`) against the **Queue Depth Threshold**
-  from Settings → Notification (default 100), and appends output to
-  `storage/logs/queue-monitor.log`. When a queue reaches the threshold, its `QueueBusy`
-  event emails the store notification address with the depth details, at most once per
-  queue per **Queue Alert Cooldown** (default 60 minutes). When the queue falls below
-  the threshold, the cooldown is cleared so a new incident alerts immediately.
-- `queue:alert-failed-jobs`, which emails the store notification address once per
-  incident. It alerts on the first increase after the backlog was zero, stays quiet while
-  the same backlog keeps growing, and sends a one-time recovery notice after
-  `failed_jobs` returns to zero. Both emails include the most common failure exception
-  and the affected queues and job classes; the recovery notice also includes when the
-  incident started and how long it lasted. Alert details are summarized from the newest
-  **Failed Jobs Sample Size** failures (default 500) so a very large backlog is not
-  loaded in full; the recovery notice notes when those incident details were sampled.
-
-Both require Laravel's scheduler to be running, normally via this cron entry on the host:
-
-```cron
-* * * * * cd /var/www/sodai && php artisan schedule:run >> /dev/null 2>&1
-```
-
-Retries can duplicate an email if the provider accepted it but the job failed afterward,
-so confirm the order notification state before bulk-retrying `all`.
-
-Default seeded accounts (see `database/seeders/AdminSeeder.php` / `CustomerSeeder.php`
-for current values — change these before any shared/public deployment).
-
-### Demo catalog (optional)
-
-`php artisan migrate --seed` installs only the normal development data. For a
-full storefront — categories, brands, variant products with photos, banners,
-customers, orders in every status, reviews, a coupon and a refund:
-
-```bash
-php artisan storage:link
-php artisan demo:seed        # or: php artisan db:seed --class=DemoCatalogSeeder
-```
-
-Logins: `demo-admin@example.com` / `Demo#12345` (super admin) and
-`demo-customer@example.com` / `Demo#12345`. Set `SEED_DEMO_PASSWORD` to replace
-the password; outside local/testing the seeder refuses to create accounts
-without it. `DEMO_DATE=2026-01-15` pins every relative date so the history
-reproduces exactly for screenshots and tests.
-
-Undo a demo run, and only that run, with `php artisan demo:clear`
-(`--dry-run` previews it). Demo rows use their own identifiers (`DEMO-ORD-…`
-order numbers, `demo-…` slugs, `DEMO-…` SKUs, `@example.com` accounts), and the
-command never deletes a real record: a demo product still referenced by a real
-order, a demo coupon on a real order, or any setting a shop has since changed
-is kept and reported. Settings the seeder created are removed with it; the
-demo photos copied into `storage/app/public` are cleaned up too.
-
-## Running Tests
-
-```bash
-composer test
-# or target a suite
+composer test                      # 459 tests, 1,899 assertions
 php artisan test --filter=ProductModuleTest
 ```
+
+Tests run against in-memory SQLite, so no database setup is needed. The feature suites
+cover permissions and validation edges as well as business rules (stock locking, coupon
+eligibility, refund balances, report window anchoring); the unit suites cover pure
+services. Every pull request runs five GitHub Actions jobs: Pint style, asset build,
+the PHP 8.3 test suite, a Playwright browser run, and a blocking `composer audit`.
 
 ## Project Structure Highlights
 
@@ -268,6 +244,17 @@ routes/
 ├── web.php                     # Public + legacy template demo routes
 tests/Feature/                  # Module-level test suites
 ```
+
+## Documentation
+
+- [`docs/queue-operations.md`](docs/queue-operations.md) — workers, retries, and the
+  scheduled queue and failure alerts
+- [`deploy/supervisor/sodai-queue-worker.conf`](deploy/supervisor/sodai-queue-worker.conf) —
+  production queue worker program
+- [`.github/project-instructions.md`](.github/project-instructions.md) — what is built
+  versus planned, plus the full backlog
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — branching strategy and coding standards
+- [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) — bundled asset licenses
 
 ## Roadmap
 
