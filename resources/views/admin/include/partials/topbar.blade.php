@@ -6,19 +6,19 @@
                 <!-- Logo light -->
                 <a class="logo-light" href="{{ url("/") }}">
                     <span class="logo-lg">
-                        <img alt="logo" src="/images/logo.png" />
+                        <img alt="Sodai" src="/images/logo-sodai-white.png" />
                     </span>
                     <span class="logo-sm">
-                        <img alt="small logo" src="/images/logo-sm.png" />
+                        <img alt="Sodai" src="/images/logo-sodai-mark-white.png" />
                     </span>
                 </a>
                 <!-- Logo Dark -->
                 <a class="logo-dark" href="{{ url("/") }}">
                     <span class="logo-lg">
-                        <img alt="dark logo" src="/images/logo-black.png" />
+                        <img alt="Sodai" src="/images/logo-black.png" />
                     </span>
                     <span class="logo-sm">
-                        <img alt="small logo" src="/images/logo-sm.png" />
+                        <img alt="Sodai" src="/images/logo-sodai-mark-dark.png" />
                     </span>
                 </a>
             </div>
@@ -561,9 +561,11 @@
             <div class="topbar-item nav-user" id="simple-user-dropdown">
                 <div class="dropdown">
                     <a aria-expanded="false" aria-haspopup="false" class="topbar-link dropdown-toggle drop-arrow-none px-2" data-bs-toggle="dropdown" href="#!">
-                        <img alt="user-image" class="rounded-circle me-lg-2 d-flex" src="/images/users/user-1.jpg" width="32" />
+                        <img alt="{{ auth('admin')->user()?->name ?? 'Administrator' }}"
+                            class="rounded-circle me-lg-2 d-flex"
+                            src="{{ auth('admin')->user()?->avatar_url ?? '/images/users/user-1.jpg' }}" width="32" />
                         <div class="d-lg-flex align-items-center gap-1 d-none">
-                            <h5 class="my-0">Geneva K.</h5>
+                            <h5 class="my-0">{{ auth('admin')->user()?->name ?? 'Administrator' }}</h5>
                             <i class="align-middle" data-lucide="chevron-down"></i>
                         </div>
                     </a>
