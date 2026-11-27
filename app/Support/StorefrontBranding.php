@@ -22,8 +22,8 @@ class StorefrontBranding
             'description' => 'Best ecommerce html template for single and multi vendor store.',
             'keywords' => 'apparel, catalog, clean, ecommerce, ecommerce HTML, electronics, fashion, html eCommerce, html store, minimal, multipurpose, multipurpose ecommerce, online store, responsive ecommerce template, shops',
             'author' => 'Sodai',
-            'logo' => asset('visitor/images/logo/logo.png'),
-            'logo_dark' => asset('visitor/images/logo/dark-logo.png'),
+            'logo' => asset('images/logo-black.png'),
+            'logo_dark' => asset('images/logo-black.png'),
             'favicon' => asset('visitor/images/favicon/favicon-4.png'),
             'copyright_name' => 'ekka',
         ];

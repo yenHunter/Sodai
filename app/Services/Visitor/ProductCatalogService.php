@@ -169,7 +169,13 @@ class ProductCatalogService
             'variants' => fn ($v) => $v->active()->with('optionValues.option'),
             'variants.images' => fn ($q) => $q->orderBy('sort_order'),
             'tags',
-            'relatedProducts' => fn ($q) => $q->select('products.id', 'products.name', 'products.min_price'),
+            'relatedProducts' => fn ($q) => $q->select(
+                'products.id',
+                'products.name',
+                'products.slug',
+                'products.min_price',
+                'products.max_price',
+            ),
             'reviews' => fn ($q) => $q->approved()->latest()->with('user:id,name,avatar'),
         ]);
     }

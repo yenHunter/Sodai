@@ -5,7 +5,7 @@
             <div class="col-12 text-center">
                 ©
                 <span data-current-year=""></span>
-                UBold By <span class="fw-semibold">Coderthemes</span>
+                <span class="fw-semibold">Sodai</span>
             </div>
         </div>
     </div>
