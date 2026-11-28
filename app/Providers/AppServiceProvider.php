@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\SendQueueBusyAlert;
+use App\Support\DemoEnvironment;
 use App\View\Composers\CartComposer;
 use Illuminate\Queue\Events\QueueBusy;
 use Illuminate\Support\Facades\Blade;
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // A demo deployment must never deliver real email, whatever the .env
+        // says. See config/demo.php and docs/demo-mode.md.
+        DemoEnvironment::enforce();
+
         // ─────────────────────────────────────────────
         // CUSTOM BLADE DIRECTIVES FOR ADMIN PERMISSIONS
         // ─────────────────────────────────────────────
