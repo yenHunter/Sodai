@@ -128,7 +128,7 @@ Every screenshot is captured from the seeded demo catalog.
   profile and password
 
 **Admin**
-- Spatie RBAC with 5 seeded roles and granular permissions
+- Spatie RBAC with granular permissions
 - Variant-based product catalog (Color/Size/Weight/custom), generated SKUs, per-variant
   galleries, related products, tags, CSV import/export
 - POS-style order builder, status-history audit trail, refund workflow, filtered CSV export
@@ -137,11 +137,11 @@ Every screenshot is captured from the seeded demo catalog.
   surface
 
 **Engineering**
-- Thin controllers with business logic in a dedicated service layer
-- 459 tests / 1,899 assertions across 39 feature suites and 6 unit suites
-- Form Request validation, soft deletes, security headers and CSP
-- Whitelist HTML sanitizer for rich text, sanitized SVG uploads, object-level ownership
-  checks on orders, reviews, addresses, cart and wishlist
+- Thin controllers with business logic in a dedicated service layer; Form Request
+  validation and soft deletes on core models
+- How the variant model, the two auth guards, RBAC, the checkout transaction and the
+  security checks are built — and which test pins each one — is in
+  [Why Sodai?](#why-sodai)
 
 <details>
 <summary>Full feature list</summary>
@@ -153,7 +153,6 @@ Every screenshot is captured from the seeded demo catalog.
   with variant matrix
 - Guest or registered checkout (guest checkout toggle in Settings), COD payment,
   live shipping charge/free-shipping threshold/tax and coupon validation via throttled AJAX
-- Stock is re-locked and re-validated inside a DB transaction at order placement
 - Customer account area: order history + timeline tracking, cancellation of pending orders,
   addresses (default management), reviews (only after delivered purchase), wishlist,
   profile/password management
@@ -184,25 +183,6 @@ Every screenshot is captured from the seeded demo catalog.
   cached key-value `Setting` model
 - reCAPTCHA v3 + rate limiting on all authentication surfaces (admin and customer)
 
-**Engineering practices**
-- Thin controllers, business logic in a dedicated Service layer
-- 459 tests / 1,899 assertions across 39 feature suites and 6 unit suites, covering
-  permissions, validation edge cases, and business rules (stock locking on order creation,
-  coupon eligibility, refund balances, report window anchoring)
-- Consistent Form Request validation, soft deletes on core models, security headers + CSP
-
-**Security hardening**
-- Whitelist-based HTML sanitizer on all unescaped rich-text rendering (CMS content,
-  product descriptions) — strips scripts, event handlers, and dangerous URLs while
-  preserving normal editor output
-- Uploaded SVGs (design logos) are stored with active content stripped
-- Rate limiting on every authentication surface plus checkout/coupon endpoints
-  (coupon brute-force protection); throttled endpoints return 429
-- Ownership enforcement on every customer resource (orders, reviews, addresses, cart,
-  wishlist) via a dedicated trait — object-level authorization
-- App-image-only `mimes`/`max` validation on all uploads; UUID filenames; no source-map
-  files shipped to the browser; `composer audit` tracked clean
-
 </details>
 
 ## Why Sodai?
@@ -229,8 +209,8 @@ account state on every request, so a deactivated admin is logged out by
 `AdminAuthenticated`, and `CustomerAuthenticated` enforces verified email, ban and lock.
 Admin accounts also support TOTP two-factor with recovery codes.
 
-**RBAC is enforced per route.** Spatie permissions on the `admin` guard, seeded as **65
-permissions across 19 groups and 5 roles** (`super-admin`, `manager`, `order-manager`,
+**RBAC is enforced per route.** Spatie permissions live on the `admin` guard, seeded as
+**65 permissions across 19 groups and 5 roles** (`super-admin`, `manager`, `order-manager`,
 `content-editor`, `support`). Routes are gated by `CheckAdminPermission`, which accepts
 any of the permission strings it is given and short-circuits for `super-admin`. The
 navigation and buttons read those same permission names, so the UI cannot drift from the
@@ -252,13 +232,13 @@ URL-decoding, and `data:` is only accepted for images. Uploaded SVGs are strippe
 script and `foreignObject`. `SecurityHeaders` applies CSP, `nosniff`, `SAMEORIGIN`,
 referrer and permissions policies to every response, plus HSTS in production. Each
 customer resource (order, review, address, cart, wishlist) is checked with the
-`EnsuresCustomerOwnership` trait and answers 403 on a foreign id. Authentication, checkout
-and coupon endpoints are throttled, and `composer audit` fails the build on a known
-advisory.
+`EnsuresCustomerOwnership` trait and answers 403 on a foreign id. Uploads are
+`mimes`/`max`-validated images stored under UUID filenames, no source maps ship to the
+browser, authentication plus checkout and coupon endpoints are throttled, and
+`composer audit` fails the build on a known advisory.
 
-**The rules are pinned by tests.** 459 tests / 1,899 assertions across 39 feature and 6
-unit suites, plus Playwright flows for storefront, checkout and admin. They are
-behavioural, not smoke tests: `VisitorCheckoutTest` covers stock exhaustion discovered
+**The rules are pinned by tests.** The suites are behavioural, not smoke tests:
+`VisitorCheckoutTest` covers stock exhaustion discovered
 *after* add-to-cart, a variant deactivated mid-session, coupon minimums and per-user
 limits, full cart clearing and a queued confirmation delivered by a real worker;
 `SecurityHardeningTest` covers the sanitizer, variant-matrix JSON that tries to break out
@@ -310,6 +290,8 @@ tests/Feature/                  # Module-level test suites
 
 - [`docs/queue-operations.md`](docs/queue-operations.md) — workers, retries, and the
   scheduled queue and failure alerts
+- [`docs/demo-mode.md`](docs/demo-mode.md) — running a public demo that cannot send real
+  email
 - [`deploy/supervisor/sodai-queue-worker.conf`](deploy/supervisor/sodai-queue-worker.conf) —
   production queue worker program
 - [`.github/project-instructions.md`](.github/project-instructions.md) — what is built
