@@ -58,12 +58,17 @@ The demo database is disposable by design. Build it once:
 ```bash
 touch database/demo.sqlite
 php artisan migrate --force
+php artisan storage:link
 php artisan demo:seed
 ```
 
+`php artisan storage:link` is not optional: the seeded product photographs are copied into
+`storage/app/public` and served through `/storage`, so without the symlink every catalog and
+order image 404s.
+
 `php artisan demo:seed` needs `SEED_DEMO_PASSWORD` outside `local`/`development`/`testing`,
 because the built-in demo password would otherwise be a live super-admin account. Resetting
-the demo means throwing the file away and repeating those three commands; a scheduled reset
+the demo means throwing the file away and repeating those four commands; a scheduled reset
 command is tracked in the roadmap.
 
 Never point `DB_DATABASE` at an existing shop's database, and never run `demo:seed` against

@@ -31,14 +31,21 @@ final class DemoEnvironment
         $configuredMailer = config('mail.default');
         $logChannel = config('mail.mailers.log.channel');
 
+        $logMailer = array_filter([
+            'transport' => 'log',
+            'channel' => $logChannel,
+        ], fn ($value) => $value !== null);
+
         $mailers = [];
 
         foreach (array_keys((array) config('mail.mailers', [])) as $name) {
-            $mailers[$name] = array_filter([
-                'transport' => 'log',
-                'channel' => $logChannel,
-            ], fn ($value) => $value !== null);
+            $mailers[$name] = $logMailer;
         }
+
+        // mail.default is about to point at "log", so that mailer has to exist
+        // even when the copied config never defined it — otherwise every send
+        // throws "Mailer [log] is not defined" instead of being logged.
+        $mailers['log'] = $logMailer;
 
         config([
             'mail.default' => 'log',

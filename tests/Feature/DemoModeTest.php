@@ -54,6 +54,28 @@ class DemoModeTest extends TestCase
         $this->assertNotInstanceOf(EsmtpTransport::class, $transport);
     }
 
+    public function test_demo_mode_defines_the_log_mailer_when_the_config_lacks_it(): void
+    {
+        // A stripped-down config that never defined a "log" mailer, which is
+        // exactly what mail.default is about to be pointed at.
+        config([
+            'demo.enabled' => true,
+            'mail.default' => 'smtp',
+            'mail.mailers' => [
+                'smtp' => ['transport' => 'smtp', 'host' => 'smtp.example.com', 'port' => 587],
+            ],
+            'queue.default' => 'database',
+        ]);
+
+        DemoEnvironment::enforce();
+
+        $this->assertArrayHasKey('log', config('mail.mailers'));
+        $this->assertSame('log', config('mail.mailers.log.transport'));
+
+        // Resolving the default mailer must not throw "Mailer [log] is not defined".
+        $this->assertInstanceOf(LogTransport::class, app('mail.manager')->mailer()->getSymfonyTransport());
+    }
+
     public function test_config_is_left_alone_when_demo_mode_is_off(): void
     {
         config([
