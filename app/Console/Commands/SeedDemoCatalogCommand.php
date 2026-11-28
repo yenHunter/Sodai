@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Support\DemoEnvironment;
 use Database\Seeders\DemoCatalogSeeder;
 use Illuminate\Console\Command;
 
@@ -19,8 +20,11 @@ class SeedDemoCatalogCommand extends Command
 
     public function handle(): int
     {
-        if (app()->environment('production')) {
-            $this->components->error('demo:seed is disabled in production, same as the demo seeder.');
+        // A public demo runs with APP_ENV=production, so production alone cannot
+        // be the blocker. DEMO_MODE=true is the deliberate opt-in; the seeder
+        // still refuses to create accounts without SEED_DEMO_PASSWORD.
+        if (app()->environment('production') && ! DemoEnvironment::enabled()) {
+            $this->components->error('demo:seed is disabled in production unless DEMO_MODE=true (see docs/demo-mode.md).');
 
             return self::FAILURE;
         }

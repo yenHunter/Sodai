@@ -108,6 +108,47 @@ class DemoCatalogSeederTest extends TestCase
         $this->assertSame(0, Product::count());
     }
 
+    public function test_demo_mode_seeds_in_production_when_a_password_is_set(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.demo_password' => 'Secret#99999', 'demo.enabled' => true]);
+
+        $this->seedDemo();
+
+        $this->assertSame(8, Product::whereIn('slug', DemoCatalogSeeder::productSlugs())->count());
+        $this->assertSame(14, Order::whereIn('order_number', DemoCatalogSeeder::orderNumbers())->count());
+    }
+
+    public function test_demo_mode_without_a_password_still_skips_in_production(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.demo_password' => null, 'demo.enabled' => true]);
+
+        $this->seedDemo();
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_the_seed_command_refuses_production_without_demo_mode(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.demo_password' => 'Secret#99999']);
+
+        $this->artisan('demo:seed', ['--force' => true])->assertFailed();
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_demo_mode_unlocks_the_seed_command_in_production(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.demo_password' => 'Secret#99999', 'demo.enabled' => true]);
+
+        $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
+
+        $this->assertSame(8, Product::whereIn('slug', DemoCatalogSeeder::productSlugs())->count());
+    }
+
     public function test_environments_beyond_the_developers_machine_need_an_explicit_password(): void
     {
         $this->app['env'] = 'staging';

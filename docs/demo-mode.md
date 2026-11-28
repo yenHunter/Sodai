@@ -59,17 +59,24 @@ The demo database is disposable by design. Build it once:
 touch database/demo.sqlite
 php artisan migrate --force
 php artisan storage:link
-php artisan demo:seed
+php artisan demo:seed --force
 ```
+
+`--force` skips the "seed into this database?" confirmation, which a deploy script cannot
+answer. Run it without the flag when you are at a terminal and want to see the database
+path first.
 
 `php artisan storage:link` is not optional: the seeded product photographs are copied into
 `storage/app/public` and served through `/storage`, so without the symlink every catalog and
-order image 404s.
+order image 404s. If the link is already in place the command answers "link already exists"
+and changes nothing; that is fine.
 
-`php artisan demo:seed` needs `SEED_DEMO_PASSWORD` outside `local`/`development`/`testing`,
-because the built-in demo password would otherwise be a live super-admin account. Resetting
-the demo means throwing the file away and repeating those four commands; a scheduled reset
-command is tracked in the roadmap.
+`demo:seed` and its undo `demo:clear` refuse to run under `APP_ENV=production` unless
+`DEMO_MODE=true`, which is why the demo `.env` above sets it. Seeding also requires
+`SEED_DEMO_PASSWORD` outside `local`/`development`/`testing`, because the built-in demo
+password would otherwise be a live super-admin account. Resetting the demo means throwing
+the file away and repeating those four commands; a scheduled reset command is tracked in the
+roadmap.
 
 Never point `DB_DATABASE` at an existing shop's database, and never run `demo:seed` against
 one.
@@ -97,13 +104,17 @@ the verification is skipped when no secret is configured.
 
 ## Checking a deployment
 
-Email in a demo should only ever appear in `storage/logs/laravel.log`. After a guest
-checkout, confirm the confirmation message is there and that no mail queue entry exists:
+Email in a demo should only ever appear in the log. The filename follows the log channel —
+`laravel.log` for `single`, `laravel-YYYY-MM-DD.log` for `daily` — so use the glob. After a
+guest checkout, confirm the confirmation message is there and that nothing is queued:
 
 ```bash
-grep -i "order confirmation" storage/logs/laravel.log
+grep -i "order confirmation" storage/logs/laravel*.log
 php artisan queue:failed          # a demo with DEMO_MODE=true never queues mail
 ```
+
+The message is logged as the full MIME body, which is why the view's "Order Confirmation"
+title is what matches; the subject line reads `Order #ORD-… confirmed - Sodai`.
 
 `tests/Feature/DemoModeTest.php` pins the behaviour: with demo mode on, both the default
 mailer and a named `smtp` mailer resolve to Laravel's `LogTransport`, and the queue

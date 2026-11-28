@@ -16,6 +16,7 @@ use App\Models\Refund;
 use App\Models\Review;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\DemoEnvironment;
 use Database\Seeders\DemoCatalogSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
@@ -45,8 +46,8 @@ class ClearDemoCatalogCommand extends Command
 
     public function handle(): int
     {
-        if (app()->environment('production')) {
-            $this->components->error('demo:clear is disabled in production, same as the demo seeder.');
+        if (app()->environment('production') && ! DemoEnvironment::enabled()) {
+            $this->components->error('demo:clear is disabled in production unless DEMO_MODE=true (see docs/demo-mode.md).');
 
             return self::FAILURE;
         }
