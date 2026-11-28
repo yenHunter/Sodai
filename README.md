@@ -22,6 +22,7 @@
   <a href="#quick-start">Quick start</a> ·
   <a href="#screenshots">Screenshots</a> ·
   <a href="#highlights">Features</a> ·
+  <a href="#why-sodai">Why Sodai?</a> ·
   <a href="#tech-stack">Tech stack</a> ·
   <a href="#documentation">Documentation</a>
 </p>
@@ -204,6 +205,66 @@ Every screenshot is captured from the seeded demo catalog.
 
 </details>
 
+## Why Sodai?
+
+Sodai is built like a shop that has to take real orders, not a CRUD demo. Six things are
+worth reading in the code.
+
+**Variants are modelled, not flattened.** A product owns `product_options` (`Color`,
+`Size`, `Weight`, or a custom option) and their `product_option_values` (with an optional
+swatch); each `product_variants` row joins them through `product_variant_option_values`.
+A variant carries its own SKU, price, purchase price, discount, stock, low-stock threshold,
+weight and thumbnail, plus `is_default` / `is_active` flags. The product row only caches
+`min_price`, `max_price` and `total_stock`, recomputed on every stock change
+(`Product::refreshPriceAndStockCache`). Order lines snapshot what was sold — product name,
+SKU, image and a readable `variant_options` string — and `order_items.product_variant_id`
+is `nullOnDelete`, so an order still renders correctly after the catalog is edited or a
+variant retired.
+
+**Two guards, two identity tables.** Customers authenticate through the `customer` guard
+on the `User` model, staff through the `admin` guard on the `Admin` model — not one users
+table with an `is_admin` flag. Password reset is split the same way: separate token tables,
+60-minute tokens for customers and 30-minute tokens for admins. Middleware re-checks
+account state on every request, so a deactivated admin is logged out by
+`AdminAuthenticated`, and `CustomerAuthenticated` enforces verified email, ban and lock.
+Admin accounts also support TOTP two-factor with recovery codes.
+
+**RBAC is enforced per route.** Spatie permissions on the `admin` guard, seeded as **65
+permissions across 19 groups and 5 roles** (`super-admin`, `manager`, `order-manager`,
+`content-editor`, `support`). Routes are gated by `CheckAdminPermission`, which accepts
+any of the permission strings it is given and short-circuits for `super-admin`. The
+navigation and buttons read those same permission names, so the UI cannot drift from the
+route rules.
+
+**Checkout is one transaction or nothing.** `CheckoutService::placeOrder` runs inside
+`DB::transaction`: every cart line re-reads its variant with `lockForUpdate()`, then
+re-checks availability and stock against that locked row instead of trusting the cart; the
+coupon is locked and re-validated; the order number is allocated under a lock; stock is
+decremented, product sales and price/stock caches updated, the status-history row written
+and the cart cleared — all before commit. Any failure rolls the whole order back. The
+confirmation email is queued *after* the commit, so a mail outage cannot roll back an
+order and a rolled-back order is never emailed.
+
+**Security decisions live in code, not config.** `HtmlSanitizer` is a whitelist, not a
+blacklist, for admin-entered rich text rendered with `{!! !!}`: unknown tags and `on*`
+handlers are dropped, `href`/`src` are limited to http(s), mailto and tel after double
+URL-decoding, and `data:` is only accepted for images. Uploaded SVGs are stripped of
+script and `foreignObject`. `SecurityHeaders` applies CSP, `nosniff`, `SAMEORIGIN`,
+referrer and permissions policies to every response, plus HSTS in production. Each
+customer resource (order, review, address, cart, wishlist) is checked with the
+`EnsuresCustomerOwnership` trait and answers 403 on a foreign id. Authentication, checkout
+and coupon endpoints are throttled, and `composer audit` fails the build on a known
+advisory.
+
+**The rules are pinned by tests.** 459 tests / 1,899 assertions across 39 feature and 6
+unit suites, plus Playwright flows for storefront, checkout and admin. They are
+behavioural, not smoke tests: `VisitorCheckoutTest` covers stock exhaustion discovered
+*after* add-to-cart, a variant deactivated mid-session, coupon minimums and per-user
+limits, full cart clearing and a queued confirmation delivered by a real worker;
+`SecurityHardeningTest` covers the sanitizer, variant-matrix JSON that tries to break out
+of its `<script>` tag, a `javascript:` CTA URL, and SVG logos stored without active
+content.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -270,7 +331,7 @@ up-to-date backlog. Near-term priorities:
 ## Connect & Support
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/firoz-ebna-jobaier)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-Support-yellow?style=for-the-badge&logo=buymeacoffee)](buymeacoffee.com/yenHunter)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-Support-yellow?style=for-the-badge&logo=buymeacoffee)](https://buymeacoffee.com/yenHunter)
 [![Fork me on GitHub](https://img.shields.io/badge/Fork_on_GitHub-000?style=for-the-badge&logo=github)](https://github.com/yenHunter)
 
 ## Contributing
