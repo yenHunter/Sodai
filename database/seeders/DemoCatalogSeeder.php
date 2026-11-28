@@ -25,6 +25,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Services\Shared\PricingService;
+use App\Support\DemoEnvironment;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -105,8 +106,11 @@ class DemoCatalogSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->environment('production')) {
-            $this->command?->warn('DemoCatalogSeeder skipped: demo accounts are disabled in production.');
+        // A public demo runs under APP_ENV=production, so demo mode — not the
+        // environment name — is the switch. The password guard below still
+        // refuses to create the well-known accounts without SEED_DEMO_PASSWORD.
+        if (app()->environment('production') && ! DemoEnvironment::enabled()) {
+            $this->command?->warn('DemoCatalogSeeder skipped: demo accounts are disabled in production unless DEMO_MODE=true.');
 
             return;
         }
