@@ -64,7 +64,9 @@ php artisan demo:seed --force
 
 `--force` skips the "seed into this database?" confirmation, which a deploy script cannot
 answer. Run it without the flag when you are at a terminal and want to see the database
-path first.
+path first. If the seeder skips itself — production without `SEED_DEMO_PASSWORD`, for
+instance — `demo:seed` exits non-zero, so a deploy fails instead of publishing an empty
+catalog.
 
 `php artisan storage:link` is not optional: the seeded product photographs are copied into
 `storage/app/public` and served through `/storage`, so without the symlink every catalog and

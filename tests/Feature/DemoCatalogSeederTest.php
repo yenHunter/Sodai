@@ -149,6 +149,18 @@ class DemoCatalogSeederTest extends TestCase
         $this->assertSame(8, Product::whereIn('slug', DemoCatalogSeeder::productSlugs())->count());
     }
 
+    public function test_the_seed_command_fails_when_the_seeder_skips(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.demo_password' => null, 'demo.enabled' => true]);
+
+        $this->artisan('demo:seed', ['--force' => true])
+            ->expectsOutputToContain('was not seeded')
+            ->assertFailed();
+
+        $this->assertSame(0, Product::count());
+    }
+
     public function test_environments_beyond_the_developers_machine_need_an_explicit_password(): void
     {
         $this->app['env'] = 'staging';

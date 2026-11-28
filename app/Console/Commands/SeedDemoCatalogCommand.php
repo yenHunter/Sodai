@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Product;
 use App\Support\DemoEnvironment;
 use Database\Seeders\DemoCatalogSeeder;
 use Illuminate\Console\Command;
@@ -43,6 +44,15 @@ class SeedDemoCatalogCommand extends Command
             '--class' => DemoCatalogSeeder::class,
             '--force' => true,
         ]);
+
+        // The seeder reports its skip reasons with a warning and a normal
+        // return, which `db:seed` turns into exit 0. A deploy script must not
+        // read "skipped" as success, so require the catalog to actually exist.
+        if (! Product::whereIn('slug', DemoCatalogSeeder::productSlugs())->exists()) {
+            $this->components->error('The demo catalog was not seeded. See the seeder message above; in production it needs DEMO_MODE=true and SEED_DEMO_PASSWORD.');
+
+            return self::FAILURE;
+        }
 
         $this->components->info('Run `php artisan demo:clear --dry-run` to preview the undo, or `demo:clear` to apply it.');
 
